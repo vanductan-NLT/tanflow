@@ -89,7 +89,7 @@ const Index = () => {
         <>
           {/* Header */}
           <header className="fixed top-0 left-0 right-0 z-40 glass-effect animate-slide-down">
-            <div className="container max-w-4xl mx-auto px-3 sm:px-4 h-14 sm:h-16 flex items-center justify-between gap-2">
+            <div className="container max-w-6xl xl:max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between gap-2">
               <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-shrink-0">
                 <img src="/favicon.png" alt="FocusFlow" className="w-6 h-6 sm:w-7 sm:h-7 flex-shrink-0" />
                 <span className="font-semibold text-base sm:text-lg truncate">FocusFlow</span>
@@ -102,18 +102,18 @@ const Index = () => {
           </header>
 
           {/* Main Content */}
-          <main className="container max-w-4xl mx-auto px-4 pt-24 pb-8">
-            <div className="flex flex-col lg:flex-row gap-8">
+          <main className="container max-w-6xl xl:max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 pt-20 sm:pt-24 pb-16 sm:pb-8">
+            <div className="flex flex-col lg:flex-row gap-6 md:gap-8 lg:gap-12 xl:gap-16">
               {/* Left Column - Timer */}
               <div 
-                className="flex-1 flex flex-col items-center justify-center py-8 animate-zoom-in"
+                className="flex-1 flex flex-col items-center justify-center py-4 sm:py-6 md:py-8 lg:py-12 animate-zoom-in"
                 style={{ animationDelay: '0.15s' }}
               >
                 <PomodoroTimer pomodoro={pomodoro} />
               </div>
 
               {/* Right Column - Music & Reminders */}
-              <div className="lg:w-80 space-y-4">
+              <div className="w-full lg:w-80 xl:w-96 space-y-4 lg:space-y-6">
                 <div 
                   className="animate-slide-up"
                   style={{ animationDelay: '0.25s' }}
@@ -131,7 +131,7 @@ const Index = () => {
           </main>
 
           {/* Footer */}
-          <footer className="fixed bottom-0 left-0 right-0 py-4 text-center text-xs text-muted-foreground">
+          <footer className="fixed bottom-0 left-0 right-0 py-3 sm:py-4 text-center text-xs text-muted-foreground">
             <p>Tập trung. Nghỉ ngơi. Lặp lại. 🍅</p>
           </footer>
         </>
