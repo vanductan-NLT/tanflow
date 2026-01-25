@@ -28,8 +28,8 @@ export function YouTubePlayer() {
   const [volume, setVolume] = useState(50);
   const [isMuted, setIsMuted] = useState(false);
   const [showPlayer, setShowPlayer] = useState(false);
+  const [isPlayerReady, setIsPlayerReady] = useState(false);
   const playerRef = useRef<YT.Player | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
 
   // Extract video ID from YouTube URL
   const extractVideoId = (url: string): string | null => {
@@ -82,6 +82,7 @@ export function YouTubePlayer() {
         },
         events: {
           onReady: (event: YT.PlayerEvent) => {
+            setIsPlayerReady(true);
             event.target.setVolume(volume);
           },
           onStateChange: (event: YT.OnStateChangeEvent) => {
@@ -96,18 +97,19 @@ export function YouTubePlayer() {
     return () => {
       playerRef.current?.destroy();
       playerRef.current = null;
+      setIsPlayerReady(false);
     };
   }, [showPlayer, savedVideoId]);
 
-  // Update volume
+  // Update volume - only when player is ready
   useEffect(() => {
-    if (playerRef.current) {
+    if (isPlayerReady && playerRef.current && typeof playerRef.current.setVolume === 'function') {
       playerRef.current.setVolume(isMuted ? 0 : volume);
     }
-  }, [volume, isMuted]);
+  }, [volume, isMuted, isPlayerReady]);
 
   const handlePlayPause = () => {
-    if (!playerRef.current) return;
+    if (!isPlayerReady || !playerRef.current) return;
     
     if (isPlaying) {
       playerRef.current.pauseVideo();
