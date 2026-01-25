@@ -2,9 +2,11 @@ import { usePomodoro, TimerMode } from '@/hooks/usePomodoro';
 import { Button } from '@/components/ui/button';
 import { Play, Pause, RotateCcw, SkipForward } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import type { Task } from '@/hooks/useTasks';
 
 interface MinimalTimerProps {
   pomodoro: ReturnType<typeof usePomodoro>;
+  activeTask?: Task | null;
 }
 
 const modeColors: Record<TimerMode, string> = {
@@ -14,11 +16,23 @@ const modeColors: Record<TimerMode, string> = {
   meditation: 'text-[hsl(var(--timer-meditation))]',
 };
 
-export function MinimalTimer({ pomodoro }: MinimalTimerProps) {
+export function MinimalTimer({ pomodoro, activeTask }: MinimalTimerProps) {
   const { mode, formattedTime, isRunning, start, pause, reset, skip } = pomodoro;
 
   return (
     <div className="flex flex-col items-center gap-4 sm:gap-6 md:gap-8 w-full px-4">
+      {/* Active Task Info */}
+      {activeTask && mode === 'pomodoro' && (
+        <div className="text-center animate-fade-in">
+          <p className="text-lg sm:text-xl text-white/80 font-medium truncate max-w-[280px] sm:max-w-md">
+            {activeTask.title}
+          </p>
+          <p className="text-sm sm:text-base text-white/60 mt-1">
+            Cycle {activeTask.completedCycles + 1}/{activeTask.targetCycles} 🍅
+          </p>
+        </div>
+      )}
+
       {/* Giant timer */}
       <div className={cn(
         "text-6xl sm:text-8xl md:text-[10rem] lg:text-[14rem] font-mono font-bold tracking-tighter leading-none",
