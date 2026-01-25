@@ -15,18 +15,33 @@ export function VideoBackground({ timerMode, isRunning, pexels }: VideoBackgroun
     return null;
   }
 
-  const { settings, videoUrl, isLoading, refreshVideo } = pexels;
+  const { settings, videoUrl, refreshVideo } = pexels;
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [isVideoLoaded, setIsVideoLoaded] = useState(false);
+  const prevVideoRef = useRef<HTMLVideoElement>(null);
+  const [currentUrl, setCurrentUrl] = useState(videoUrl);
+  const [prevUrl, setPrevUrl] = useState<string | null>(null);
+  const [isNewVideoReady, setIsNewVideoReady] = useState(true);
 
   const isFocusing = timerMode === 'pomodoro' && isRunning;
 
+  // Handle video URL changes with crossfade
   useEffect(() => {
-    if (videoRef.current && videoUrl) {
-      setIsVideoLoaded(false);
-      videoRef.current.load();
+    if (videoUrl && videoUrl !== currentUrl) {
+      // Keep old video visible, prepare new one
+      setPrevUrl(currentUrl);
+      setCurrentUrl(videoUrl);
+      setIsNewVideoReady(false);
     }
-  }, [videoUrl]);
+  }, [videoUrl, currentUrl]);
+
+  // When new video is loaded, fade it in
+  const handleNewVideoLoaded = useCallback(() => {
+    setIsNewVideoReady(true);
+    // Clear previous video after transition
+    setTimeout(() => {
+      setPrevUrl(null);
+    }, 1000);
+  }, []);
 
   // Handle video end - refresh if setting is enabled
   const handleVideoEnded = useCallback(() => {
@@ -41,24 +56,40 @@ export function VideoBackground({ timerMode, isRunning, pexels }: VideoBackgroun
 
   return (
     <div className="fixed inset-0 -z-10 overflow-hidden">
-      {/* Video element */}
-      {videoUrl && (
+      {/* Previous video - fades out */}
+      {prevUrl && (
+        <video
+          ref={prevVideoRef}
+          autoPlay
+          loop
+          muted
+          playsInline
+          className={cn(
+            "absolute inset-0 w-full h-full object-cover transition-opacity duration-1000",
+            isNewVideoReady ? "opacity-0" : "opacity-100"
+          )}
+        >
+          <source src={prevUrl} type="video/mp4" />
+        </video>
+      )}
+
+      {/* Current video - fades in */}
+      {currentUrl && (
         <video
           ref={videoRef}
           autoPlay
           loop={!settings.refreshOnVideoEnd}
           muted
           playsInline
-          onLoadedData={() => setIsVideoLoaded(true)}
+          onLoadedData={handleNewVideoLoaded}
           onEnded={handleVideoEnded}
           className={cn(
             "absolute inset-0 w-full h-full object-cover transition-all duration-1000",
-            isLoading || !isVideoLoaded ? "opacity-0" : "opacity-100",
-            // When focusing: video is clearer
+            isNewVideoReady ? "opacity-100" : "opacity-0",
             isFocusing ? "scale-105" : "scale-100"
           )}
         >
-          <source src={videoUrl} type="video/mp4" />
+          <source src={currentUrl} type="video/mp4" />
         </video>
       )}
 
@@ -74,13 +105,6 @@ export function VideoBackground({ timerMode, isRunning, pexels }: VideoBackgroun
       
       {/* Vignette effect */}
       <div className="absolute inset-0 bg-radial-vignette" />
-
-      {/* Loading state */}
-      {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-        </div>
-      )}
     </div>
   );
 }
