@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocalStorage } from './useLocalStorage';
-import { useNotificationPopup } from './useNotificationPopup';
 
 export type TimerMode = 'pomodoro' | 'shortBreak' | 'longBreak' | 'meditation';
 
@@ -21,6 +20,16 @@ export interface PomodoroState {
   lastUpdated: number; // timestamp to calculate elapsed time
 }
 
+export interface NotificationCallbacks {
+  showPiPNotification: (opts: {
+    type: 'pomodoro-complete' | 'break-complete' | 'health-reminder';
+    title: string;
+    message: string;
+    onDismiss: () => void;
+  }) => void;
+  showBrowserNotification: (title: string, body: string) => void;
+}
+
 const DEFAULT_SETTINGS: PomodoroSettings = {
   pomodoroDuration: 25,
   shortBreakDuration: 5,
@@ -38,7 +47,7 @@ const DEFAULT_STATE: PomodoroState = {
   lastUpdated: Date.now(),
 };
 
-export function usePomodoro() {
+export function usePomodoro(notificationCallbacks?: NotificationCallbacks) {
   const [settings, setSettings] = useLocalStorage<PomodoroSettings>(
     'focusflow-pomodoro-settings',
     DEFAULT_SETTINGS
@@ -48,9 +57,6 @@ export function usePomodoro() {
     'focusflow-pomodoro-state',
     { ...DEFAULT_STATE, timeLeft: DEFAULT_SETTINGS.pomodoroDuration * 60 }
   );
-
-  // PiP notification hook
-  const { showNotification: showPiPNotification } = useNotificationPopup();
 
   // Calculate initial values using lazy initialization in useState
   const [mode, setMode] = useState<TimerMode>(() => savedState.mode);
@@ -164,7 +170,7 @@ export function usePomodoro() {
       setCompletedPomodoros(newCount);
       
       // Show PiP/Popup notification
-      showPiPNotification({
+      notificationCallbacks?.showPiPNotification({
         type: 'pomodoro-complete',
         title: 'Hoàn thành Pomodoro! 🍅',
         message: `Tuyệt vời! Bạn đã hoàn thành ${newCount} phiên tập trung. Nghỉ ngơi thôi!`,
@@ -172,7 +178,7 @@ export function usePomodoro() {
       });
       
       // Browser notification as fallback
-      showBrowserNotification(
+      notificationCallbacks?.showBrowserNotification(
         'FocusFlow - Hoàn thành Pomodoro! 🍅',
         `Tuyệt vời! Bạn đã hoàn thành ${newCount} phiên tập trung. Nghỉ ngơi thôi!`
       );
@@ -193,14 +199,14 @@ export function usePomodoro() {
       }
     } else if (mode === 'meditation') {
       // Meditation complete - stay in meditation mode, just stop
-      showPiPNotification({
+      notificationCallbacks?.showPiPNotification({
         type: 'break-complete',
         title: 'Hoàn thành thiền! 🧘',
         message: 'Bạn đã hoàn thành phiên thiền. Cảm thấy thư giãn hơn chưa?',
         onDismiss: () => {},
       });
       
-      showBrowserNotification(
+      notificationCallbacks?.showBrowserNotification(
         'FocusFlow - Hoàn thành thiền! 🧘',
         'Bạn đã hoàn thành phiên thiền. Cảm thấy thư giãn hơn chưa?'
       );
@@ -209,14 +215,14 @@ export function usePomodoro() {
       setIsRunning(false);
     } else {
       // Break is over, back to pomodoro
-      showPiPNotification({
+      notificationCallbacks?.showPiPNotification({
         type: 'break-complete',
         title: 'Hết giờ nghỉ! ⏰',
         message: 'Đã đến lúc quay lại tập trung rồi!',
         onDismiss: () => {},
       });
       
-      showBrowserNotification(
+      notificationCallbacks?.showBrowserNotification(
         'FocusFlow - Hết giờ nghỉ! ⏰',
         'Đã đến lúc quay lại tập trung rồi!'
       );
@@ -229,7 +235,7 @@ export function usePomodoro() {
         setIsRunning(true);
       }
     }
-  }, [mode, completedPomodoros, settings, playNotificationSound, showBrowserNotification, showPiPNotification]);
+  }, [mode, completedPomodoros, settings, playNotificationSound, notificationCallbacks]);
 
   // Timer countdown using timestamp-based approach for accuracy
   // Store the target end time instead of counting down
