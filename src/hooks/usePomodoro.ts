@@ -283,9 +283,20 @@ export function usePomodoro() {
     };
   }, [isRunning, playTickSound]);
 
-  // Check for completion
+  // Track if we've already handled completion for current cycle
+  const hasCompletedRef = useRef(false);
+  
+  // Reset completion flag when timer restarts with time
   useEffect(() => {
-    if (timeLeft === 0 && isRunning) {
+    if (timeLeft > 0) {
+      hasCompletedRef.current = false;
+    }
+  }, [timeLeft]);
+  
+  // Check for completion - only trigger once per cycle
+  useEffect(() => {
+    if (timeLeft === 0 && isRunning && !hasCompletedRef.current) {
+      hasCompletedRef.current = true;
       handleTimerComplete();
     }
   }, [timeLeft, isRunning, handleTimerComplete]);
