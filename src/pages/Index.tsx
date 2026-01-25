@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { PomodoroTimer } from '@/components/PomodoroTimer';
 import { MinimalTimer } from '@/components/MinimalTimer';
@@ -15,11 +15,29 @@ import { useHealthReminders } from '@/hooks/useHealthReminders';
 import { useTheme } from '@/hooks/useTheme';
 import { usePexelsVideo } from '@/hooks/usePexelsVideo';
 import { useYouTubePlayer } from '@/hooks/useYouTubePlayer';
+import { useNotificationPopup } from '@/hooks/useNotificationPopup';
 
 const Index = () => {
   useTheme();
   
-  const pomodoro = usePomodoro();
+  // Notification system - must be called before usePomodoro
+  const { showNotification: showPiPNotification } = useNotificationPopup();
+  
+  // Browser notification helper
+  const showBrowserNotification = useCallback((title: string, body: string) => {
+    if ('Notification' in window && Notification.permission === 'granted') {
+      new Notification(title, {
+        body,
+        icon: '/favicon.png',
+        tag: 'pomodoro-complete',
+      });
+    }
+  }, []);
+  
+  const pomodoro = usePomodoro({
+    showPiPNotification,
+    showBrowserNotification,
+  });
   const reminders = useHealthReminders({ pauseReminders: pomodoro.mode === 'meditation' && pomodoro.isRunning });
   const pexels = usePexelsVideo();
   const youtube = useYouTubePlayer();
