@@ -17,11 +17,7 @@ const DEFAULT_SETTINGS: PomodoroSettings = {
   longBreakInterval: 4,
 };
 
-interface UsePomodoroOptions {
-  onPomodoroComplete?: () => void;
-}
-
-export function usePomodoro(options: UsePomodoroOptions = {}) {
+export function usePomodoro() {
   const [settings, setSettings] = useLocalStorage<PomodoroSettings>(
     'focusflow-pomodoro-settings',
     DEFAULT_SETTINGS
@@ -67,9 +63,6 @@ export function usePomodoro(options: UsePomodoroOptions = {}) {
       const newCount = completedPomodoros + 1;
       setCompletedPomodoros(newCount);
       
-      // Call the callback when pomodoro completes
-      options.onPomodoroComplete?.();
-      
       // Check if it's time for long break
       if (newCount % settings.longBreakInterval === 0) {
         setMode('longBreak');
@@ -83,7 +76,7 @@ export function usePomodoro(options: UsePomodoroOptions = {}) {
       setMode('pomodoro');
       setTimeLeft(settings.pomodoroDuration * 60);
     }
-  }, [mode, completedPomodoros, settings, playNotificationSound, options]);
+  }, [mode, completedPomodoros, settings, playNotificationSound]);
 
   // Timer countdown
   useEffect(() => {

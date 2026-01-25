@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { PomodoroTimer } from '@/components/PomodoroTimer';
 import { MinimalTimer } from '@/components/MinimalTimer';
@@ -13,22 +14,27 @@ import { useHealthReminders } from '@/hooks/useHealthReminders';
 import { useTheme } from '@/hooks/useTheme';
 import { usePexelsVideo } from '@/hooks/usePexelsVideo';
 import { useYouTubePlayer } from '@/hooks/useYouTubePlayer';
-import { cn } from '@/lib/utils';
 
 const Index = () => {
   useTheme();
   
+  const pomodoro = usePomodoro();
+  const reminders = useHealthReminders();
   const pexels = usePexelsVideo();
+  const youtube = useYouTubePlayer();
+
+  // Track previous completed count to detect new completions
+  const prevCompletedRef = useRef(pomodoro.completedPomodoros);
   
-  const pomodoro = usePomodoro({
-    onPomodoroComplete: () => {
+  // Refresh video when a pomodoro completes
+  useEffect(() => {
+    if (pomodoro.completedPomodoros > prevCompletedRef.current) {
       if (pexels.settings.refreshOnPomodoroComplete && pexels.settings.enabled && pexels.settings.apiKey) {
         pexels.refreshVideo();
       }
-    },
-  });
-  const reminders = useHealthReminders();
-  const youtube = useYouTubePlayer();
+    }
+    prevCompletedRef.current = pomodoro.completedPomodoros;
+  }, [pomodoro.completedPomodoros, pexels]);
 
   const isFocusing = pomodoro.mode === 'pomodoro' && pomodoro.isRunning;
 
