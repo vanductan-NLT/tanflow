@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Music, Play, Pause, Volume2, VolumeX, ExternalLink, Loader2 } from 'lucide-react';
+import { Music, Play, Pause, Volume2, VolumeX, ExternalLink, Loader2, SkipForward, Repeat } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
@@ -21,8 +21,15 @@ const SUGGESTED_PLAYLISTS: Playlist[] = [
   { id: '5', name: 'Ambient Study', videoId: 'lTRiuFIWV54', thumbnail: '🌙' },
 ];
 
+// Get next video ID from playlist
+const getNextVideoId = (currentVideoId: string): string => {
+  const currentIndex = SUGGESTED_PLAYLISTS.findIndex(p => p.videoId === currentVideoId);
+  const nextIndex = (currentIndex + 1) % SUGGESTED_PLAYLISTS.length;
+  return SUGGESTED_PLAYLISTS[nextIndex].videoId;
+};
+
 export function YouTubePlayer() {
-  const [savedVideoId, setSavedVideoId] = useLocalStorage<string>('focusflow-youtube-video', 'jfKfPfyJRdk');
+const [savedVideoId, setSavedVideoId] = useLocalStorage<string>('focusflow-youtube-video', 'jfKfPfyJRdk');
   const [customUrl, setCustomUrl] = useState('');
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState(50);
@@ -30,6 +37,7 @@ export function YouTubePlayer() {
   const [showPlayer, setShowPlayer] = useState(false);
   const [isPlayerReady, setIsPlayerReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [autoPlay, setAutoPlay] = useLocalStorage<boolean>('focusflow-autoplay', true);
   const playerRef = useRef<YT.Player | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -97,8 +105,13 @@ export function YouTubePlayer() {
             setError(null);
             event.target.setVolume(volume);
           },
-          onStateChange: (event: YT.OnStateChangeEvent) => {
+onStateChange: (event: YT.OnStateChangeEvent) => {
             setIsPlaying(event.data === window.YT.PlayerState.PLAYING);
+            // Auto-advance to next track when video ends
+            if (event.data === window.YT.PlayerState.ENDED && autoPlay) {
+              const nextVideoId = getNextVideoId(savedVideoId);
+              setSavedVideoId(nextVideoId);
+            }
           },
           onError: () => {
             setError('Không thể phát video này');
@@ -110,12 +123,12 @@ export function YouTubePlayer() {
 
     initPlayer();
 
-    return () => {
+return () => {
       playerRef.current?.destroy();
       playerRef.current = null;
       setIsPlayerReady(false);
     };
-  }, [savedVideoId]);
+  }, [savedVideoId, autoPlay]);
 
   // Update volume - only when player is ready
   useEffect(() => {
@@ -157,7 +170,14 @@ export function YouTubePlayer() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Music className="h-5 w-5 text-primary" />
-          <span className="font-medium">Nhạc nền</span>
+          <div className="flex flex-col">
+            <span className="font-medium">Nhạc nền</span>
+            {savedVideoId && (
+              <span className="text-xs text-muted-foreground">
+                {SUGGESTED_PLAYLISTS.find(p => p.videoId === savedVideoId)?.name || 'Custom video'}
+              </span>
+            )}
+          </div>
           {!isPlayerReady && showPlayer && (
             <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
           )}
@@ -215,6 +235,18 @@ export function YouTubePlayer() {
               )}
             </Button>
 
+            {/* Skip to next track */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setSavedVideoId(getNextVideoId(savedVideoId))}
+              disabled={!isPlayerReady}
+              className="h-10 w-10 rounded-full"
+              title="Bài tiếp theo"
+            >
+              <SkipForward className="h-5 w-5" />
+            </Button>
+
             <div className="flex items-center gap-2 flex-1">
               <Button
                 variant="ghost"
@@ -241,6 +273,17 @@ export function YouTubePlayer() {
                 disabled={!isPlayerReady}
               />
             </div>
+
+            {/* Auto-play toggle */}
+            <Button
+              variant={autoPlay ? "default" : "ghost"}
+              size="icon"
+              onClick={() => setAutoPlay(!autoPlay)}
+              className={cn("h-8 w-8", autoPlay && "bg-primary/20 text-primary")}
+              title={autoPlay ? "Tắt tự động chuyển bài" : "Bật tự động chuyển bài"}
+            >
+              <Repeat className="h-4 w-4" />
+            </Button>
 
             <a
               href={`https://youtube.com/watch?v=${savedVideoId}`}
