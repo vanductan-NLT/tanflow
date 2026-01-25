@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocalStorage } from './useLocalStorage';
 
 export interface PexelsSettings {
@@ -52,9 +52,15 @@ export function usePexelsVideo() {
   const [videoUrl, setVideoUrl] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Use ref to store latest settings without causing effect re-runs
+  const settingsRef = useRef(settings);
+  settingsRef.current = settings;
 
   const fetchRandomVideo = useCallback(async () => {
-    if (!settings.apiKey || !settings.enabled) {
+    const currentSettings = settingsRef.current;
+    
+    if (!currentSettings.apiKey || !currentSettings.enabled) {
       setError('Cần nhập Pexels API key');
       return;
     }
@@ -65,10 +71,10 @@ export function usePexelsVideo() {
     try {
       const randomPage = Math.floor(Math.random() * 5) + 1;
       const response = await fetch(
-        `https://api.pexels.com/videos/search?query=${settings.category}&per_page=15&page=${randomPage}&orientation=landscape`,
+        `https://api.pexels.com/videos/search?query=${currentSettings.category}&per_page=15&page=${randomPage}&orientation=landscape`,
         {
           headers: {
-            Authorization: settings.apiKey,
+            Authorization: currentSettings.apiKey,
           },
         }
       );
@@ -96,14 +102,14 @@ export function usePexelsVideo() {
     } finally {
       setIsLoading(false);
     }
-  }, [settings.apiKey, settings.category, settings.enabled]);
+  }, []);
 
   // Fetch video on mount and when category changes
   useEffect(() => {
     if (settings.enabled && settings.apiKey) {
       fetchRandomVideo();
     }
-  }, [settings.category, settings.apiKey, settings.enabled]);
+  }, [settings.category, settings.apiKey, settings.enabled, fetchRandomVideo]);
 
   // Auto-refresh video at interval
   useEffect(() => {
