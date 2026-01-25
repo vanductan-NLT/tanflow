@@ -15,10 +15,11 @@ export function VideoBackground({ timerMode, isRunning, pexels }: VideoBackgroun
     return null;
   }
 
-  const { settings, videoUrl, refreshVideo, shouldRefreshOnVideoEnd } = pexels;
+  const { settings, videoUrl, videoKey, refreshVideo, shouldRefreshOnVideoEnd } = pexels;
   const videoRef = useRef<HTMLVideoElement>(null);
   const prevVideoRef = useRef<HTMLVideoElement>(null);
   const [currentUrl, setCurrentUrl] = useState(videoUrl);
+  const [currentKey, setCurrentKey] = useState(videoKey);
   const [prevUrl, setPrevUrl] = useState<string | null>(null);
   const [isNewVideoReady, setIsNewVideoReady] = useState(true);
 
@@ -26,13 +27,14 @@ export function VideoBackground({ timerMode, isRunning, pexels }: VideoBackgroun
 
   // Handle video URL changes with crossfade
   useEffect(() => {
-    if (videoUrl && videoUrl !== currentUrl) {
+    if (videoUrl && (videoUrl !== currentUrl || videoKey !== currentKey)) {
       // Keep old video visible, prepare new one
       setPrevUrl(currentUrl);
       setCurrentUrl(videoUrl);
+      setCurrentKey(videoKey);
       setIsNewVideoReady(false);
     }
-  }, [videoUrl, currentUrl]);
+  }, [videoUrl, videoKey, currentUrl, currentKey]);
 
   // When new video is loaded, fade it in
   const handleNewVideoLoaded = useCallback(() => {
