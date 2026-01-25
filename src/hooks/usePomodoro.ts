@@ -28,6 +28,7 @@ export interface NotificationCallbacks {
     onDismiss: () => void;
   }) => void;
   showBrowserNotification: (title: string, body: string) => void;
+  onPomodoroComplete?: () => void; // Callback when a pomodoro session completes
 }
 
 const DEFAULT_SETTINGS: PomodoroSettings = {
@@ -170,6 +171,9 @@ export function usePomodoro(notificationCallbacks?: NotificationCallbacks) {
     if (mode === 'pomodoro') {
       const newCount = completedPomodoros + 1;
       setCompletedPomodoros(newCount);
+      
+      // Notify task system that a pomodoro completed
+      notificationCallbacks?.onPomodoroComplete?.();
       
       // Only show notification if NOT auto-starting (avoid conflict with manual continue button)
       if (!willAutoStart) {

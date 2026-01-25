@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { PomodoroTimer } from '@/components/PomodoroTimer';
 import { MinimalTimer } from '@/components/MinimalTimer';
@@ -10,15 +10,23 @@ import { BackgroundScene } from '@/components/BackgroundScene';
 import { AudioVisualizer } from '@/components/AudioVisualizer';
 import { MinimalReminders } from '@/components/MinimalReminders';
 import { QuoteDisplay } from '@/components/QuoteDisplay';
+import { TaskList } from '@/components/TaskList';
+import { TaskCompleteDialog } from '@/components/TaskCompleteDialog';
 import { usePomodoro } from '@/hooks/usePomodoro';
 import { useHealthReminders } from '@/hooks/useHealthReminders';
 import { useTheme } from '@/hooks/useTheme';
 import { usePexelsVideo } from '@/hooks/usePexelsVideo';
 import { useYouTubePlayer } from '@/hooks/useYouTubePlayer';
 import { useNotificationPopup } from '@/hooks/useNotificationPopup';
+import { useTasks, Task } from '@/hooks/useTasks';
 
 const Index = () => {
   useTheme();
+  
+  // Task management
+  const tasks = useTasks();
+  const [taskCompleteDialogOpen, setTaskCompleteDialogOpen] = useState(false);
+  const [completedTask, setCompletedTask] = useState<Task | null>(null);
   
   // Notification system - must be called before usePomodoro
   const { showNotification: showPiPNotification } = useNotificationPopup();
@@ -34,9 +42,25 @@ const Index = () => {
     }
   }, []);
   
+  // Handle pomodoro complete - increment task cycle
+  const handlePomodoroComplete = useCallback(() => {
+    if (tasks.activeTaskId) {
+      const taskCompleted = tasks.incrementCycle(tasks.activeTaskId);
+      if (taskCompleted) {
+        // Task reached target cycles, show completion dialog
+        const task = tasks.tasks.find(t => t.id === tasks.activeTaskId);
+        if (task) {
+          setCompletedTask({ ...task, completedCycles: task.completedCycles + 1 });
+          setTaskCompleteDialogOpen(true);
+        }
+      }
+    }
+  }, [tasks]);
+  
   const pomodoro = usePomodoro({
     showPiPNotification,
     showBrowserNotification,
+    onPomodoroComplete: handlePomodoroComplete,
   });
   const reminders = useHealthReminders({ pauseReminders: pomodoro.mode === 'meditation' && pomodoro.isRunning });
   const pexels = usePexelsVideo();
@@ -54,6 +78,17 @@ const Index = () => {
     }
     prevCompletedRef.current = pomodoro.completedPomodoros;
   }, [pomodoro.completedPomodoros, pexels]);
+
+  // Task completion handlers
+  const handleTaskComplete = (taskId: string) => {
+    tasks.markComplete(taskId);
+    setCompletedTask(null);
+  };
+
+  const handleAddMoreTime = (taskId: string, additionalCycles: number) => {
+    tasks.addMoreCycles(taskId, additionalCycles);
+    setCompletedTask(null);
+  };
 
   const isFocusing = (pomodoro.mode === 'pomodoro' || pomodoro.mode === 'meditation') && pomodoro.isRunning;
   const isMeditating = pomodoro.mode === 'meditation';
@@ -81,7 +116,7 @@ const Index = () => {
           </div>
 
           {/* Minimal Timer */}
-          <MinimalTimer pomodoro={pomodoro} />
+          <MinimalTimer pomodoro={pomodoro} activeTask={tasks.activeTask} />
 
           {/* Bottom bar: Visualizer + Reminders (hide reminders in meditation) */}
           <div className="fixed bottom-4 sm:bottom-6 md:bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 sm:gap-3 md:gap-4 w-full max-w-sm sm:max-w-md md:max-w-lg px-4">
@@ -130,17 +165,30 @@ const Index = () => {
                 <PomodoroTimer pomodoro={pomodoro} />
               </div>
 
-              {/* Right Column - Music & Reminders */}
+              {/* Right Column - Tasks, Music & Reminders */}
               <div className="w-full lg:w-80 xl:w-96 space-y-4 lg:space-y-6">
+                {/* Tasks */}
                 <div 
                   className="animate-slide-up"
-                  style={{ animationDelay: '0.25s' }}
+                  style={{ animationDelay: '0.20s' }}
+                >
+                  <TaskList
+                    tasks={tasks.tasks}
+                    activeTaskId={tasks.activeTaskId}
+                    onAddTask={tasks.addTask}
+                    onDeleteTask={tasks.deleteTask}
+                    onSetActiveTask={tasks.setActiveTask}
+                  />
+                </div>
+                <div 
+                  className="animate-slide-up"
+                  style={{ animationDelay: '0.30s' }}
                 >
                   <YouTubePlayer {...youtube} />
                 </div>
                 <div 
                   className="animate-slide-up"
-                  style={{ animationDelay: '0.35s' }}
+                  style={{ animationDelay: '0.40s' }}
                 >
                   <HealthReminders reminders={reminders} />
                 </div>
@@ -150,6 +198,15 @@ const Index = () => {
 
         </>
       )}
+
+      {/* Task Complete Dialog */}
+      <TaskCompleteDialog
+        open={taskCompleteDialogOpen}
+        onOpenChange={setTaskCompleteDialogOpen}
+        task={completedTask}
+        onComplete={handleTaskComplete}
+        onAddMoreTime={handleAddMoreTime}
+      />
     </div>
   );
 };
