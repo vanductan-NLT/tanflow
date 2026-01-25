@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState, useCallback } from 'react';
+import { useRef, useEffect, useMemo, useState, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { TimerMode } from '@/hooks/usePomodoro';
 import { usePexelsVideo } from '@/hooks/usePexelsVideo';
@@ -16,59 +16,107 @@ export function VideoBackground({ timerMode, isRunning, pexels }: VideoBackgroun
   }
 
   const { settings, videoUrl, videoKey, refreshVideo, shouldRefreshOnVideoEnd } = pexels;
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const prevVideoRef = useRef<HTMLVideoElement>(null);
-  const [currentUrl, setCurrentUrl] = useState(videoUrl);
-  const [currentKey, setCurrentKey] = useState(videoKey);
-  const [prevUrl, setPrevUrl] = useState<string | null>(null);
-  const [isNewVideoReady, setIsNewVideoReady] = useState(true);
+
+  // Double-buffered video layers (A/B) to avoid unmount/remount flashes during source swaps.
+  const videoARef = useRef<HTMLVideoElement>(null);
+  const videoBRef = useRef<HTMLVideoElement>(null);
+
+  const [activeLayer, setActiveLayer] = useState<'A' | 'B'>('A');
+  const [urlA, setUrlA] = useState<string | null>(videoUrl ?? null);
+  const [urlB, setUrlB] = useState<string | null>(null);
+  const [readyA, setReadyA] = useState(false);
+  const [readyB, setReadyB] = useState(false);
+
+  const lastAppliedKeyRef = useRef(videoKey);
 
   const isFocusing = timerMode === 'pomodoro' && isRunning;
 
-  // Handle video URL changes with crossfade
-  useEffect(() => {
-    if (videoUrl && (videoUrl !== currentUrl || videoKey !== currentKey)) {
-      // Keep old video visible, prepare new one
-      setPrevUrl(currentUrl || null);
-      setCurrentUrl(videoUrl);
-      setCurrentKey(videoKey);
-      // Keep showing previous video until the new one can play, then crossfade.
-      setIsNewVideoReady(false);
-    }
-  }, [videoUrl, videoKey, currentUrl, currentKey]);
+  const inactiveLayer = activeLayer === 'A' ? 'B' : 'A';
 
-  // Force browser to load the new source (changing <source> doesn't reliably reload in all browsers)
-  useEffect(() => {
-    if (!videoRef.current) return;
-    // When currentUrl/currentKey changes, remount may not happen fast enough; ensure a load()
-    videoRef.current.load();
-    // Autoplay can be blocked in rare cases even when muted; ignore errors
-    void videoRef.current.play().catch(() => {});
-  }, [currentUrl, currentKey]);
+  const refs = useMemo(
+    () => ({
+      A: videoARef,
+      B: videoBRef,
+    }),
+    []
+  );
 
-  // Ensure the previous layer can render immediately (avoid brief black frame while buffering)
-  useEffect(() => {
-    if (!prevVideoRef.current) return;
-    if (!prevUrl) return;
-    prevVideoRef.current.load();
-    void prevVideoRef.current.play().catch(() => {});
-  }, [prevUrl]);
+  const urls = useMemo(
+    () => ({
+      A: urlA,
+      B: urlB,
+    }),
+    [urlA, urlB]
+  );
 
-  // When new video can play, fade it in
-  const handleNewVideoLoaded = useCallback(() => {
-    setIsNewVideoReady(true);
-    // Clear previous video after transition
-    setTimeout(() => {
-      setPrevUrl(null);
-    }, 1000);
+  const setUrlFor = useCallback((layer: 'A' | 'B', url: string | null) => {
+    if (layer === 'A') setUrlA(url);
+    else setUrlB(url);
   }, []);
 
-  // Handle video end - refresh if setting is enabled
-  const handleVideoEnded = useCallback(() => {
-    if (shouldRefreshOnVideoEnd) {
-      refreshVideo();
+  const setReadyFor = useCallback((layer: 'A' | 'B', ready: boolean) => {
+    if (layer === 'A') setReadyA(ready);
+    else setReadyB(ready);
+  }, []);
+
+  // Initial ready state (first load)
+  useEffect(() => {
+    if (urlA && !readyA) {
+      // We'll mark ready when it can play.
+      setReadyA(false);
     }
-  }, [shouldRefreshOnVideoEnd, refreshVideo]);
+  }, [urlA, readyA]);
+
+  // When Pexels gives a new URL (or forces refresh via key), load it into the inactive layer.
+  useEffect(() => {
+    if (!videoUrl) return;
+
+    const currentActiveUrl = urls[activeLayer];
+    const keyChanged = videoKey !== lastAppliedKeyRef.current;
+    const urlChanged = videoUrl !== currentActiveUrl;
+    if (!keyChanged && !urlChanged) return;
+    lastAppliedKeyRef.current = videoKey;
+
+    const targetLayer = inactiveLayer;
+    setReadyFor(targetLayer, false);
+    setUrlFor(targetLayer, videoUrl);
+
+    // Force load/play on the inactive element as soon as src is set.
+    // Note: src assignment causes a new resource fetch; keeping the element mounted avoids flashes.
+    queueMicrotask(() => {
+      const el = refs[targetLayer].current;
+      if (!el) return;
+      el.load();
+      void el.play().catch(() => {});
+    });
+  }, [videoUrl, videoKey, activeLayer, inactiveLayer, refs, setReadyFor, setUrlFor, urls]);
+
+  const crossfadeTo = useCallback(
+    (layer: 'A' | 'B') => {
+      // Fade to the layer that can play.
+      setActiveLayer(layer);
+      setReadyFor(layer, true);
+
+      // After the crossfade completes, pause the other layer to save resources.
+      const old = layer === 'A' ? 'B' : 'A';
+      setTimeout(() => {
+        const el = refs[old].current;
+        if (!el) return;
+        el.pause();
+      }, 1000);
+    },
+    [refs, setReadyFor]
+  );
+
+  // Handle video end - refresh if setting is enabled
+  const handleVideoEnded = useCallback(
+    (layer: 'A' | 'B') => {
+      if (!shouldRefreshOnVideoEnd) return;
+      if (layer !== activeLayer) return;
+      refreshVideo();
+    },
+    [shouldRefreshOnVideoEnd, refreshVideo, activeLayer]
+  );
 
   if (!settings.enabled || !settings.apiKey) {
     return null;
@@ -76,45 +124,48 @@ export function VideoBackground({ timerMode, isRunning, pexels }: VideoBackgroun
 
   return (
     <div className="fixed inset-0 -z-10 overflow-hidden">
-      {/* Previous video - fades out */}
-      {prevUrl && (
-        <video
-          ref={prevVideoRef}
-          autoPlay
-          loop
-          muted
-          playsInline
-          preload="auto"
-          className={cn(
-            "absolute inset-0 w-full h-full object-cover transition-opacity duration-1000",
-            // While the new video isn't ready, keep previous fully visible.
-            isNewVideoReady ? "opacity-0" : "opacity-100"
-          )}
-          src={prevUrl}
-        />
-      )}
+      {/* Layer A */}
+      <video
+        ref={videoARef}
+        autoPlay
+        loop={!shouldRefreshOnVideoEnd}
+        muted
+        playsInline
+        preload="auto"
+        src={urlA ?? undefined}
+        onCanPlay={() => {
+          // First load or after swap into A
+          if (activeLayer !== 'A') crossfadeTo('A');
+          else setReadyA(true);
+        }}
+        onEnded={() => handleVideoEnded('A')}
+        className={cn(
+          "absolute inset-0 w-full h-full object-cover transition-opacity duration-1000",
+          activeLayer === 'A' ? "opacity-100" : "opacity-0",
+          activeLayer === 'A' && isFocusing ? "scale-105 transition-transform duration-1000" : "scale-100"
+        )}
+      />
 
-      {/* Current video - fades in */}
-      {currentUrl && (
-        <video
-          key={`cur-${currentKey}`}
-          ref={videoRef}
-          autoPlay
-          loop={!shouldRefreshOnVideoEnd}
-          muted
-          playsInline
-          preload="auto"
-          onCanPlay={handleNewVideoLoaded}
-          onEnded={handleVideoEnded}
-          className={cn(
-            "absolute inset-0 w-full h-full object-cover transition-all duration-1000",
-            // Crossfade only when we have a previous video; otherwise show current (initial load).
-            prevUrl ? (isNewVideoReady ? "opacity-100" : "opacity-0") : "opacity-100",
-            isFocusing ? "scale-105" : "scale-100"
-          )}
-          src={currentUrl}
-        />
-      )}
+      {/* Layer B */}
+      <video
+        ref={videoBRef}
+        autoPlay
+        loop={!shouldRefreshOnVideoEnd}
+        muted
+        playsInline
+        preload="auto"
+        src={urlB ?? undefined}
+        onCanPlay={() => {
+          if (activeLayer !== 'B') crossfadeTo('B');
+          else setReadyB(true);
+        }}
+        onEnded={() => handleVideoEnded('B')}
+        className={cn(
+          "absolute inset-0 w-full h-full object-cover transition-opacity duration-1000",
+          activeLayer === 'B' ? "opacity-100" : "opacity-0",
+          activeLayer === 'B' && isFocusing ? "scale-105 transition-transform duration-1000" : "scale-100"
+        )}
+      />
 
       {/* Overlay - consistent dark overlay regardless of theme */}
       <div 
