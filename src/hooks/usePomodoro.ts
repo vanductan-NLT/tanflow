@@ -201,26 +201,26 @@ export function usePomodoro() {
     }
   }, [mode, completedPomodoros, settings, playNotificationSound, showBrowserNotification, showPiPNotification]);
 
-  // Timer countdown using timestamp-based approach to handle background tabs
-  const lastTickRef = useRef<number>(Date.now());
+  // Timer countdown using timestamp-based approach for accuracy
+  // Store the target end time instead of counting down
+  const startTimeRef = useRef<number>(0);
+  const initialTimeRef = useRef<number>(0);
   
   useEffect(() => {
     if (isRunning && timeLeft > 0) {
-      lastTickRef.current = Date.now();
+      // Calculate when the timer started based on current timeLeft
+      startTimeRef.current = Date.now();
+      initialTimeRef.current = timeLeft;
       
+      // Use 100ms interval for smoother UI updates
       intervalRef.current = window.setInterval(() => {
         const now = Date.now();
-        const elapsed = Math.floor((now - lastTickRef.current) / 1000);
-        lastTickRef.current = now;
+        const elapsedSeconds = (now - startTimeRef.current) / 1000;
+        const remaining = Math.max(0, initialTimeRef.current - elapsedSeconds);
         
-        setTimeLeft((prev) => {
-          const newTime = prev - elapsed;
-          if (newTime <= 0) {
-            return 0;
-          }
-          return newTime;
-        });
-      }, 1000);
+        // Use Math.ceil to ensure we show full seconds
+        setTimeLeft(Math.ceil(remaining));
+      }, 100);
     }
 
     return () => {

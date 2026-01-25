@@ -7,6 +7,7 @@ export interface PexelsSettings {
   apiKey: string;
   autoRefreshInterval: number; // 0 = off, otherwise minutes
   refreshOnPomodoroComplete: boolean;
+  refreshOnVideoEnd: boolean; // NEW: đổi video khi phát xong
 }
 
 const DEFAULT_SETTINGS: PexelsSettings = {
@@ -15,6 +16,7 @@ const DEFAULT_SETTINGS: PexelsSettings = {
   apiKey: '',
   autoRefreshInterval: 0,
   refreshOnPomodoroComplete: true,
+  refreshOnVideoEnd: false,
 };
 
 const CATEGORIES = [

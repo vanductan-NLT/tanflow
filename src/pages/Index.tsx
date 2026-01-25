@@ -49,7 +49,7 @@ const Index = () => {
 
       {/* Background: Video if API key exists, otherwise gradient */}
       {pexels.settings.enabled && pexels.settings.apiKey ? (
-        <VideoBackground timerMode={pomodoro.mode} isRunning={pomodoro.isRunning} />
+        <VideoBackground timerMode={pomodoro.mode} isRunning={pomodoro.isRunning} pexels={pexels} />
       ) : (
         <BackgroundScene timerMode={pomodoro.mode} />
       )}
