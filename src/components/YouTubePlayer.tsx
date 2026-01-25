@@ -70,8 +70,8 @@ export function YouTubePlayer() {
       }
 
       playerRef.current = new window.YT.Player('youtube-player', {
-        height: '180',
-        width: '100%',
+        height: '0',
+        width: '0',
         videoId: savedVideoId,
         playerVars: {
           autoplay: 0,
@@ -186,8 +186,8 @@ export function YouTubePlayer() {
       {/* Player Controls */}
       {showPlayer && (
         <div className="space-y-3">
-          {/* Hidden YouTube Player */}
-          <div className="rounded-lg overflow-hidden bg-black/20">
+          {/* Hidden YouTube Player - audio only */}
+          <div className="hidden">
             <div id="youtube-player" />
           </div>
 
