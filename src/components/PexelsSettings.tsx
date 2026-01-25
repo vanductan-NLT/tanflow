@@ -1,4 +1,4 @@
-import { Video, RefreshCw, ExternalLink } from 'lucide-react';
+import { Video, RefreshCw, ExternalLink, Trees, TreePine, Waves, Mountain, Cloud, CloudRain, Sunset, CloudSun, LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,15 +17,21 @@ interface PexelsSettingsProps {
   pexels: ReturnType<typeof usePexelsVideo>;
 }
 
-const CATEGORY_LABELS: Record<string, string> = {
-  nature: '🌿 Thiên nhiên',
-  forest: '🌲 Rừng',
-  ocean: '🌊 Biển',
-  mountains: '⛰️ Núi',
-  sky: '☁️ Bầu trời',
-  rain: '🌧️ Mưa',
-  sunset: '🌅 Hoàng hôn',
-  clouds: '☁️ Mây',
+interface CategoryConfig {
+  label: string;
+  icon: LucideIcon;
+  color: string;
+}
+
+const CATEGORY_CONFIG: Record<string, CategoryConfig> = {
+  nature: { label: 'Thiên nhiên', icon: Trees, color: 'text-green-500' },
+  forest: { label: 'Rừng', icon: TreePine, color: 'text-emerald-600' },
+  ocean: { label: 'Biển', icon: Waves, color: 'text-blue-500' },
+  mountains: { label: 'Núi', icon: Mountain, color: 'text-slate-500' },
+  sky: { label: 'Bầu trời', icon: CloudSun, color: 'text-sky-400' },
+  rain: { label: 'Mưa', icon: CloudRain, color: 'text-indigo-400' },
+  sunset: { label: 'Hoàng hôn', icon: Sunset, color: 'text-orange-500' },
+  clouds: { label: 'Mây', icon: Cloud, color: 'text-gray-400' },
 };
 
 const REFRESH_MODE_OPTIONS: { value: VideoRefreshMode; label: string }[] = [
@@ -90,14 +96,34 @@ export function PexelsSettings({ pexels }: PexelsSettingsProps) {
               onValueChange={(category) => updateSettings({ category })}
             >
               <SelectTrigger>
-                <SelectValue />
+                <SelectValue>
+                  {(() => {
+                    const config = CATEGORY_CONFIG[settings.category];
+                    if (!config) return settings.category;
+                    const IconComponent = config.icon;
+                    return (
+                      <span className="flex items-center gap-2">
+                        <IconComponent className={cn("h-4 w-4", config.color)} />
+                        {config.label}
+                      </span>
+                    );
+                  })()}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
-                {categories.map((cat) => (
-                  <SelectItem key={cat} value={cat}>
-                    {CATEGORY_LABELS[cat] || cat}
-                  </SelectItem>
-                ))}
+                {categories.map((cat) => {
+                  const config = CATEGORY_CONFIG[cat];
+                  if (!config) return <SelectItem key={cat} value={cat}>{cat}</SelectItem>;
+                  const IconComponent = config.icon;
+                  return (
+                    <SelectItem key={cat} value={cat}>
+                      <span className="flex items-center gap-2">
+                        <IconComponent className={cn("h-4 w-4", config.color)} />
+                        {config.label}
+                      </span>
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
           </div>
@@ -139,9 +165,6 @@ export function PexelsSettings({ pexels }: PexelsSettingsProps) {
             Đổi video nền
           </Button>
 
-          <p className="text-xs text-muted-foreground">
-            💡 Video sẽ rõ nét hơn khi bạn đang tập trung
-          </p>
         </>
       )}
     </div>
