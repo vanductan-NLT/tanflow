@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Music, Play, Pause, Volume2, VolumeX, ExternalLink } from 'lucide-react';
+import { Music, Play, Pause, Volume2, VolumeX, ExternalLink, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
@@ -29,7 +29,9 @@ export function YouTubePlayer() {
   const [isMuted, setIsMuted] = useState(false);
   const [showPlayer, setShowPlayer] = useState(false);
   const [isPlayerReady, setIsPlayerReady] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const playerRef = useRef<YT.Player | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // Extract video ID from YouTube URL
   const extractVideoId = (url: string): string | null => {
@@ -59,15 +61,24 @@ export function YouTubePlayer() {
     };
   }, []);
 
-  // Initialize player when showing
+  // Initialize player when component mounts (not dependent on showPlayer)
   useEffect(() => {
-    if (!showPlayer || !savedVideoId) return;
+    if (!savedVideoId) return;
 
     const initPlayer = () => {
       if (!window.YT?.Player) {
         setTimeout(initPlayer, 100);
         return;
       }
+
+      // Destroy existing player if any
+      if (playerRef.current) {
+        playerRef.current.destroy();
+        playerRef.current = null;
+      }
+
+      setIsPlayerReady(false);
+      setError(null);
 
       playerRef.current = new window.YT.Player('youtube-player', {
         height: '0',
@@ -83,10 +94,15 @@ export function YouTubePlayer() {
         events: {
           onReady: (event: YT.PlayerEvent) => {
             setIsPlayerReady(true);
+            setError(null);
             event.target.setVolume(volume);
           },
           onStateChange: (event: YT.OnStateChangeEvent) => {
             setIsPlaying(event.data === window.YT.PlayerState.PLAYING);
+          },
+          onError: () => {
+            setError('Không thể phát video này');
+            setIsPlayerReady(false);
           },
         },
       });
@@ -99,7 +115,7 @@ export function YouTubePlayer() {
       playerRef.current = null;
       setIsPlayerReady(false);
     };
-  }, [showPlayer, savedVideoId]);
+  }, [savedVideoId]);
 
   // Update volume - only when player is ready
   useEffect(() => {
@@ -123,24 +139,28 @@ export function YouTubePlayer() {
     if (videoId) {
       setSavedVideoId(videoId);
       setCustomUrl('');
-      setShowPlayer(false);
-      setTimeout(() => setShowPlayer(true), 100);
     }
   };
 
   const selectPlaylist = (playlist: Playlist) => {
     setSavedVideoId(playlist.videoId);
-    setShowPlayer(false);
-    setTimeout(() => setShowPlayer(true), 100);
   };
 
   return (
     <div className="w-full glass-effect rounded-2xl p-4 space-y-4">
+      {/* Hidden YouTube Player - always exists */}
+      <div className="hidden">
+        <div id="youtube-player" />
+      </div>
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Music className="h-5 w-5 text-primary" />
           <span className="font-medium">Nhạc nền</span>
+          {!isPlayerReady && showPlayer && (
+            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+          )}
         </div>
         <Button
           variant="ghost"
@@ -166,23 +186,29 @@ export function YouTubePlayer() {
         </Button>
       </div>
 
+      {/* Error message */}
+      {error && (
+        <p className="text-sm text-destructive">{error}</p>
+      )}
+
       {/* Player Controls */}
       {showPlayer && (
         <div className="space-y-3">
-          {/* Hidden YouTube Player - audio only */}
-          <div className="hidden">
-            <div id="youtube-player" />
-          </div>
-
           {/* Custom Controls */}
           <div className="flex items-center gap-4">
             <Button
               variant="ghost"
               size="icon"
               onClick={handlePlayPause}
-              className="h-10 w-10 rounded-full"
+              disabled={!isPlayerReady}
+              className={cn(
+                "h-10 w-10 rounded-full",
+                !isPlayerReady && "opacity-50 cursor-not-allowed"
+              )}
             >
-              {isPlaying ? (
+              {!isPlayerReady ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : isPlaying ? (
                 <Pause className="h-5 w-5" />
               ) : (
                 <Play className="h-5 w-5 ml-0.5" />
@@ -195,6 +221,7 @@ export function YouTubePlayer() {
                 size="icon"
                 onClick={() => setIsMuted(!isMuted)}
                 className="h-8 w-8"
+                disabled={!isPlayerReady}
               >
                 {isMuted || volume === 0 ? (
                   <VolumeX className="h-4 w-4" />
@@ -211,6 +238,7 @@ export function YouTubePlayer() {
                 max={100}
                 step={1}
                 className="w-24"
+                disabled={!isPlayerReady}
               />
             </div>
 
