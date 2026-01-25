@@ -10,6 +10,11 @@ interface VideoBackgroundProps {
 }
 
 export function VideoBackground({ timerMode, isRunning, pexels }: VideoBackgroundProps) {
+  // Early return if pexels is not provided
+  if (!pexels) {
+    return null;
+  }
+
   const { settings, videoUrl, isLoading, refreshVideo } = pexels;
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isVideoLoaded, setIsVideoLoaded] = useState(false);
