@@ -61,9 +61,9 @@ export function PomodoroTimer({ pomodoro }: PomodoroTimerProps) {
       </div>
 
       {/* Timer Display */}
-      <div className="relative flex items-center justify-center">
+      <div className="relative flex items-center justify-center w-72 h-72">
         {/* Progress Ring */}
-        <svg className="absolute w-72 h-72 -rotate-90" viewBox="0 0 100 100">
+        <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 100 100">
           <circle
             cx="50"
             cy="50"
