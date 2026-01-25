@@ -135,7 +135,7 @@
   }
 
   .bg-radial-vignette {
-    background: radial-gradient(ellipse at center, transparent 0%, hsl(var(--background) / 0.3) 100%);
+    background: radial-gradient(ellipse at center, transparent 0%, rgba(0, 0, 0, 0.3) 100%);
   }
 
   /* Animated gradient background */
