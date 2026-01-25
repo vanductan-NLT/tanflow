@@ -229,21 +229,31 @@ export function HealthReminders({ reminders: reminderHook }: HealthRemindersProp
         {!isExpanded && (
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              {enabledReminders.slice(0, 5).map((reminder) => (
-                <div
-                  key={reminder.id}
-                  className="flex items-center justify-center w-8 h-8 rounded-full bg-muted/50"
-                  title={`${reminder.name} - ${formatTimeRemaining(timeUntilNext[reminder.id] || 0)}`}
-                >
-                  <ReminderIcon iconKey={reminder.icon} size="md" className="text-muted-foreground" />
-                </div>
-              ))}
+              {enabledReminders.slice(0, 5).map((reminder) => {
+                const isNext = nextReminder?.reminder.id === reminder.id;
+                return (
+                  <div
+                    key={reminder.id}
+                    className={cn(
+                      "flex items-center justify-center w-8 h-8 rounded-full",
+                      isNext ? "bg-green-500/20" : "bg-muted/50"
+                    )}
+                    title={`${reminder.name} - ${formatTimeRemaining(timeUntilNext[reminder.id] || 0)}`}
+                  >
+                    <ReminderIcon 
+                      iconKey={reminder.icon} 
+                      size="md" 
+                      className={isNext ? "text-green-500" : "text-muted-foreground"} 
+                    />
+                  </div>
+                );
+              })}
               {enabledReminders.length > 5 && (
                 <span className="text-xs text-muted-foreground">+{enabledReminders.length - 5}</span>
               )}
             </div>
             {nextReminder && (
-              <span className="text-sm font-mono tabular-nums text-primary">
+              <span className="text-sm font-mono tabular-nums text-green-500">
                 {formatTimeRemaining(nextReminder.timeLeft)}
               </span>
             )}
