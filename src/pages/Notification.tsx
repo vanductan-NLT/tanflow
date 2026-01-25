@@ -1,15 +1,27 @@
 import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, Clock, Droplets, Eye, Footprints, Coffee } from 'lucide-react';
+import { CheckCircle2, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { REMINDER_ICONS } from '@/components/icons/ReminderIcon';
 
-// Map icon string to component
-const iconMap: Record<string, React.ReactNode> = {
-  '💧': <Droplets className="h-16 w-16 text-blue-400" />,
-  '👁️': <Eye className="h-16 w-16 text-purple-400" />,
-  '🚶': <Footprints className="h-16 w-16 text-green-400" />,
-  '🧘': <Coffee className="h-16 w-16 text-orange-400" />,
+// Color mapping for health reminder icons
+const iconColors: Record<string, string> = {
+  droplets: 'text-blue-400',
+  footprints: 'text-green-400',
+  eye: 'text-purple-400',
+  stretch: 'text-orange-400',
+  coffee: 'text-amber-400',
+  apple: 'text-red-400',
+  leaf: 'text-emerald-400',
+  dumbbell: 'text-indigo-400',
+  brain: 'text-pink-400',
+  heart: 'text-rose-400',
+  // Legacy emoji mappings
+  '💧': 'text-blue-400',
+  '🚶': 'text-green-400',
+  '👁️': 'text-purple-400',
+  '🧘': 'text-orange-400',
 };
 
 const Notification = () => {
@@ -77,6 +89,19 @@ const Notification = () => {
     window.close();
   };
 
+  const getHealthIcon = (iconKey: string) => {
+    const IconComponent = REMINDER_ICONS[iconKey];
+    const colorClass = iconColors[iconKey] || 'text-blue-400';
+    
+    if (IconComponent) {
+      return <IconComponent className={cn("h-16 w-16", colorClass)} strokeWidth={1.5} />;
+    }
+    
+    // Fallback for unknown icons
+    const FallbackIcon = REMINDER_ICONS['droplets'];
+    return <FallbackIcon className="h-16 w-16 text-blue-400" strokeWidth={1.5} />;
+  };
+
   const getTypeStyles = () => {
     if (type === 'pomodoro') {
       return {
@@ -94,7 +119,7 @@ const Notification = () => {
       return {
         bg: 'from-green-500/30 via-green-500/10 to-background',
         iconBg: 'bg-green-500/20',
-        icon: icon && iconMap[icon] ? iconMap[icon] : <Droplets className="h-16 w-16 text-blue-400" />,
+        icon: icon ? getHealthIcon(icon) : getHealthIcon('droplets'),
       };
     }
   };

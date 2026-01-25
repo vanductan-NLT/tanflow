@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { usePexelsVideo } from '@/hooks/usePexelsVideo';
+import { usePexelsVideo, VideoRefreshMode } from '@/hooks/usePexelsVideo';
 import { cn } from '@/lib/utils';
 
 interface PexelsSettingsProps {
@@ -28,12 +28,14 @@ const CATEGORY_LABELS: Record<string, string> = {
   clouds: '☁️ Mây',
 };
 
-const REFRESH_INTERVALS = [
-  { value: 0, label: 'Tắt' },
-  { value: 10, label: '10 phút' },
-  { value: 15, label: '15 phút' },
-  { value: 30, label: '30 phút' },
-  { value: 60, label: '1 giờ' },
+const REFRESH_MODE_OPTIONS: { value: VideoRefreshMode; label: string }[] = [
+  { value: 'off', label: 'Tắt' },
+  { value: 'on-pomodoro', label: 'Khi hoàn thành Pomodoro' },
+  { value: 'on-video-end', label: 'Khi video phát xong' },
+  { value: '10', label: 'Mỗi 10 phút' },
+  { value: '15', label: 'Mỗi 15 phút' },
+  { value: '30', label: 'Mỗi 30 phút' },
+  { value: '60', label: 'Mỗi 1 giờ' },
 ];
 
 export function PexelsSettings({ pexels }: PexelsSettingsProps) {
@@ -100,44 +102,24 @@ export function PexelsSettings({ pexels }: PexelsSettingsProps) {
             </Select>
           </div>
 
-          {/* Auto refresh interval */}
+          {/* Auto refresh mode - unified dropdown */}
           <div className="space-y-2">
             <Label>Tự động đổi video</Label>
             <Select
-              value={String(settings.autoRefreshInterval)}
-              onValueChange={(value) => updateSettings({ autoRefreshInterval: Number(value) })}
+              value={settings.refreshMode}
+              onValueChange={(value) => updateSettings({ refreshMode: value as VideoRefreshMode })}
             >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {REFRESH_INTERVALS.map((interval) => (
-                  <SelectItem key={interval.value} value={String(interval.value)}>
-                    {interval.label}
+                {REFRESH_MODE_OPTIONS.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-          </div>
-
-          {/* Refresh on Pomodoro complete */}
-          <div className="flex items-center justify-between">
-            <Label htmlFor="refresh-pomodoro">Đổi video khi hoàn thành Pomodoro</Label>
-            <Switch
-              id="refresh-pomodoro"
-              checked={settings.refreshOnPomodoroComplete}
-              onCheckedChange={(checked) => updateSettings({ refreshOnPomodoroComplete: checked })}
-            />
-          </div>
-
-          {/* Refresh on video end */}
-          <div className="flex items-center justify-between">
-            <Label htmlFor="refresh-video-end">Đổi video khi phát xong</Label>
-            <Switch
-              id="refresh-video-end"
-              checked={settings.refreshOnVideoEnd}
-              onCheckedChange={(checked) => updateSettings({ refreshOnVideoEnd: checked })}
-            />
           </div>
 
           {/* Error message */}

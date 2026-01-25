@@ -92,7 +92,9 @@ export function usePomodoro() {
   }, []);
   
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const tickAudioRef = useRef<HTMLAudioElement | null>(null);
   const intervalRef = useRef<number | null>(null);
+  const lastTickRef = useRef<number>(0);
 
   // Get duration based on current mode
   const getDuration = useCallback((timerMode: TimerMode) => {
@@ -135,6 +137,18 @@ export function usePomodoro() {
     }
     audioRef.current.currentTime = 0;
     audioRef.current.play().catch(console.error);
+  }, []);
+
+  // Play tick sound for countdown
+  const playTickSound = useCallback(() => {
+    if (!tickAudioRef.current) {
+      tickAudioRef.current = new Audio();
+      // Short tick sound
+      tickAudioRef.current.src = 'data:audio/wav;base64,UklGRl9vAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YTtvAAB/fn18e3p5eHd2dXRzcnFwb25tbGtqaWhnZmVkY2JhYF9eXVxbWllYV1ZVVFNSUVBPTk1MS0pJSEdGRURDQkFAPz49PDs6OTg3NjU0MzIxMC8uLSwrKikoJyYlJCMiISAfHh0cGxoZGBcWFRQTEhEQDw4NDAsKCQgHBgUEAwIBAQECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWltcXV5fYGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6e3x9fn9/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f35+fn5+fn5+fX19fX19fXx8fHx8fHt7e3t7enp6enp5eXl5eXh4eHh4d3d3d3d2dnZ2dnV1dXV1dHR0dHRzc3Nzc3JycnJycXFxcXFwcHBwcG9vb29vbm5ubm5tbW1tbWxsbGxsa2tra2tqampqamlpaWlpaGhoaGhnZ2dnZ2ZmZmZmZWVlZWVkZGRkZGNjY2NjYmJiYmJhYWFhYWBgYGBgX19fX19eXl5eXl1dXV1dXFxcXFxbW1tbW1paWlpaWVlZWVlYWFhYWFdXV1dXVlZWVlZVVVVVVVRUVFRUU1NTU1NSUlJSUlFRUVFRUFBQUFBPT09PT05OTk5OTU1NTU1MTExMTEtLS0tLSkpKSkpJSUlJSUhISEhIR0dHR0dGRkZGRkVFRUVFREREREREQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0RERERERERERERFRUVFRUVFRUVFRUZGQ0NDQ0NDQkJCQkJCQUFBQUFAQEBAQD8/Pz8/Pj4+Pj49PT09PTw8PDw8Ozs7Ozs6Ojo6OTk5OTk4ODg4ODc3Nzc3NjY2NjY1NTU1NTQ0NDQ0MzMzMzMyMjIyMjExMTExMDAwMDAvLy8vLy4uLi4uLS0tLS0sLCwsLCsrKysrKioqKioqKioqKioqKioqKioqKioqKioqKioqKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKysrKysrKywsLCwsLS0tLS0tLS4uLi4uLy8vLy8wMDAwMDExMTExMjIyMjIzMzMzMzQ0NDQ0NTU1NTU2NjY2Njc3Nzc3ODg4ODg5OTk5OTo6Ojo6Ozs7Ozs8PDw8PD09PT09Pj4+Pj4/Pz8/P0BAQEBAQUFBQUFCQkJCQkNDQ0NDQ0RDQ0NERERERERFRUVFRUZGRkZGR0dHR0dHSEhISEhJSUlJSUpKSkpKS0tLS0tMTExMTExNTU1NTU5OTk5OT09PT09QUFBQUFFBUVFRUVJSU1JTU1NUVFRUVFVVVVVWV1ZWV1dXV1hYWFhYWVlZWVlaWlpaWltbW1tbXFxcXFxdXV1dXV5eXl5eX19fX19gYGBgYGFhYWFhYmJiYmJjY2NjY2RkZGRkZWVlZWVmZmZmZmdnZ2dnaGhoaGhpaWlpaWpqampqa2tra2tsbGxsbG1tbW1tbm5ubm5vb29vb3BwcHBwcXFxcXFycnJycnNzc3NzdHR0dHR1dXV1dXZ2dnZ2d3d3d3d4eHh4eHl5eXl5enp6enp7e3t7e3x8fHx8fX19fX19fn5+fn5+fn5/f39/f39/f39/f39/';
+      tickAudioRef.current.volume = 0.3;
+    }
+    tickAudioRef.current.currentTime = 0;
+    tickAudioRef.current.play().catch(console.error);
   }, []);
 
   // Handle timer completion
@@ -211,15 +225,23 @@ export function usePomodoro() {
       // Calculate when the timer started based on current timeLeft
       startTimeRef.current = Date.now();
       initialTimeRef.current = timeLeft;
+      lastTickRef.current = 0;
       
       // Use 100ms interval for smoother UI updates
       intervalRef.current = window.setInterval(() => {
         const now = Date.now();
         const elapsedSeconds = (now - startTimeRef.current) / 1000;
         const remaining = Math.max(0, initialTimeRef.current - elapsedSeconds);
+        const remainingCeil = Math.ceil(remaining);
+        
+        // Play tick sound in last 5 seconds
+        if (remainingCeil <= 5 && remainingCeil > 0 && remainingCeil !== lastTickRef.current) {
+          lastTickRef.current = remainingCeil;
+          playTickSound();
+        }
         
         // Use Math.ceil to ensure we show full seconds
-        setTimeLeft(Math.ceil(remaining));
+        setTimeLeft(remainingCeil);
       }, 100);
     }
 
@@ -228,7 +250,7 @@ export function usePomodoro() {
         clearInterval(intervalRef.current);
       }
     };
-  }, [isRunning]);
+  }, [isRunning, playTickSound]);
 
   // Check for completion
   useEffect(() => {
