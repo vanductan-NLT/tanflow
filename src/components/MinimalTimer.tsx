@@ -21,13 +21,6 @@ export function MinimalTimer({ pomodoro, activeTask }: MinimalTimerProps) {
 
   return (
     <div className="flex flex-col items-center gap-4 sm:gap-6 md:gap-8 w-full px-4">
-      {/* Active Task Name */}
-      {activeTask && mode === 'pomodoro' && (
-        <p className="text-lg sm:text-xl text-white/80 font-medium truncate max-w-[280px] sm:max-w-md text-center animate-fade-in">
-          {activeTask.title}
-        </p>
-      )}
-
       {/* Giant timer */}
       <div className={cn(
         "text-6xl sm:text-8xl md:text-[10rem] lg:text-[14rem] font-mono font-bold tracking-tighter leading-none",
@@ -36,6 +29,13 @@ export function MinimalTimer({ pomodoro, activeTask }: MinimalTimerProps) {
       )}>
         {formattedTime}
       </div>
+
+      {/* Active Task Name - Below timer */}
+      {activeTask && mode === 'pomodoro' && (
+        <p className="text-lg sm:text-xl text-white/80 font-medium truncate max-w-[280px] sm:max-w-md text-center animate-fade-in">
+          {activeTask.title}
+        </p>
+      )}
 
       {/* Minimal controls */}
       <div className="flex items-center gap-3 sm:gap-4 md:gap-6">
