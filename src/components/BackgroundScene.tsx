@@ -27,13 +27,13 @@ export function BackgroundScene({ timerMode = 'pomodoro' }: BackgroundSceneProps
         )}
       />
 
-      {/* Overlay that adjusts based on timer mode */}
+      {/* Overlay - consistent dark overlay regardless of theme */}
       <div 
         className={cn(
           "absolute inset-0 bg-gradient-to-b transition-all duration-700",
           isFocusing 
-            ? "from-background/20 via-background/10 to-background/40" 
-            : "from-background/50 via-background/40 to-background/70"
+            ? "from-black/10 via-black/5 to-black/30" 
+            : "from-black/30 via-black/20 to-black/50"
         )} 
       />
       

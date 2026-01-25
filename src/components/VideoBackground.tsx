@@ -47,13 +47,13 @@ export function VideoBackground({ timerMode, isRunning }: VideoBackgroundProps) 
         </video>
       )}
 
-      {/* Overlay - lighter when focusing for clearer video */}
+      {/* Overlay - consistent dark overlay regardless of theme */}
       <div 
         className={cn(
           "absolute inset-0 transition-all duration-700",
           isFocusing 
-            ? "bg-background/20" 
-            : "bg-background/50"
+            ? "bg-black/20" 
+            : "bg-black/40"
         )} 
       />
       
