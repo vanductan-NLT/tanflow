@@ -28,6 +28,14 @@ const CATEGORY_LABELS: Record<string, string> = {
   clouds: '☁️ Mây',
 };
 
+const REFRESH_INTERVALS = [
+  { value: 0, label: 'Tắt' },
+  { value: 10, label: '10 phút' },
+  { value: 15, label: '15 phút' },
+  { value: 30, label: '30 phút' },
+  { value: 60, label: '1 giờ' },
+];
+
 export function PexelsSettings({ pexels }: PexelsSettingsProps) {
   const { settings, updateSettings, refreshVideo, isLoading, error, categories } = pexels;
 
@@ -90,6 +98,36 @@ export function PexelsSettings({ pexels }: PexelsSettingsProps) {
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          {/* Auto refresh interval */}
+          <div className="space-y-2">
+            <Label>Tự động đổi video</Label>
+            <Select
+              value={String(settings.autoRefreshInterval)}
+              onValueChange={(value) => updateSettings({ autoRefreshInterval: Number(value) })}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {REFRESH_INTERVALS.map((interval) => (
+                  <SelectItem key={interval.value} value={String(interval.value)}>
+                    {interval.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Refresh on Pomodoro complete */}
+          <div className="flex items-center justify-between">
+            <Label htmlFor="refresh-pomodoro">Đổi video khi hoàn thành Pomodoro</Label>
+            <Switch
+              id="refresh-pomodoro"
+              checked={settings.refreshOnPomodoroComplete}
+              onCheckedChange={(checked) => updateSettings({ refreshOnPomodoroComplete: checked })}
+            />
           </div>
 
           {/* Error message */}
