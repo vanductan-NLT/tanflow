@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, Clock, Coffee, Droplets, Eye, Footprints } from 'lucide-react';
+import { CheckCircle2, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { REMINDER_ICONS } from '@/components/icons/ReminderIcon';
 
 export type NotificationType = 'pomodoro-complete' | 'break-complete' | 'health-reminder';
 
@@ -15,12 +16,23 @@ interface PiPNotificationProps {
   autoCloseSeconds?: number;
 }
 
-// Map icon string to component
-const iconMap: Record<string, React.ReactNode> = {
-  '💧': <Droplets className="h-12 w-12 text-blue-400" />,
-  '👁️': <Eye className="h-12 w-12 text-purple-400" />,
-  '🚶': <Footprints className="h-12 w-12 text-green-400" />,
-  '🧘': <Coffee className="h-12 w-12 text-orange-400" />,
+// Color mapping for health reminder icons
+const iconColors: Record<string, string> = {
+  droplets: 'text-blue-400',
+  footprints: 'text-green-400',
+  eye: 'text-purple-400',
+  stretch: 'text-orange-400',
+  coffee: 'text-amber-400',
+  apple: 'text-red-400',
+  leaf: 'text-emerald-400',
+  dumbbell: 'text-indigo-400',
+  brain: 'text-pink-400',
+  heart: 'text-rose-400',
+  // Legacy emoji mappings
+  '💧': 'text-blue-400',
+  '🚶': 'text-green-400',
+  '👁️': 'text-purple-400',
+  '🧘': 'text-orange-400',
 };
 
 export function PiPNotification({
@@ -66,6 +78,19 @@ export function PiPNotification({
     return () => clearInterval(timer);
   }, [countdown, onDismiss]);
 
+  const getHealthIcon = (iconKey: string) => {
+    const IconComponent = REMINDER_ICONS[iconKey];
+    const colorClass = iconColors[iconKey] || 'text-blue-400';
+    
+    if (IconComponent) {
+      return <IconComponent className={cn("h-12 w-12", colorClass)} strokeWidth={1.5} />;
+    }
+    
+    // Fallback for unknown icons
+    const FallbackIcon = REMINDER_ICONS['droplets'];
+    return <FallbackIcon className="h-12 w-12 text-blue-400" strokeWidth={1.5} />;
+  };
+
   const getTypeStyles = () => {
     switch (type) {
       case 'pomodoro-complete':
@@ -84,7 +109,7 @@ export function PiPNotification({
         return {
           bg: 'from-green-500/20 to-green-500/5',
           iconBg: 'bg-green-500/20',
-          icon: icon && iconMap[icon] ? iconMap[icon] : <Droplets className="h-12 w-12 text-blue-400" />,
+          icon: icon ? getHealthIcon(icon) : getHealthIcon('droplets'),
         };
     }
   };

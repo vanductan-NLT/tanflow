@@ -15,7 +15,7 @@ export function VideoBackground({ timerMode, isRunning, pexels }: VideoBackgroun
     return null;
   }
 
-  const { settings, videoUrl, refreshVideo } = pexels;
+  const { settings, videoUrl, refreshVideo, shouldRefreshOnVideoEnd } = pexels;
   const videoRef = useRef<HTMLVideoElement>(null);
   const prevVideoRef = useRef<HTMLVideoElement>(null);
   const [currentUrl, setCurrentUrl] = useState(videoUrl);
@@ -45,10 +45,10 @@ export function VideoBackground({ timerMode, isRunning, pexels }: VideoBackgroun
 
   // Handle video end - refresh if setting is enabled
   const handleVideoEnded = useCallback(() => {
-    if (settings.refreshOnVideoEnd) {
+    if (shouldRefreshOnVideoEnd) {
       refreshVideo();
     }
-  }, [settings.refreshOnVideoEnd, refreshVideo]);
+  }, [shouldRefreshOnVideoEnd, refreshVideo]);
 
   if (!settings.enabled || !settings.apiKey) {
     return null;
@@ -78,7 +78,7 @@ export function VideoBackground({ timerMode, isRunning, pexels }: VideoBackgroun
         <video
           ref={videoRef}
           autoPlay
-          loop={!settings.refreshOnVideoEnd}
+          loop={!shouldRefreshOnVideoEnd}
           muted
           playsInline
           onLoadedData={handleNewVideoLoaded}

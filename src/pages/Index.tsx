@@ -30,7 +30,7 @@ const Index = () => {
   // Refresh video when a pomodoro completes
   useEffect(() => {
     if (pomodoro.completedPomodoros > prevCompletedRef.current) {
-      if (pexels.settings.refreshOnPomodoroComplete && pexels.settings.enabled && pexels.settings.apiKey) {
+      if (pexels.shouldRefreshOnPomodoro && pexels.settings.enabled && pexels.settings.apiKey) {
         pexels.refreshVideo();
       }
     }

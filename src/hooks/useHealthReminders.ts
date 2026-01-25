@@ -11,14 +11,6 @@ export interface HealthReminder {
   lastReminded?: number;
 }
 
-// Map icon name to emoji for PiP
-const iconToEmoji: Record<string, string> = {
-  'droplets': '💧',
-  'footprints': '🚶',
-  'eye': '👁️',
-  'stretch': '🧘',
-};
-
 const DEFAULT_REMINDERS: HealthReminder[] = [
   { id: 'water', name: 'Uống nước', icon: 'droplets', intervalMinutes: 30, enabled: true },
   { id: 'walk', name: 'Đi lại', icon: 'footprints', intervalMinutes: 60, enabled: true },
@@ -45,6 +37,10 @@ export function useHealthReminders(options: UseHealthRemindersOptions = {}) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const startTimeRef = useRef<Record<string, number>>({});
   const { showNotification: showPiPNotification } = useNotificationPopup();
+  
+  // Flag to skip notification triggers on initial render
+  const isFirstRenderRef = useRef(true);
+  const mountTimeRef = useRef(Date.now());
 
   // Play a gentle notification sound
   const playSound = useCallback(() => {
@@ -58,7 +54,7 @@ export function useHealthReminders(options: UseHealthRemindersOptions = {}) {
     audioRef.current.play().catch(console.error);
   }, []);
 
-  // Initialize start times
+  // Initialize start times for enabled reminders
   useEffect(() => {
     const now = Date.now();
     const newStartTimes: Record<string, number> = {};
@@ -75,6 +71,14 @@ export function useHealthReminders(options: UseHealthRemindersOptions = {}) {
     if ('Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission();
     }
+  }, []);
+
+  // Mark first render as complete after 3 seconds to avoid false triggers on reload
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      isFirstRenderRef.current = false;
+    }, 3000);
+    return () => clearTimeout(timeout);
   }, []);
 
   // Show browser notification (fallback)
@@ -96,12 +100,12 @@ export function useHealthReminders(options: UseHealthRemindersOptions = {}) {
     playSound();
     setActiveReminder(reminder);
     
-    // Show PiP/Popup notification
+    // Show PiP/Popup notification with icon key
     showPiPNotification({
       type: 'health-reminder',
       title: reminder.name,
       message: 'Đã đến lúc chăm sóc sức khỏe!',
-      icon: iconToEmoji[reminder.icon] || '💧',
+      icon: reminder.icon,
       reminderId: reminder.id,
       onDismiss: () => setActiveReminder(null),
       onSnooze: (minutes) => {
@@ -137,6 +141,9 @@ export function useHealthReminders(options: UseHealthRemindersOptions = {}) {
         const remaining = intervalSeconds - (elapsed % intervalSeconds);
 
         newTimeUntil[reminder.id] = remaining;
+
+        // Skip trigger check during first 3 seconds after mount
+        if (isFirstRenderRef.current) return;
 
         // Check if reminder should trigger (when it cycles back to full interval)
         // Use a small window to catch the trigger

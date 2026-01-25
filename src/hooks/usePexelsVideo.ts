@@ -1,22 +1,20 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocalStorage } from './useLocalStorage';
 
+export type VideoRefreshMode = 'off' | 'on-pomodoro' | 'on-video-end' | '10' | '15' | '30' | '60';
+
 export interface PexelsSettings {
   enabled: boolean;
   category: string;
   apiKey: string;
-  autoRefreshInterval: number; // 0 = off, otherwise minutes
-  refreshOnPomodoroComplete: boolean;
-  refreshOnVideoEnd: boolean; // NEW: đổi video khi phát xong
+  refreshMode: VideoRefreshMode;
 }
 
 const DEFAULT_SETTINGS: PexelsSettings = {
   enabled: true,
   category: 'nature',
   apiKey: '',
-  autoRefreshInterval: 0,
-  refreshOnPomodoroComplete: true,
-  refreshOnVideoEnd: false,
+  refreshMode: 'on-pomodoro',
 };
 
 const CATEGORIES = [
@@ -48,7 +46,7 @@ interface PexelsResponse {
 
 export function usePexelsVideo() {
   const [settings, setSettings] = useLocalStorage<PexelsSettings>(
-    'focusflow-pexels',
+    'focusflow-pexels-v2',
     DEFAULT_SETTINGS
   );
   const [videoUrl, setVideoUrl] = useState<string>('');
@@ -58,9 +56,6 @@ export function usePexelsVideo() {
   // Use ref to store latest settings without causing effect re-runs
   const settingsRef = useRef(settings);
   settingsRef.current = settings;
-
-  // Manual refresh trigger
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const fetchRandomVideo = useCallback(async () => {
     const currentSettings = settingsRef.current;
@@ -109,35 +104,40 @@ export function usePexelsVideo() {
     }
   }, []);
 
-  // Fetch video on mount and when category changes or manual refresh
+  // Fetch video on mount and when category changes
   useEffect(() => {
     if (settings.enabled && settings.apiKey) {
       fetchRandomVideo();
     }
-  }, [settings.category, settings.apiKey, settings.enabled, refreshTrigger, fetchRandomVideo]);
+  }, [settings.category, settings.apiKey, settings.enabled, fetchRandomVideo]);
 
-  // Auto-refresh video at interval
+  // Auto-refresh video at interval (only for interval modes)
   useEffect(() => {
-    if (!settings.enabled || !settings.apiKey || settings.autoRefreshInterval === 0) {
+    const intervalMinutes = parseInt(settings.refreshMode);
+    if (!settings.enabled || !settings.apiKey || isNaN(intervalMinutes) || intervalMinutes === 0) {
       return;
     }
 
-    const intervalMs = settings.autoRefreshInterval * 60 * 1000;
+    const intervalMs = intervalMinutes * 60 * 1000;
     const intervalId = setInterval(() => {
       fetchRandomVideo();
     }, intervalMs);
 
     return () => clearInterval(intervalId);
-  }, [settings.enabled, settings.apiKey, settings.autoRefreshInterval, fetchRandomVideo]);
+  }, [settings.enabled, settings.apiKey, settings.refreshMode, fetchRandomVideo]);
 
   const updateSettings = useCallback((updates: Partial<PexelsSettings>) => {
     setSettings(prev => ({ ...prev, ...updates }));
   }, [setSettings]);
 
-  // Manual refresh function that triggers a new fetch
+  // Direct refresh function
   const refreshVideo = useCallback(() => {
-    setRefreshTrigger(prev => prev + 1);
-  }, []);
+    fetchRandomVideo();
+  }, [fetchRandomVideo]);
+
+  // Helper getters for compatibility
+  const shouldRefreshOnPomodoro = settings.refreshMode === 'on-pomodoro';
+  const shouldRefreshOnVideoEnd = settings.refreshMode === 'on-video-end';
 
   return {
     settings,
@@ -147,5 +147,7 @@ export function usePexelsVideo() {
     error,
     refreshVideo,
     categories: CATEGORIES,
+    shouldRefreshOnPomodoro,
+    shouldRefreshOnVideoEnd,
   };
 }
