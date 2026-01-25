@@ -1,19 +1,21 @@
 import { useState, useMemo } from 'react';
-import { Plus, Trash2, CheckCircle2, Circle, ChevronDown, ChevronUp, Clock } from 'lucide-react';
+import { Plus, Trash2, CheckCircle2, Circle, ChevronDown, ChevronUp, Clock, Pencil, ListTodo } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { AddTaskDialog } from './AddTaskDialog';
+import { EditTaskDialog } from './EditTaskDialog';
 import type { Task } from '@/hooks/useTasks';
 
 interface TaskListProps {
   tasks: Task[];
   activeTaskId: string | null;
-  pomodoroDuration?: number; // in minutes
+  pomodoroDuration?: number;
   onAddTask: (title: string, description: string, targetCycles: number) => void;
+  onUpdateTask: (id: string, updates: Partial<Pick<Task, 'title' | 'description' | 'targetCycles'>>) => void;
   onDeleteTask: (id: string) => void;
   onSetActiveTask: (id: string | null) => void;
-  compact?: boolean; // for focus mode
+  compact?: boolean;
 }
 
 export function TaskList({
@@ -21,17 +23,19 @@ export function TaskList({
   activeTaskId,
   pomodoroDuration = 25,
   onAddTask,
+  onUpdateTask,
   onDeleteTask,
   onSetActiveTask,
   compact = false,
 }: TaskListProps) {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showCompleted, setShowCompleted] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
 
   const incompleteTasks = tasks.filter((t) => !t.isCompleted);
   const completedTasks = tasks.filter((t) => t.isCompleted);
 
-  // Calculate estimated completion time
   const estimatedCompletion = useMemo(() => {
     const remainingCycles = incompleteTasks.reduce((sum, task) => {
       return sum + Math.max(0, task.targetCycles - task.completedCycles);
@@ -49,8 +53,11 @@ export function TaskList({
     };
   }, [incompleteTasks, pomodoroDuration]);
 
+  const handleEditSave = (id: string, title: string, description: string, targetCycles: number) => {
+    onUpdateTask(id, { title, description, targetCycles });
+  };
+
   if (compact) {
-    // Compact mode for Focus UI
     return (
       <div className="bg-black/20 backdrop-blur-sm rounded-xl p-3 w-full max-w-xs">
         <div className="space-y-1.5 max-h-32 overflow-y-auto">
@@ -89,95 +96,154 @@ export function TaskList({
   }
 
   return (
-    <div className="card-glass rounded-2xl p-4 sm:p-5">
+    <div className="w-full glass-effect rounded-2xl p-4 space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="font-semibold text-lg">Tasks</h3>
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => setShowAddDialog(true)}
-          className="h-8 gap-1"
-        >
-          <Plus className="h-4 w-4" />
-          <span className="hidden sm:inline">Thêm</span>
-        </Button>
-      </div>
-
-      {/* Task List */}
-      <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
-        {incompleteTasks.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-4">
-            Chưa có task nào. Thêm task để bắt đầu!
-          </p>
-        ) : (
-          incompleteTasks.map((task) => (
-            <TaskItem
-              key={task.id}
-              task={task}
-              isActive={task.id === activeTaskId}
-              onSelect={() => onSetActiveTask(task.id)}
-              onDelete={() => onDeleteTask(task.id)}
-            />
-          ))
-        )}
-      </div>
-
-      {/* Completed Section */}
-      {completedTasks.length > 0 && (
-        <div className="mt-4 pt-4 border-t border-border/50">
-          <button
-            onClick={() => setShowCompleted(!showCompleted)}
-            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors w-full"
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <ListTodo className="h-5 w-5 text-primary" strokeWidth={1.5} />
+          <span className="font-medium">Tasks</span>
+          {incompleteTasks.length > 0 && (
+            <span className="text-xs text-muted-foreground">({incompleteTasks.length})</span>
+          )}
+        </div>
+        <div className="flex items-center gap-1">
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={() => setShowAddDialog(true)}
+            className="h-8 w-8"
           >
-            {showCompleted ? (
+            <Plus className="h-4 w-4" strokeWidth={1.5} />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="text-xs h-8 px-2"
+          >
+            {isExpanded ? (
               <ChevronUp className="h-4 w-4" />
             ) : (
               <ChevronDown className="h-4 w-4" />
             )}
-            <span>Đã hoàn thành ({completedTasks.length})</span>
-          </button>
-          
-          {showCompleted && (
-            <div className="space-y-2 mt-2 opacity-60">
-              {completedTasks.map((task) => (
-                <TaskItem
-                  key={task.id}
-                  task={task}
-                  isActive={false}
-                  isCompleted
-                  onSelect={() => {}}
-                  onDelete={() => onDeleteTask(task.id)}
-                />
-              ))}
+          </Button>
+        </div>
+      </div>
+
+      {/* Collapsed View - Show task count and estimated time */}
+      {!isExpanded && (
+        <div className="flex items-center justify-between text-sm">
+          <div className="flex items-center gap-2">
+            {incompleteTasks.slice(0, 3).map((task) => (
+              <div
+                key={task.id}
+                className={cn(
+                  "w-2 h-2 rounded-full",
+                  task.id === activeTaskId ? "bg-primary" : "bg-muted-foreground/50"
+                )}
+              />
+            ))}
+            {incompleteTasks.length > 3 && (
+              <span className="text-xs text-muted-foreground">+{incompleteTasks.length - 3}</span>
+            )}
+          </div>
+          {estimatedCompletion && (
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <Clock className="h-3 w-3" />
+              <span>{estimatedCompletion.time}</span>
             </div>
           )}
         </div>
       )}
 
-      {/* Estimated Completion Time */}
-      {estimatedCompletion && (
-        <div className="mt-4 pt-4 border-t border-border/50">
-          <div className="flex items-center justify-between text-sm">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Clock className="h-4 w-4" />
-              <span>Dự kiến hoàn thành</span>
-            </div>
-            <div className="text-right">
-              <span className="font-semibold text-primary">{estimatedCompletion.time}</span>
-              <p className="text-xs text-muted-foreground">
-                {estimatedCompletion.cycles} 🍅 · {Math.round(estimatedCompletion.minutes / 60 * 10) / 10}h
+      {/* Expanded View */}
+      {isExpanded && (
+        <>
+          {/* Task List */}
+          <div className="space-y-2 max-h-[250px] overflow-y-auto pr-1">
+            {incompleteTasks.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                Chưa có task nào. Thêm task để bắt đầu!
               </p>
-            </div>
+            ) : (
+              incompleteTasks.map((task) => (
+                <TaskItem
+                  key={task.id}
+                  task={task}
+                  isActive={task.id === activeTaskId}
+                  onSelect={() => onSetActiveTask(task.id)}
+                  onEdit={() => setEditingTask(task)}
+                  onDelete={() => onDeleteTask(task.id)}
+                />
+              ))
+            )}
           </div>
-        </div>
+
+          {/* Completed Section */}
+          {completedTasks.length > 0 && (
+            <div className="pt-3 border-t border-border/50">
+              <button
+                onClick={() => setShowCompleted(!showCompleted)}
+                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors w-full"
+              >
+                {showCompleted ? (
+                  <ChevronUp className="h-4 w-4" />
+                ) : (
+                  <ChevronDown className="h-4 w-4" />
+                )}
+                <span>Đã hoàn thành ({completedTasks.length})</span>
+              </button>
+              
+              {showCompleted && (
+                <div className="space-y-2 mt-2 opacity-60">
+                  {completedTasks.map((task) => (
+                    <TaskItem
+                      key={task.id}
+                      task={task}
+                      isActive={false}
+                      isCompleted
+                      onSelect={() => {}}
+                      onEdit={() => {}}
+                      onDelete={() => onDeleteTask(task.id)}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Estimated Completion Time */}
+          {estimatedCompletion && (
+            <div className="pt-3 border-t border-border/50">
+              <div className="flex items-center justify-between text-sm">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Clock className="h-4 w-4" strokeWidth={1.5} />
+                  <span>Dự kiến hoàn thành</span>
+                </div>
+                <div className="text-right">
+                  <span className="font-semibold text-primary">{estimatedCompletion.time}</span>
+                  <p className="text-xs text-muted-foreground">
+                    {estimatedCompletion.cycles} 🍅 · {Math.round(estimatedCompletion.minutes / 60 * 10) / 10}h
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+        </>
       )}
 
-      {/* Add Task Dialog */}
+      {/* Dialogs */}
       <AddTaskDialog
         open={showAddDialog}
         onOpenChange={setShowAddDialog}
         onAdd={onAddTask}
+      />
+      <EditTaskDialog
+        open={!!editingTask}
+        onOpenChange={(open) => !open && setEditingTask(null)}
+        task={editingTask}
+        onSave={handleEditSave}
+        onDelete={onDeleteTask}
       />
     </div>
   );
@@ -188,10 +254,11 @@ interface TaskItemProps {
   isActive: boolean;
   isCompleted?: boolean;
   onSelect: () => void;
+  onEdit: () => void;
   onDelete: () => void;
 }
 
-function TaskItem({ task, isActive, isCompleted, onSelect, onDelete }: TaskItemProps) {
+function TaskItem({ task, isActive, isCompleted, onSelect, onEdit, onDelete }: TaskItemProps) {
   const progress = (task.completedCycles / task.targetCycles) * 100;
 
   return (
@@ -238,18 +305,33 @@ function TaskItem({ task, isActive, isCompleted, onSelect, onDelete }: TaskItemP
           )}
         </div>
 
-        {/* Delete Button */}
-        <Button
-          size="icon"
-          variant="ghost"
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete();
-          }}
-          className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-        >
-          <Trash2 className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
-        </Button>
+        {/* Action Buttons */}
+        <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+          {!isCompleted && (
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit();
+              }}
+              className="h-6 w-6"
+            >
+              <Pencil className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground" strokeWidth={1.5} />
+            </Button>
+          )}
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete();
+            }}
+            className="h-6 w-6"
+          >
+            <Trash2 className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" strokeWidth={1.5} />
+          </Button>
+        </div>
       </div>
     </div>
   );
