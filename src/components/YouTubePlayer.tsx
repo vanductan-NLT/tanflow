@@ -3,32 +3,51 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
 import { cn } from '@/lib/utils';
-import { useYouTubePlayer } from '@/hooks/useYouTubePlayer';
 import { useState } from 'react';
 
-export function YouTubePlayer() {
-  const {
-    isPlaying,
-    isPlayerReady,
-    volume,
-    setVolume,
-    isMuted,
-    setIsMuted,
-    currentTrack,
-    savedVideoId,
-    setSavedVideoId,
-    handlePlayPause,
-    handleNext,
-    autoPlay,
-    setAutoPlay,
-    currentTime,
-    duration,
-    progress,
-    seekTo,
-    formatTime,
-    error,
-  } = useYouTubePlayer();
+interface YouTubePlayerProps {
+  isPlaying: boolean;
+  isPlayerReady: boolean;
+  volume: number;
+  setVolume: (v: number) => void;
+  isMuted: boolean;
+  setIsMuted: (m: boolean) => void;
+  currentTrack: { id: string; name: string; videoId: string; thumbnail: string };
+  savedVideoId: string;
+  setSavedVideoId: (id: string) => void;
+  handlePlayPause: () => void;
+  handleNext: () => void;
+  autoPlay: boolean;
+  setAutoPlay: (a: boolean) => void;
+  currentTime: number;
+  duration: number;
+  progress: number;
+  seekTo: (s: number) => void;
+  formatTime: (s: number) => string;
+  error: string | null;
+}
 
+export function YouTubePlayer({
+  isPlaying,
+  isPlayerReady,
+  volume,
+  setVolume,
+  isMuted,
+  setIsMuted,
+  currentTrack,
+  savedVideoId,
+  setSavedVideoId,
+  handlePlayPause,
+  handleNext,
+  autoPlay,
+  setAutoPlay,
+  currentTime,
+  duration,
+  progress,
+  seekTo,
+  formatTime,
+  error,
+}: YouTubePlayerProps) {
   const [customUrl, setCustomUrl] = useState('');
   const [showPlayer, setShowPlayer] = useState(false);
 

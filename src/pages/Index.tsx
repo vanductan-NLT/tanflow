@@ -96,7 +96,7 @@ const Index = () => {
                   className="animate-slide-up"
                   style={{ animationDelay: '0.25s' }}
                 >
-                  <YouTubePlayer />
+                  <YouTubePlayer {...youtube} />
                 </div>
                 <div 
                   className="animate-slide-up"
