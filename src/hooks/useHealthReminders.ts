@@ -11,10 +11,10 @@ export interface HealthReminder {
 }
 
 const DEFAULT_REMINDERS: HealthReminder[] = [
-  { id: 'water', name: 'Uống nước', icon: '💧', intervalMinutes: 30, enabled: true },
-  { id: 'walk', name: 'Đi lại', icon: '🚶', intervalMinutes: 60, enabled: true },
-  { id: 'eyes', name: 'Nghỉ mắt', icon: '👀', intervalMinutes: 20, enabled: true },
-  { id: 'stretch', name: 'Vươn vai', icon: '🧘', intervalMinutes: 45, enabled: false },
+  { id: 'water', name: 'Uống nước', icon: 'droplets', intervalMinutes: 30, enabled: true },
+  { id: 'walk', name: 'Đi lại', icon: 'footprints', intervalMinutes: 60, enabled: true },
+  { id: 'eyes', name: 'Nghỉ mắt', icon: 'eye', intervalMinutes: 20, enabled: true },
+  { id: 'stretch', name: 'Vươn vai', icon: 'stretch', intervalMinutes: 45, enabled: false },
 ];
 
 export function useHealthReminders() {

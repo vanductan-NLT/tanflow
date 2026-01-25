@@ -1,6 +1,6 @@
-import { Droplets, Eye, Footprints, Dumbbell } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { HealthReminder } from '@/hooks/useHealthReminders';
+import { ReminderIcon } from '@/components/icons/ReminderIcon';
 import {
   Tooltip,
   TooltipContent,
@@ -13,13 +13,6 @@ interface MinimalRemindersProps {
   timeUntilNext: Record<string, number>;
   formatTimeRemaining: (seconds: number) => string;
 }
-
-const iconComponents: Record<string, React.ReactNode> = {
-  '💧': <Droplets className="h-5 w-5" strokeWidth={1.5} />,
-  '👀': <Eye className="h-5 w-5" strokeWidth={1.5} />,
-  '🚶': <Footprints className="h-5 w-5" strokeWidth={1.5} />,
-  '🧘': <Dumbbell className="h-5 w-5" strokeWidth={1.5} />,
-};
 
 export function MinimalReminders({ reminders, timeUntilNext, formatTimeRemaining }: MinimalRemindersProps) {
   const enabledReminders = reminders.filter(r => r.enabled);
@@ -52,7 +45,7 @@ export function MinimalReminders({ reminders, timeUntilNext, formatTimeRemaining
                       : "bg-white/10 text-white/60"
                   )}
                 >
-                  {iconComponents[reminder.icon] || <span className="text-lg">{reminder.icon}</span>}
+                  <ReminderIcon iconKey={reminder.icon} size="lg" />
                 </div>
               </TooltipTrigger>
               <TooltipContent side="top" className="bg-background/90 backdrop-blur-sm">

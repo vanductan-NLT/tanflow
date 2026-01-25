@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
-import { useHealthReminders, HealthReminder } from '@/hooks/useHealthReminders';
+import { useHealthReminders } from '@/hooks/useHealthReminders';
+import { ReminderIcon, ICON_OPTIONS, REMINDER_ICONS } from '@/components/icons/ReminderIcon';
 import {
   Dialog,
   DialogContent,
@@ -17,8 +18,6 @@ interface HealthRemindersProps {
   reminders: ReturnType<typeof useHealthReminders>;
 }
 
-const EMOJI_OPTIONS = ['💧', '🚶', '👀', '🧘', '☕', '🍎', '🌿', '💪', '🧠', '❤️'];
-
 export function HealthReminders({ reminders: reminderHook }: HealthRemindersProps) {
   const {
     reminders,
@@ -28,7 +27,6 @@ export function HealthReminders({ reminders: reminderHook }: HealthRemindersProp
     formatTimeRemaining,
     getNextReminder,
     addReminder,
-    updateReminder,
     removeReminder,
     toggleReminder,
     dismissReminder,
@@ -38,7 +36,7 @@ export function HealthReminders({ reminders: reminderHook }: HealthRemindersProp
 
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [newName, setNewName] = useState('');
-  const [newIcon, setNewIcon] = useState('💧');
+  const [newIcon, setNewIcon] = useState('droplets');
   const [newInterval, setNewInterval] = useState(30);
 
   const nextReminder = getNextReminder();
@@ -47,7 +45,7 @@ export function HealthReminders({ reminders: reminderHook }: HealthRemindersProp
     if (newName.trim()) {
       addReminder(newName.trim(), newIcon, newInterval);
       setNewName('');
-      setNewIcon('💧');
+      setNewIcon('droplets');
       setNewInterval(30);
       setShowAddDialog(false);
     }
@@ -59,7 +57,9 @@ export function HealthReminders({ reminders: reminderHook }: HealthRemindersProp
       {activeReminder && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm animate-fade-in">
           <div className="glass-effect rounded-2xl p-8 max-w-sm mx-4 text-center space-y-4 animate-scale-in">
-            <span className="text-5xl">{activeReminder.icon}</span>
+            <div className="flex items-center justify-center w-20 h-20 mx-auto rounded-full bg-primary/10">
+              <ReminderIcon iconKey={activeReminder.icon} size="xl" className="text-primary" />
+            </div>
             <h3 className="text-xl font-semibold">{activeReminder.name}</h3>
             <p className="text-muted-foreground">Đã đến lúc rồi!</p>
             <div className="flex gap-3 justify-center">
@@ -102,7 +102,9 @@ export function HealthReminders({ reminders: reminderHook }: HealthRemindersProp
         {isActive && nextReminder && (
           <div className="flex items-center justify-between p-3 rounded-xl bg-muted/30">
             <div className="flex items-center gap-3">
-              <span className="text-2xl">{nextReminder.reminder.icon}</span>
+              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10">
+                <ReminderIcon iconKey={nextReminder.reminder.icon} size="lg" className="text-primary" />
+              </div>
               <div>
                 <p className="text-sm font-medium">{nextReminder.reminder.name}</p>
                 <p className="text-xs text-muted-foreground">Sắp đến</p>
@@ -125,7 +127,9 @@ export function HealthReminders({ reminders: reminderHook }: HealthRemindersProp
               )}
             >
               <div className="flex items-center gap-3">
-                <span className="text-xl">{reminder.icon}</span>
+                <div className="flex items-center justify-center w-9 h-9 rounded-full bg-muted">
+                  <ReminderIcon iconKey={reminder.icon} size="lg" />
+                </div>
                 <div>
                   <p className="text-sm font-medium">{reminder.name}</p>
                   <div className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -175,20 +179,24 @@ export function HealthReminders({ reminders: reminderHook }: HealthRemindersProp
               <div className="space-y-2">
                 <label className="text-sm font-medium">Biểu tượng</label>
                 <div className="flex flex-wrap gap-2">
-                  {EMOJI_OPTIONS.map((emoji) => (
-                    <button
-                      key={emoji}
-                      onClick={() => setNewIcon(emoji)}
-                      className={cn(
-                        'w-10 h-10 text-xl rounded-lg transition-colors',
-                        newIcon === emoji
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-muted hover:bg-muted/80'
-                      )}
-                    >
-                      {emoji}
-                    </button>
-                  ))}
+                  {ICON_OPTIONS.map((option) => {
+                    const IconComponent = REMINDER_ICONS[option.key];
+                    return (
+                      <button
+                        key={option.key}
+                        onClick={() => setNewIcon(option.key)}
+                        className={cn(
+                          'w-10 h-10 flex items-center justify-center rounded-lg transition-colors',
+                          newIcon === option.key
+                            ? 'bg-primary text-primary-foreground'
+                            : 'bg-muted hover:bg-muted/80'
+                        )}
+                        title={option.label}
+                      >
+                        <IconComponent className="h-5 w-5" strokeWidth={1.5} />
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
               <div className="space-y-2">
