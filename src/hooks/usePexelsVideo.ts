@@ -57,6 +57,9 @@ export function usePexelsVideo() {
   const settingsRef = useRef(settings);
   settingsRef.current = settings;
 
+  // Manual refresh trigger
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
   const fetchRandomVideo = useCallback(async () => {
     const currentSettings = settingsRef.current;
     
@@ -104,12 +107,12 @@ export function usePexelsVideo() {
     }
   }, []);
 
-  // Fetch video on mount and when category changes
+  // Fetch video on mount and when category changes or manual refresh
   useEffect(() => {
     if (settings.enabled && settings.apiKey) {
       fetchRandomVideo();
     }
-  }, [settings.category, settings.apiKey, settings.enabled, fetchRandomVideo]);
+  }, [settings.category, settings.apiKey, settings.enabled, refreshTrigger, fetchRandomVideo]);
 
   // Auto-refresh video at interval
   useEffect(() => {
@@ -129,13 +132,18 @@ export function usePexelsVideo() {
     setSettings(prev => ({ ...prev, ...updates }));
   }, [setSettings]);
 
+  // Manual refresh function that triggers a new fetch
+  const refreshVideo = useCallback(() => {
+    setRefreshTrigger(prev => prev + 1);
+  }, []);
+
   return {
     settings,
     updateSettings,
     videoUrl,
     isLoading,
     error,
-    refreshVideo: fetchRandomVideo,
+    refreshVideo,
     categories: CATEGORIES,
   };
 }

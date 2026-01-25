@@ -54,6 +54,27 @@ export function useHealthReminders() {
     startTimeRef.current = { ...startTimeRef.current, ...newStartTimes };
   }, [reminders]);
 
+  // Request notification permission
+  useEffect(() => {
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  }, []);
+
+  // Show browser notification
+  const showNotification = useCallback((title: string, body: string) => {
+    if ('Notification' in window && Notification.permission === 'granted') {
+      new Notification(title, {
+        body,
+        icon: '/favicon.png',
+        tag: 'health-reminder',
+      });
+    }
+  }, []);
+
+  // Track last triggered time to prevent double triggers
+  const lastTriggeredRef = useRef<Record<string, number>>({});
+
   // Update countdown timers
   useEffect(() => {
     if (!isActive) return;
@@ -72,12 +93,17 @@ export function useHealthReminders() {
 
         newTimeUntil[reminder.id] = remaining;
 
-        // Check if reminder should trigger
-        if (remaining === intervalSeconds) {
-          playSound();
-          setActiveReminder(reminder);
-          // Reset start time
-          startTimeRef.current[reminder.id] = now;
+        // Check if reminder should trigger (when it cycles back to full interval)
+        // Use a small window to catch the trigger
+        if (elapsed > 0 && elapsed % intervalSeconds < 2) {
+          const lastTriggered = lastTriggeredRef.current[reminder.id] || 0;
+          // Prevent triggering more than once per cycle
+          if (now - lastTriggered > intervalSeconds * 1000 - 5000) {
+            playSound();
+            setActiveReminder(reminder);
+            showNotification('FocusFlow - Nhắc nhở sức khỏe', `Đã đến lúc: ${reminder.name}`);
+            lastTriggeredRef.current[reminder.id] = now;
+          }
         }
       });
 
@@ -85,7 +111,7 @@ export function useHealthReminders() {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [reminders, isActive, playSound]);
+  }, [reminders, isActive, playSound, showNotification]);
 
   // Format time as MM:SS
   const formatTimeRemaining = (seconds: number) => {
