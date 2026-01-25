@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { usePictureInPicture } from './usePictureInPicture';
-import { PiPNotification, NotificationType } from '@/components/PiPNotification';
-import { createElement } from 'react';
+
+export type NotificationType = 'pomodoro-complete' | 'break-complete' | 'health-reminder';
 
 interface NotificationOptions {
   type: NotificationType;
@@ -38,6 +38,15 @@ export function useNotificationPopup() {
     return () => channelRef.current?.close();
   }, []);
 
+  // Map notification type to PiP type
+  const mapType = (type: NotificationType): 'pomodoro' | 'break' | 'health' => {
+    switch (type) {
+      case 'pomodoro-complete': return 'pomodoro';
+      case 'break-complete': return 'break';
+      case 'health-reminder': return 'health';
+    }
+  };
+
   // Show notification using PiP or fallback popup
   const showNotification = useCallback(async (options: NotificationOptions) => {
     const { type, title, message, icon, reminderId, onDismiss, onSnooze } = options;
@@ -59,17 +68,14 @@ export function useNotificationPopup() {
 
     // Try PiP first
     if (pip.isSupported) {
-      const notificationElement = createElement(PiPNotification, {
-        type,
+      const pipWindow = await pip.openPiP({
+        type: mapType(type),
         title,
         message,
         icon,
         onDismiss: handleDismiss,
         onSnooze: type === 'health-reminder' ? handleSnooze : undefined,
-        autoCloseSeconds: 30,
-      });
-
-      const pipWindow = await pip.openPiP(notificationElement, {
+      }, {
         width: 360,
         height: 280,
       });
