@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { Bell, BellOff, Plus, Trash2, Clock, Timer } from 'lucide-react';
+import { Bell, BellOff, Plus, Trash2, Clock, Timer, Pencil, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
-import { useHealthReminders } from '@/hooks/useHealthReminders';
+import { useHealthReminders, HealthReminder } from '@/hooks/useHealthReminders';
 import { ReminderIcon, ICON_OPTIONS, REMINDER_ICONS } from '@/components/icons/ReminderIcon';
 import {
   Dialog,
@@ -25,19 +25,26 @@ export function HealthReminders({ reminders: reminderHook }: HealthRemindersProp
     isActive,
     activeReminder,
     formatTimeRemaining,
-    getNextReminder,
     addReminder,
+    updateReminder,
     removeReminder,
     toggleReminder,
     dismissReminder,
     snoozeReminder,
     toggleActive,
+    resetAllTimers,
   } = reminderHook;
 
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [newName, setNewName] = useState('');
   const [newIcon, setNewIcon] = useState('droplets');
   const [newInterval, setNewInterval] = useState(30);
+
+  // Edit dialog state
+  const [editingReminder, setEditingReminder] = useState<HealthReminder | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editIcon, setEditIcon] = useState('');
+  const [editInterval, setEditInterval] = useState(30);
 
   // Find next reminder using live timeUntilNext values
   const nextReminder = (() => {
@@ -59,6 +66,31 @@ export function HealthReminders({ reminders: reminderHook }: HealthRemindersProp
       setNewIcon('droplets');
       setNewInterval(30);
       setShowAddDialog(false);
+    }
+  };
+
+  const openEditDialog = (reminder: HealthReminder) => {
+    setEditingReminder(reminder);
+    setEditName(reminder.name);
+    setEditIcon(reminder.icon);
+    setEditInterval(reminder.intervalMinutes);
+  };
+
+  const handleSaveEdit = () => {
+    if (editingReminder && editName.trim()) {
+      updateReminder(editingReminder.id, {
+        name: editName.trim(),
+        icon: editIcon,
+        intervalMinutes: editInterval,
+      });
+      setEditingReminder(null);
+    }
+  };
+
+  const handleDeleteReminder = () => {
+    if (editingReminder) {
+      removeReminder(editingReminder.id);
+      setEditingReminder(null);
     }
   };
 
@@ -89,6 +121,66 @@ export function HealthReminders({ reminders: reminderHook }: HealthRemindersProp
         </div>
       )}
 
+      {/* Edit Reminder Dialog */}
+      <Dialog open={!!editingReminder} onOpenChange={(open) => !open && setEditingReminder(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Chỉnh sửa nhắc nhở</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Biểu tượng</label>
+              <div className="flex flex-wrap gap-2">
+                {ICON_OPTIONS.map((option) => {
+                  const IconComponent = REMINDER_ICONS[option.key];
+                  return (
+                    <button
+                      key={option.key}
+                      onClick={() => setEditIcon(option.key)}
+                      className={cn(
+                        'w-10 h-10 flex items-center justify-center rounded-lg transition-colors',
+                        editIcon === option.key
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-muted hover:bg-muted/80'
+                      )}
+                      title={option.label}
+                    >
+                      <IconComponent className="h-5 w-5" strokeWidth={1.5} />
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Tên nhắc nhở</label>
+              <Input
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                placeholder="VD: Uống nước"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Chu kỳ (phút)</label>
+              <Input
+                type="number"
+                value={editInterval}
+                onChange={(e) => setEditInterval(parseInt(e.target.value) || 1)}
+                min={1}
+                max={120}
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button onClick={handleSaveEdit} className="flex-1" disabled={!editName.trim()}>
+                Lưu
+              </Button>
+              <Button variant="destructive" onClick={handleDeleteReminder}>
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Reminders Card */}
       <div className="w-full glass-effect rounded-2xl p-4 space-y-4">
         {/* Header */}
@@ -98,6 +190,15 @@ export function HealthReminders({ reminders: reminderHook }: HealthRemindersProp
             <span className="font-medium">Nhắc nhở sức khỏe</span>
           </div>
           <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={resetAllTimers}
+              className="h-8 w-8"
+              title="Reset tất cả bộ đếm"
+            >
+              <RotateCcw className="h-4 w-4" strokeWidth={1.5} />
+            </Button>
             <Button
               variant="ghost"
               size="icon"
@@ -133,18 +234,18 @@ export function HealthReminders({ reminders: reminderHook }: HealthRemindersProp
             <div
               key={reminder.id}
               className={cn(
-                'flex items-center justify-between p-3 rounded-xl transition-colors',
+                'flex items-center justify-between p-3 rounded-xl transition-colors group',
                 reminder.enabled ? 'bg-muted/20' : 'bg-muted/5 opacity-60'
               )}
             >
-              <div className="flex items-center gap-3">
-                <div className="flex items-center justify-center w-9 h-9 rounded-full bg-muted">
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <div className="flex items-center justify-center w-9 h-9 rounded-full bg-muted shrink-0">
                   <ReminderIcon iconKey={reminder.icon} size="lg" />
                 </div>
-                <div>
-                  <p className="text-sm font-medium">{reminder.name}</p>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium truncate">{reminder.name}</p>
                   <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <Clock className="h-3 w-3" strokeWidth={1.5} />
+                    <Clock className="h-3 w-3 shrink-0" strokeWidth={1.5} />
                     <span>Mỗi {reminder.intervalMinutes} phút</span>
                     {reminder.enabled && timeUntilNext[reminder.id] && (
                       <span className="ml-2 text-primary">
@@ -154,21 +255,20 @@ export function HealthReminders({ reminders: reminderHook }: HealthRemindersProp
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 shrink-0">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => openEditDialog(reminder)}
+                  className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                  title="Chỉnh sửa"
+                >
+                  <Pencil className="h-3.5 w-3.5" strokeWidth={1.5} />
+                </Button>
                 <Switch
                   checked={reminder.enabled}
                   onCheckedChange={() => toggleReminder(reminder.id)}
                 />
-                {reminder.id.startsWith('custom-') && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => removeReminder(reminder.id)}
-                    className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                  >
-                    <Trash2 className="h-4 w-4" strokeWidth={1.5} />
-                  </Button>
-                )}
               </div>
             </div>
           ))}
