@@ -46,6 +46,14 @@ export function VideoBackground({ timerMode, isRunning, pexels }: VideoBackgroun
     void videoRef.current.play().catch(() => {});
   }, [currentUrl, currentKey]);
 
+  // Ensure the previous layer can render immediately (avoid brief black frame while buffering)
+  useEffect(() => {
+    if (!prevVideoRef.current) return;
+    if (!prevUrl) return;
+    prevVideoRef.current.load();
+    void prevVideoRef.current.play().catch(() => {});
+  }, [prevUrl]);
+
   // When new video can play, fade it in
   const handleNewVideoLoaded = useCallback(() => {
     setIsNewVideoReady(true);
@@ -71,7 +79,6 @@ export function VideoBackground({ timerMode, isRunning, pexels }: VideoBackgroun
       {/* Previous video - fades out */}
       {prevUrl && (
         <video
-          key={`prev-${prevUrl}`}
           ref={prevVideoRef}
           autoPlay
           loop
@@ -83,9 +90,8 @@ export function VideoBackground({ timerMode, isRunning, pexels }: VideoBackgroun
             // While the new video isn't ready, keep previous fully visible.
             isNewVideoReady ? "opacity-0" : "opacity-100"
           )}
-        >
-          <source src={prevUrl} type="video/mp4" />
-        </video>
+          src={prevUrl}
+        />
       )}
 
       {/* Current video - fades in */}
@@ -106,9 +112,8 @@ export function VideoBackground({ timerMode, isRunning, pexels }: VideoBackgroun
             prevUrl ? (isNewVideoReady ? "opacity-100" : "opacity-0") : "opacity-100",
             isFocusing ? "scale-105" : "scale-100"
           )}
-        >
-          <source src={currentUrl} type="video/mp4" />
-        </video>
+          src={currentUrl}
+        />
       )}
 
       {/* Overlay - consistent dark overlay regardless of theme */}
