@@ -10,9 +10,9 @@ interface UpcomingRemindersProps {
 }
 
 const iconMap: Record<string, React.ReactNode> = {
-  '💧': <Droplets className="h-4 w-4 text-info" />,
-  '👀': <Eye className="h-4 w-4 text-warning" />,
-  '🚶': <Footprints className="h-4 w-4 text-success" />,
+  '💧': <Droplets className="h-4 w-4 text-info" strokeWidth={1.5} />,
+  '👀': <Eye className="h-4 w-4 text-warning" strokeWidth={1.5} />,
+  '🚶': <Footprints className="h-4 w-4 text-success" strokeWidth={1.5} />,
 };
 
 export function UpcomingReminders({ reminders, timeUntilNext, formatTimeRemaining, className }: UpcomingRemindersProps) {
@@ -34,7 +34,7 @@ export function UpcomingReminders({ reminders, timeUntilNext, formatTimeRemainin
   return (
     <div className={cn("glass-effect rounded-2xl p-4", className)}>
       <div className="flex items-center gap-2 mb-3">
-        <Bell className="h-4 w-4 text-primary" />
+        <Bell className="h-4 w-4 text-primary" strokeWidth={1.5} />
         <span className="text-sm font-medium">Nhắc nhở sắp tới</span>
         {nextReminder && (
           <span className="text-xs text-muted-foreground ml-auto">
