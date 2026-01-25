@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocalStorage } from './useLocalStorage';
+import { useNotificationPopup } from './useNotificationPopup';
 
 export type TimerMode = 'pomodoro' | 'shortBreak' | 'longBreak';
 
@@ -46,6 +47,9 @@ export function usePomodoro() {
 
   // Use refs to track if this is first mount
   const isFirstMount = useRef(true);
+  
+  // PiP notification hook
+  const { showNotification: showPiPNotification } = useNotificationPopup();
 
   // Calculate initial values once
   const initialValues = useRef(() => {
@@ -138,7 +142,15 @@ export function usePomodoro() {
       const newCount = completedPomodoros + 1;
       setCompletedPomodoros(newCount);
       
-      // Show notification
+      // Show PiP/Popup notification
+      showPiPNotification({
+        type: 'pomodoro-complete',
+        title: 'Hoàn thành Pomodoro! 🍅',
+        message: `Tuyệt vời! Bạn đã hoàn thành ${newCount} phiên tập trung. Nghỉ ngơi thôi!`,
+        onDismiss: () => {},
+      });
+      
+      // Browser notification as fallback
       showBrowserNotification(
         'FocusFlow - Hoàn thành Pomodoro! 🍅',
         `Tuyệt vời! Bạn đã hoàn thành ${newCount} phiên tập trung. Nghỉ ngơi thôi!`
@@ -154,6 +166,13 @@ export function usePomodoro() {
       }
     } else {
       // Break is over, back to pomodoro
+      showPiPNotification({
+        type: 'break-complete',
+        title: 'Hết giờ nghỉ! ⏰',
+        message: 'Đã đến lúc quay lại tập trung rồi!',
+        onDismiss: () => {},
+      });
+      
       showBrowserNotification(
         'FocusFlow - Hết giờ nghỉ! ⏰',
         'Đã đến lúc quay lại tập trung rồi!'
@@ -161,7 +180,7 @@ export function usePomodoro() {
       setMode('pomodoro');
       setTimeLeft(settings.pomodoroDuration * 60);
     }
-  }, [mode, completedPomodoros, settings, playNotificationSound, showBrowserNotification]);
+  }, [mode, completedPomodoros, settings, playNotificationSound, showBrowserNotification, showPiPNotification]);
 
   // Timer countdown
   useEffect(() => {
