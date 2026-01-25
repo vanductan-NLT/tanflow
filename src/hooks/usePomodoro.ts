@@ -10,11 +10,27 @@ export interface PomodoroSettings {
   longBreakInterval: number; // number of pomodoros before long break
 }
 
+export interface PomodoroState {
+  mode: TimerMode;
+  timeLeft: number;
+  isRunning: boolean;
+  completedPomodoros: number;
+  lastUpdated: number; // timestamp to calculate elapsed time
+}
+
 const DEFAULT_SETTINGS: PomodoroSettings = {
   pomodoroDuration: 25,
   shortBreakDuration: 5,
   longBreakDuration: 15,
   longBreakInterval: 4,
+};
+
+const DEFAULT_STATE: PomodoroState = {
+  mode: 'pomodoro',
+  timeLeft: 25 * 60,
+  isRunning: false,
+  completedPomodoros: 0,
+  lastUpdated: Date.now(),
 };
 
 export function usePomodoro() {
@@ -23,10 +39,24 @@ export function usePomodoro() {
     DEFAULT_SETTINGS
   );
 
-  const [mode, setMode] = useState<TimerMode>('pomodoro');
-  const [timeLeft, setTimeLeft] = useState(settings.pomodoroDuration * 60);
-  const [isRunning, setIsRunning] = useState(false);
-  const [completedPomodoros, setCompletedPomodoros] = useState(0);
+  const [savedState, setSavedState] = useLocalStorage<PomodoroState>(
+    'focusflow-pomodoro-state',
+    { ...DEFAULT_STATE, timeLeft: DEFAULT_SETTINGS.pomodoroDuration * 60 }
+  );
+
+  // Initialize state from localStorage, accounting for elapsed time if was running
+  const getInitialTimeLeft = () => {
+    if (savedState.isRunning && savedState.lastUpdated) {
+      const elapsed = Math.floor((Date.now() - savedState.lastUpdated) / 1000);
+      return Math.max(0, savedState.timeLeft - elapsed);
+    }
+    return savedState.timeLeft;
+  };
+
+  const [mode, setMode] = useState<TimerMode>(savedState.mode);
+  const [timeLeft, setTimeLeft] = useState(getInitialTimeLeft);
+  const [isRunning, setIsRunning] = useState(savedState.isRunning && getInitialTimeLeft() > 0);
+  const [completedPomodoros, setCompletedPomodoros] = useState(savedState.completedPomodoros);
   
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const intervalRef = useRef<number | null>(null);
@@ -104,6 +134,40 @@ export function usePomodoro() {
       handleTimerComplete();
     }
   }, [timeLeft, isRunning, handleTimerComplete]);
+
+  // Update document title with remaining time
+  useEffect(() => {
+    const modeLabels: Record<TimerMode, string> = {
+      pomodoro: '🍅 Tập trung',
+      shortBreak: '☕ Nghỉ ngắn',
+      longBreak: '🌴 Nghỉ dài',
+    };
+    
+    const mins = Math.floor(timeLeft / 60);
+    const secs = timeLeft % 60;
+    const timeStr = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    
+    if (isRunning) {
+      document.title = `${timeStr} - ${modeLabels[mode]} | FocusFlow`;
+    } else {
+      document.title = 'FocusFlow - Tập trung & Năng suất';
+    }
+
+    return () => {
+      document.title = 'FocusFlow - Tập trung & Năng suất';
+    };
+  }, [timeLeft, mode, isRunning]);
+
+  // Persist state to localStorage
+  useEffect(() => {
+    setSavedState({
+      mode,
+      timeLeft,
+      isRunning,
+      completedPomodoros,
+      lastUpdated: Date.now(),
+    });
+  }, [mode, timeLeft, isRunning, completedPomodoros, setSavedState]);
 
   // Controls
   const start = () => setIsRunning(true);
