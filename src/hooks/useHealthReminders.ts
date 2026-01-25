@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocalStorage } from './useLocalStorage';
+import { useNotificationPopup } from './useNotificationPopup';
 
 export interface HealthReminder {
   id: string;
@@ -9,6 +10,14 @@ export interface HealthReminder {
   enabled: boolean;
   lastReminded?: number;
 }
+
+// Map icon name to emoji for PiP
+const iconToEmoji: Record<string, string> = {
+  'droplets': '💧',
+  'footprints': '🚶',
+  'eye': '👁️',
+  'stretch': '🧘',
+};
 
 const DEFAULT_REMINDERS: HealthReminder[] = [
   { id: 'water', name: 'Uống nước', icon: 'droplets', intervalMinutes: 30, enabled: true },
@@ -29,13 +38,14 @@ export function useHealthReminders() {
   
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const startTimeRef = useRef<Record<string, number>>({});
+  const { showNotification: showPiPNotification } = useNotificationPopup();
 
   // Play a gentle notification sound
   const playSound = useCallback(() => {
     if (!audioRef.current) {
       audioRef.current = new Audio();
       // Gentle bell sound
-      audioRef.current.src = 'data:audio/wav;base64,UklGRl9vAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YTtvAAB/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/fn5+fn5+fn5+fX19fX19fXx8fHx8fHt7e3t7e3p6enp6eXl5eXl5eHh4eHh3d3d3d3Z2dnZ2dXV1dXV0dHR0dHNzc3NzcnJycnJxcXFxcXBwcHBwb29vb29ubm5ubm1tbW1tbGxsbGxra2tra2pqampqaWlpaWloaGhoaGdnZ2dnZmZmZmZlZWVlZWRkZGRkY2NjY2NiYmJiYmFhYWFhYGBgYGBfX19fX15eXl5eXV1dXV1cXFxcXFtbW1tbWlpaWlpZWVlZWVhYWFhYV1dXV1dWVlZWVlVVVVVVVFRUVFRTU1NTU1JSUlJSUVFRUVFQUFBQUE9PT09PTk5OTk5NTU1NTUxMTExMS0tLS0tKSkpKSklJSUlJSEhISEhHR0dHR0ZGRkZGRUVFRUVEREREREREREREREREREREREREREREREREREREREREREREREREQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0RERERERERERERERERFRUVFRUVFRUVFRUZFQ0NDQ0JCQkJCQUFBQUFAQEBAQD8/Pz8/Pj4+Pj49PT09PTw8PDw8Ozs7Ozs6Ojo6OTk5OTk4ODg4ODc3Nzc3NjY2NjY1NTU1NTQ0NDQ0MzMzMzMyMjIyMjExMTExMDAwMDAvLy8vLy4uLi4uLS0tLS0sLCwsLCsrKysrKioqKioqKioqKioqKioqKioqKioqKioqKioqKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKysrKysrKywsLCwsLS0tLS0tLS4uLi4uLy8vLy8wMDAwMDExMTExMjIyMjIzMzMzMzQ0NDQ0NTU1NTU2NjY2Njc3Nzc3ODg4ODg5OTk5OTo6Ojo6Ozs7Ozs8PDw8PD09PT09Pj4+Pj4/Pz8/P0BAQEBAQUFBQUFCQkJCQkNDQ0NDQ0RDQ0NERERERERFRUVFRUZGRkZGR0dHR0dHSEhISEhJSUlJSUpKSkpKS0tLS0tMTExMTExNTU1NTU5OTk5OT09PT09QUFBQUFFBUVFRUVJSU1JTU1NUVFRUVFVVVVVWV1ZWV1dXV1hYWFhYWVlZWVlaWlpaWltbW1tbXFxcXFxdXV1dXV5eXl5eX19fX19gYGBgYGFhYWFhYmJiYmJjY2NjY2RkZGRkZWVlZWVmZmZmZmdnZ2dnaGhoaGhpaWlpaWpqampqa2tra2tsbGxsbG1tbW1tbm5ubm5vb29vb3BwcHBwcXFxcXFycnJycnNzc3NzdHR0dHR1dXV1dXZ2dnZ2d3d3d3d4eHh4eHl5eXl5enp6enp7e3t7e3x8fHx8fX19fX19fn5+fn5+fn5/f39/f39/f39/f39/';
+      audioRef.current.src = 'data:audio/wav;base64,UklGRl9vAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YTtvAAB/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/fn5+fn5+fn5+fX19fX19fXx8fHx8fHt7e3t7e3p6enp6eXl5eXl5eHh4eHh3d3d3d3Z2dnZ2dXV1dXV0dHR0dHNzc3NzcnJycnJxcXFxcXBwcHBwb29vb29ubm5ubm1tbW1tbGxsbGxra2tra2pqampqaWlpaWloaGhoaGdnZ2dnZmZmZmZlZWVlZWRkZGRkY2NjY2NiYmJiYmFhYWFhYGBgYGBfX19fX15eXl5eXV1dXV1cXFxcXFtbW1tbWlpaWlpZWVlZWVhYWFhYV1dXV1dWVlZWVlVVVVVVVFRUVFRTU1NTU1JSUlJSUVFRUVFQUFBQUE9PT09PTk5OTk5NTU1NTUxMTExMS0tLS0tKSkpKSklJSUlJSEhISEhHR0dHR0ZGRkZGRUVFRUVEREREREREREREREREREREREREREREREREREREREREREREQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0RERERERERERERERERFRUVFRUVFRUVFRUZFQ0NDQ0JCQkJCQUFBQUFAQEBAQD8/Pz8/Pj4+Pj49PT09PTw8PDw8Ozs7Ozs6Ojo6OTk5OTk4ODg4ODc3Nzc3NjY2NjY1NTU1NTQ0NDQ0MzMzMzMyMjIyMjExMTExMDAwMDAvLy8vLy4uLi4uLS0tLS0sLCwsLCsrKysrKioqKioqKioqKioqKioqKioqKioqKioqKioqKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKSkpKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKysrKysrKywsLCwsLS0tLS0tLS4uLi4uLy8vLy8wMDAwMDExMTExMjIyMjIzMzMzMzQ0NDQ0NTU1NTU2NjY2Njc3Nzc3ODg4ODg5OTk5OTo6Ojo6Ozs7Ozs8PDw8PD09PT09Pj4+Pj4/Pz8/P0BAQEBAQUFBQUFCQkJCQkNDQ0NDQ0RDQ0NERERERERFRUVFRUZGRkZGR0dHR0dHSEhISEhJSUlJSUpKSkpKS0tLS0tMTExMTExNTU1NTU5OTk5OT09PT09QUFBQUFFBUVFRUVJSU1JTU1NUVFRUVFVVVVVWV1ZWV1dXV1hYWFhYWVlZWVlaWlpaWltbW1tbXFxcXFxdXV1dXV5eXl5eX19fX19gYGBgYGFhYWFhYmJiYmJjY2NjY2RkZGRkZWVlZWVmZmZmZmdnZ2dnaGhoaGhpaWlpaWpqampqa2tra2tsbGxsbG1tbW1tbm5ubm5vb29vb3BwcHBwcXFxcXFycnJycnNzc3NzdHR0dHR1dXV1dXZ2dnZ2d3d3d3d4eHh4eHl5eXl5enp6enp7e3t7e3x8fHx8fX19fX19fn5+fn5+fn5/f39/f39/f39/f39/';
     }
     audioRef.current.volume = 0.5;
     audioRef.current.currentTime = 0;
@@ -61,8 +71,8 @@ export function useHealthReminders() {
     }
   }, []);
 
-  // Show browser notification
-  const showNotification = useCallback((title: string, body: string) => {
+  // Show browser notification (fallback)
+  const showBrowserNotification = useCallback((title: string, body: string) => {
     if ('Notification' in window && Notification.permission === 'granted') {
       new Notification(title, {
         body,
@@ -74,6 +84,29 @@ export function useHealthReminders() {
 
   // Track last triggered time to prevent double triggers
   const lastTriggeredRef = useRef<Record<string, number>>({});
+
+  // Trigger notification for a reminder
+  const triggerReminderNotification = useCallback((reminder: HealthReminder) => {
+    playSound();
+    setActiveReminder(reminder);
+    
+    // Show PiP/Popup notification
+    showPiPNotification({
+      type: 'health-reminder',
+      title: reminder.name,
+      message: 'Đã đến lúc chăm sóc sức khỏe!',
+      icon: iconToEmoji[reminder.icon] || '💧',
+      reminderId: reminder.id,
+      onDismiss: () => setActiveReminder(null),
+      onSnooze: (minutes) => {
+        startTimeRef.current[reminder.id] = Date.now() - (reminder.intervalMinutes - minutes) * 60 * 1000;
+        setActiveReminder(null);
+      },
+    });
+    
+    // Browser notification as fallback
+    showBrowserNotification('FocusFlow - Nhắc nhở sức khỏe', `Đã đến lúc: ${reminder.name}`);
+  }, [playSound, showPiPNotification, showBrowserNotification]);
 
   // Update countdown timers
   useEffect(() => {
@@ -99,9 +132,7 @@ export function useHealthReminders() {
           const lastTriggered = lastTriggeredRef.current[reminder.id] || 0;
           // Prevent triggering more than once per cycle
           if (now - lastTriggered > intervalSeconds * 1000 - 5000) {
-            playSound();
-            setActiveReminder(reminder);
-            showNotification('FocusFlow - Nhắc nhở sức khỏe', `Đã đến lúc: ${reminder.name}`);
+            triggerReminderNotification(reminder);
             lastTriggeredRef.current[reminder.id] = now;
           }
         }
@@ -111,7 +142,7 @@ export function useHealthReminders() {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [reminders, isActive, playSound, showNotification]);
+  }, [reminders, isActive, triggerReminderNotification]);
 
   // Format time as MM:SS
   const formatTimeRemaining = (seconds: number) => {
