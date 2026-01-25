@@ -50,9 +50,12 @@ export function useBackground() {
     setSettings(prev => ({ ...prev, ...updates }));
   }, [setSettings]);
 
+  // Fallback to 'aurora' if stored theme doesn't exist (e.g., old localStorage data)
+  const validTheme = GRADIENT_THEMES[settings.theme] ? settings.theme : 'aurora';
+  
   return {
-    settings,
+    settings: { ...settings, theme: validTheme },
     updateSettings,
-    theme: GRADIENT_THEMES[settings.theme],
+    theme: GRADIENT_THEMES[validTheme],
   };
 }
