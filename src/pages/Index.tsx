@@ -110,12 +110,10 @@ const Index = () => {
       {/* ===== FOCUS MODE UI ===== */}
       {isFocusing ? (
         <div className="min-h-screen flex flex-col items-center justify-center px-4 animate-fade-in">
-          {/* Inspirational Quote - only show when no active task */}
-          {!tasks.activeTask && (
-            <div className="absolute top-8 sm:top-12 md:top-16 left-0 right-0 px-4">
-              <QuoteDisplay mode={pomodoro.mode} />
-            </div>
-          )}
+          {/* Inspirational Quote */}
+          <div className="absolute top-8 sm:top-12 md:top-16 left-0 right-0 px-4">
+            <QuoteDisplay mode={pomodoro.mode} />
+          </div>
 
           {/* Minimal Timer (shows active task name) */}
           <MinimalTimer pomodoro={pomodoro} activeTask={tasks.activeTask} />

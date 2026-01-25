@@ -21,16 +21,11 @@ export function MinimalTimer({ pomodoro, activeTask }: MinimalTimerProps) {
 
   return (
     <div className="flex flex-col items-center gap-4 sm:gap-6 md:gap-8 w-full px-4">
-      {/* Active Task Info */}
+      {/* Active Task Name */}
       {activeTask && mode === 'pomodoro' && (
-        <div className="text-center animate-fade-in">
-          <p className="text-lg sm:text-xl text-white/80 font-medium truncate max-w-[280px] sm:max-w-md">
-            {activeTask.title}
-          </p>
-          <p className="text-sm sm:text-base text-white/60 mt-1">
-            Cycle {activeTask.completedCycles + 1}/{activeTask.targetCycles} 🍅
-          </p>
-        </div>
+        <p className="text-lg sm:text-xl text-white/80 font-medium truncate max-w-[280px] sm:max-w-md text-center animate-fade-in">
+          {activeTask.title}
+        </p>
       )}
 
       {/* Giant timer */}
