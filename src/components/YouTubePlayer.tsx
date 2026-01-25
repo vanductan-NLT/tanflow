@@ -1,150 +1,47 @@
-import { useState, useRef, useEffect } from 'react';
 import { Music, Play, Pause, Volume2, VolumeX, ExternalLink, Loader2, SkipForward, Repeat } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
 import { cn } from '@/lib/utils';
-import { useLocalStorage } from '@/hooks/useLocalStorage';
-
-interface Playlist {
-  id: string;
-  name: string;
-  videoId: string;
-  thumbnail?: string;
-}
-
-const SUGGESTED_PLAYLISTS: Playlist[] = [
-  { id: '1', name: 'Lofi Hip Hop', videoId: 'jfKfPfyJRdk', thumbnail: '🎵' },
-  { id: '2', name: 'Jazz & Coffee', videoId: '-5KAN9_CzSA', thumbnail: '☕' },
-  { id: '3', name: 'Nature Sounds', videoId: 'eKFTSSKCzWA', thumbnail: '🌿' },
-  { id: '4', name: 'Piano Focus', videoId: '4oStw0r33so', thumbnail: '🎹' },
-  { id: '5', name: 'Ambient Study', videoId: 'lTRiuFIWV54', thumbnail: '🌙' },
-];
-
-// Get next video ID from playlist
-const getNextVideoId = (currentVideoId: string): string => {
-  const currentIndex = SUGGESTED_PLAYLISTS.findIndex(p => p.videoId === currentVideoId);
-  const nextIndex = (currentIndex + 1) % SUGGESTED_PLAYLISTS.length;
-  return SUGGESTED_PLAYLISTS[nextIndex].videoId;
-};
+import { useYouTubePlayer } from '@/hooks/useYouTubePlayer';
+import { useState } from 'react';
 
 export function YouTubePlayer() {
-const [savedVideoId, setSavedVideoId] = useLocalStorage<string>('focusflow-youtube-video', 'jfKfPfyJRdk');
-  const [customUrl, setCustomUrl] = useState('');
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [volume, setVolume] = useState(50);
-  const [isMuted, setIsMuted] = useState(false);
-  const [showPlayer, setShowPlayer] = useState(false);
-  const [isPlayerReady, setIsPlayerReady] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [autoPlay, setAutoPlay] = useLocalStorage<boolean>('focusflow-autoplay', true);
-  const playerRef = useRef<YT.Player | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const {
+    isPlaying,
+    isPlayerReady,
+    volume,
+    setVolume,
+    isMuted,
+    setIsMuted,
+    currentTrack,
+    savedVideoId,
+    setSavedVideoId,
+    handlePlayPause,
+    handleNext,
+    autoPlay,
+    setAutoPlay,
+    currentTime,
+    duration,
+    progress,
+    seekTo,
+    formatTime,
+    error,
+  } = useYouTubePlayer();
 
-  // Extract video ID from YouTube URL
+  const [customUrl, setCustomUrl] = useState('');
+  const [showPlayer, setShowPlayer] = useState(false);
+
   const extractVideoId = (url: string): string | null => {
     const patterns = [
       /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
       /^([a-zA-Z0-9_-]{11})$/,
     ];
-    
     for (const pattern of patterns) {
       const match = url.match(pattern);
       if (match) return match[1];
     }
     return null;
-  };
-
-  // Load YouTube IFrame API
-  useEffect(() => {
-    if (window.YT) return;
-
-    const tag = document.createElement('script');
-    tag.src = 'https://www.youtube.com/iframe_api';
-    const firstScriptTag = document.getElementsByTagName('script')[0];
-    firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
-
-    (window as any).onYouTubeIframeAPIReady = () => {
-      // API is ready
-    };
-  }, []);
-
-  // Initialize player when component mounts (not dependent on showPlayer)
-  useEffect(() => {
-    if (!savedVideoId) return;
-
-    const initPlayer = () => {
-      if (!window.YT?.Player) {
-        setTimeout(initPlayer, 100);
-        return;
-      }
-
-      // Destroy existing player if any
-      if (playerRef.current) {
-        playerRef.current.destroy();
-        playerRef.current = null;
-      }
-
-      setIsPlayerReady(false);
-      setError(null);
-
-      playerRef.current = new window.YT.Player('youtube-player', {
-        height: '0',
-        width: '0',
-        videoId: savedVideoId,
-        playerVars: {
-          autoplay: 0,
-          controls: 0,
-          modestbranding: 1,
-          rel: 0,
-          showinfo: 0,
-        },
-        events: {
-          onReady: (event: YT.PlayerEvent) => {
-            setIsPlayerReady(true);
-            setError(null);
-            event.target.setVolume(volume);
-          },
-onStateChange: (event: YT.OnStateChangeEvent) => {
-            setIsPlaying(event.data === window.YT.PlayerState.PLAYING);
-            // Auto-advance to next track when video ends
-            if (event.data === window.YT.PlayerState.ENDED && autoPlay) {
-              const nextVideoId = getNextVideoId(savedVideoId);
-              setSavedVideoId(nextVideoId);
-            }
-          },
-          onError: () => {
-            setError('Không thể phát video này');
-            setIsPlayerReady(false);
-          },
-        },
-      });
-    };
-
-    initPlayer();
-
-return () => {
-      playerRef.current?.destroy();
-      playerRef.current = null;
-      setIsPlayerReady(false);
-    };
-  }, [savedVideoId, autoPlay]);
-
-  // Update volume - only when player is ready
-  useEffect(() => {
-    if (isPlayerReady && playerRef.current && typeof playerRef.current.setVolume === 'function') {
-      playerRef.current.setVolume(isMuted ? 0 : volume);
-    }
-  }, [volume, isMuted, isPlayerReady]);
-
-  const handlePlayPause = () => {
-    if (!isPlayerReady || !playerRef.current) return;
-    
-    if (isPlaying) {
-      playerRef.current.pauseVideo();
-    } else {
-      playerRef.current.playVideo();
-    }
   };
 
   const handleCustomUrl = () => {
@@ -155,30 +52,19 @@ return () => {
     }
   };
 
-  const selectPlaylist = (playlist: Playlist) => {
-    setSavedVideoId(playlist.videoId);
-  };
-
   return (
     <div className="w-full glass-effect rounded-2xl p-4 space-y-4">
-      {/* Hidden YouTube Player - always exists */}
-      <div className="hidden">
-        <div id="youtube-player" />
-      </div>
-
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Music className="h-5 w-5 text-primary" />
           <div className="flex flex-col">
             <span className="font-medium">Nhạc nền</span>
-            {savedVideoId && (
-              <span className="text-xs text-muted-foreground">
-                {SUGGESTED_PLAYLISTS.find(p => p.videoId === savedVideoId)?.name || 'Custom video'}
-              </span>
-            )}
+            <span className="text-xs text-muted-foreground">
+              {currentTrack.name}
+            </span>
           </div>
-          {!isPlayerReady && showPlayer && (
+          {!isPlayerReady && (
             <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
           )}
         </div>
@@ -192,17 +78,96 @@ return () => {
         </Button>
       </div>
 
-      {/* Custom URL Input */}
-      <div className="flex gap-2">
-        <Input
-          value={customUrl}
-          onChange={(e) => setCustomUrl(e.target.value)}
-          placeholder="Dán link YouTube..."
-          className="text-sm"
-          onKeyDown={(e) => e.key === 'Enter' && handleCustomUrl()}
-        />
-        <Button size="sm" onClick={handleCustomUrl} disabled={!customUrl}>
-          <ExternalLink className="h-4 w-4" />
+      {/* Progress Bar - Always visible */}
+      <div className="space-y-1">
+        <div 
+          className="relative h-1.5 bg-muted rounded-full cursor-pointer overflow-hidden"
+          onClick={(e) => {
+            if (duration > 0) {
+              const rect = e.currentTarget.getBoundingClientRect();
+              const percent = (e.clientX - rect.left) / rect.width;
+              seekTo(percent * duration);
+            }
+          }}
+        >
+          <div 
+            className="absolute inset-y-0 left-0 bg-primary rounded-full transition-all"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+        <div className="flex justify-between text-xs text-muted-foreground">
+          <span>{formatTime(currentTime)}</span>
+          <span>{formatTime(duration)}</span>
+        </div>
+      </div>
+
+      {/* Quick Controls - Always visible */}
+      <div className="flex items-center gap-3">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handlePlayPause}
+          disabled={!isPlayerReady}
+          className={cn(
+            "h-10 w-10 rounded-full",
+            !isPlayerReady && "opacity-50 cursor-not-allowed"
+          )}
+        >
+          {!isPlayerReady ? (
+            <Loader2 className="h-5 w-5 animate-spin" />
+          ) : isPlaying ? (
+            <Pause className="h-5 w-5" />
+          ) : (
+            <Play className="h-5 w-5 ml-0.5" />
+          )}
+        </Button>
+
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handleNext}
+          disabled={!isPlayerReady}
+          className="h-8 w-8 rounded-full"
+          title="Bài tiếp theo"
+        >
+          <SkipForward className="h-4 w-4" />
+        </Button>
+
+        <div className="flex items-center gap-2 flex-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsMuted(!isMuted)}
+            className="h-8 w-8"
+            disabled={!isPlayerReady}
+          >
+            {isMuted || volume === 0 ? (
+              <VolumeX className="h-4 w-4" />
+            ) : (
+              <Volume2 className="h-4 w-4" />
+            )}
+          </Button>
+          <Slider
+            value={[isMuted ? 0 : volume]}
+            onValueChange={([v]) => {
+              setVolume(v);
+              setIsMuted(false);
+            }}
+            max={100}
+            step={1}
+            className="w-20"
+            disabled={!isPlayerReady}
+          />
+        </div>
+
+        <Button
+          variant={autoPlay ? "default" : "ghost"}
+          size="icon"
+          onClick={() => setAutoPlay(!autoPlay)}
+          className={cn("h-8 w-8", autoPlay && "bg-primary/20 text-primary")}
+          title={autoPlay ? "Tắt tự động chuyển bài" : "Bật tự động chuyển bài"}
+        >
+          <Repeat className="h-4 w-4" />
         </Button>
       </div>
 
@@ -211,106 +176,34 @@ return () => {
         <p className="text-sm text-destructive">{error}</p>
       )}
 
-      {/* Player Controls */}
+      {/* Expanded Controls */}
       {showPlayer && (
-        <div className="space-y-3">
-          {/* Custom Controls */}
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handlePlayPause}
-              disabled={!isPlayerReady}
-              className={cn(
-                "h-10 w-10 rounded-full",
-                !isPlayerReady && "opacity-50 cursor-not-allowed"
-              )}
-            >
-              {!isPlayerReady ? (
-                <Loader2 className="h-5 w-5 animate-spin" />
-              ) : isPlaying ? (
-                <Pause className="h-5 w-5" />
-              ) : (
-                <Play className="h-5 w-5 ml-0.5" />
-              )}
+        <div className="space-y-3 pt-2 border-t border-border/50">
+          {/* Custom URL Input */}
+          <div className="flex gap-2">
+            <Input
+              value={customUrl}
+              onChange={(e) => setCustomUrl(e.target.value)}
+              placeholder="Dán link YouTube..."
+              className="text-sm"
+              onKeyDown={(e) => e.key === 'Enter' && handleCustomUrl()}
+            />
+            <Button size="sm" onClick={handleCustomUrl} disabled={!customUrl}>
+              <ExternalLink className="h-4 w-4" />
             </Button>
-
-            {/* Skip to next track */}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setSavedVideoId(getNextVideoId(savedVideoId))}
-              disabled={!isPlayerReady}
-              className="h-10 w-10 rounded-full"
-              title="Bài tiếp theo"
-            >
-              <SkipForward className="h-5 w-5" />
-            </Button>
-
-            <div className="flex items-center gap-2 flex-1">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsMuted(!isMuted)}
-                className="h-8 w-8"
-                disabled={!isPlayerReady}
-              >
-                {isMuted || volume === 0 ? (
-                  <VolumeX className="h-4 w-4" />
-                ) : (
-                  <Volume2 className="h-4 w-4" />
-                )}
-              </Button>
-              <Slider
-                value={[isMuted ? 0 : volume]}
-                onValueChange={([v]) => {
-                  setVolume(v);
-                  setIsMuted(false);
-                }}
-                max={100}
-                step={1}
-                className="w-24"
-                disabled={!isPlayerReady}
-              />
-            </div>
-
-            {/* Auto-play toggle */}
-            <Button
-              variant={autoPlay ? "default" : "ghost"}
-              size="icon"
-              onClick={() => setAutoPlay(!autoPlay)}
-              className={cn("h-8 w-8", autoPlay && "bg-primary/20 text-primary")}
-              title={autoPlay ? "Tắt tự động chuyển bài" : "Bật tự động chuyển bài"}
-            >
-              <Repeat className="h-4 w-4" />
-            </Button>
-
-            <a
-              href={`https://youtube.com/watch?v=${savedVideoId}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Mở YouTube ↗
-            </a>
           </div>
+
+          <a
+            href={`https://youtube.com/watch?v=${savedVideoId}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+          >
+            <ExternalLink className="h-3 w-3" />
+            Mở trên YouTube
+          </a>
         </div>
       )}
     </div>
   );
-}
-
-// Add YouTube types
-declare global {
-  interface Window {
-    YT: typeof YT & {
-      PlayerState: {
-        PLAYING: number;
-        PAUSED: number;
-        ENDED: number;
-        BUFFERING: number;
-      };
-    };
-    onYouTubeIframeAPIReady: () => void;
-  }
 }

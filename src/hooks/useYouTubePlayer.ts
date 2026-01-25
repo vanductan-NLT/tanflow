@@ -2,22 +2,36 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 
 const PLAYLISTS = [
-  { id: '1', name: 'Lofi Hip Hop', videoId: 'jfKfPfyJRdk' },
-  { id: '2', name: 'Jazz & Coffee', videoId: '-5KAN9_CzSA' },
-  { id: '3', name: 'Nature Sounds', videoId: 'eKFTSSKCzWA' },
-  { id: '4', name: 'Piano Focus', videoId: '4oStw0r33so' },
-  { id: '5', name: 'Ambient Study', videoId: 'lTRiuFIWV54' },
+  { id: '1', name: 'Lofi Hip Hop', videoId: 'jfKfPfyJRdk', thumbnail: '🎵' },
+  { id: '2', name: 'Jazz & Coffee', videoId: '-5KAN9_CzSA', thumbnail: '☕' },
+  { id: '3', name: 'Nature Sounds', videoId: 'eKFTSSKCzWA', thumbnail: '🌿' },
+  { id: '4', name: 'Piano Focus', videoId: '4oStw0r33so', thumbnail: '🎹' },
+  { id: '5', name: 'Ambient Study', videoId: 'lTRiuFIWV54', thumbnail: '🌙' },
 ];
 
 export function useYouTubePlayer() {
   const [savedVideoId, setSavedVideoId] = useLocalStorage<string>('focusflow-youtube-video', 'jfKfPfyJRdk');
+  const [autoPlay, setAutoPlay] = useLocalStorage<boolean>('focusflow-youtube-autoplay', true);
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState(50);
   const [isMuted, setIsMuted] = useState(false);
   const [isPlayerReady, setIsPlayerReady] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [error, setError] = useState<string | null>(null);
   const playerRef = useRef<YT.Player | null>(null);
+  const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const currentTrack = PLAYLISTS.find(p => p.videoId === savedVideoId) || PLAYLISTS[0];
+
+  const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
+
+  const formatTime = useCallback((seconds: number): string => {
+    if (!seconds || isNaN(seconds)) return '0:00';
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  }, []);
 
   // Load YouTube IFrame API
   useEffect(() => {
@@ -45,6 +59,14 @@ export function useYouTubePlayer() {
       }
 
       setIsPlayerReady(false);
+      setError(null);
+
+      // Ensure the container exists
+      const container = document.getElementById('hidden-youtube-player');
+      if (!container) {
+        setTimeout(initPlayer, 100);
+        return;
+      }
 
       playerRef.current = new window.YT.Player('hidden-youtube-player', {
         height: '0',
@@ -58,12 +80,18 @@ export function useYouTubePlayer() {
           onReady: (event: YT.PlayerEvent) => {
             setIsPlayerReady(true);
             event.target.setVolume(volume);
+            const dur = event.target.getDuration();
+            if (dur) setDuration(dur);
           },
           onStateChange: (event: YT.OnStateChangeEvent) => {
             setIsPlaying(event.data === window.YT.PlayerState.PLAYING);
-            if (event.data === window.YT.PlayerState.ENDED) {
+            if (event.data === window.YT.PlayerState.ENDED && autoPlay) {
               handleNext();
             }
+          },
+          onError: (event: YT.PlayerEvent) => {
+            console.error('YouTube Player Error:', event);
+            setError('Video không khả dụng. Thử video khác.');
           },
         },
       });
@@ -72,10 +100,38 @@ export function useYouTubePlayer() {
     initPlayer();
 
     return () => {
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+      }
       playerRef.current?.destroy();
       playerRef.current = null;
     };
   }, [savedVideoId]);
+
+  // Update progress
+  useEffect(() => {
+    if (isPlaying && playerRef.current) {
+      progressIntervalRef.current = setInterval(() => {
+        if (playerRef.current?.getCurrentTime) {
+          setCurrentTime(playerRef.current.getCurrentTime());
+        }
+        if (playerRef.current?.getDuration) {
+          const dur = playerRef.current.getDuration();
+          if (dur > 0) setDuration(dur);
+        }
+      }, 1000);
+    } else {
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+      }
+    }
+
+    return () => {
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+      }
+    };
+  }, [isPlaying]);
 
   useEffect(() => {
     if (isPlayerReady && playerRef.current) {
@@ -104,6 +160,13 @@ export function useYouTubePlayer() {
     setSavedVideoId(PLAYLISTS[prevIndex].videoId);
   }, [savedVideoId, setSavedVideoId]);
 
+  const seekTo = useCallback((seconds: number) => {
+    if (playerRef.current?.seekTo) {
+      playerRef.current.seekTo(seconds, true);
+      setCurrentTime(seconds);
+    }
+  }, []);
+
   return {
     isPlaying,
     isPlayerReady,
@@ -118,5 +181,13 @@ export function useYouTubePlayer() {
     handlePlayPause,
     handleNext,
     handlePrev,
+    autoPlay,
+    setAutoPlay,
+    currentTime,
+    duration,
+    progress,
+    seekTo,
+    formatTime,
+    error,
   };
 }
