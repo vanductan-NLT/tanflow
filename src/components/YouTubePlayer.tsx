@@ -152,25 +152,6 @@ export function YouTubePlayer() {
         </Button>
       </div>
 
-      {/* Quick Playlists */}
-      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin">
-        {SUGGESTED_PLAYLISTS.map((playlist) => (
-          <button
-            key={playlist.id}
-            onClick={() => selectPlaylist(playlist)}
-            className={cn(
-              'flex items-center gap-2 px-3 py-2 rounded-lg text-sm whitespace-nowrap transition-colors',
-              savedVideoId === playlist.videoId
-                ? 'bg-primary text-primary-foreground'
-                : 'bg-muted/50 hover:bg-muted'
-            )}
-          >
-            <span>{playlist.thumbnail}</span>
-            <span>{playlist.name}</span>
-          </button>
-        ))}
-      </div>
-
       {/* Custom URL Input */}
       <div className="flex gap-2">
         <Input
