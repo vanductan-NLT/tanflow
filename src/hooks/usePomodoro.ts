@@ -10,6 +10,7 @@ export interface PomodoroSettings {
   longBreakDuration: number;
   longBreakInterval: number; // number of pomodoros before long break
   meditationDuration: number; // in minutes
+  autoStartNextSession: boolean; // auto-transition between modes
 }
 
 export interface PomodoroState {
@@ -26,6 +27,7 @@ const DEFAULT_SETTINGS: PomodoroSettings = {
   longBreakDuration: 15,
   longBreakInterval: 4,
   meditationDuration: 10,
+  autoStartNextSession: false,
 };
 
 const DEFAULT_STATE: PomodoroState = {
@@ -169,7 +171,6 @@ export function usePomodoro() {
   // Handle timer completion
   const handleTimerComplete = useCallback(() => {
     playNotificationSound();
-    setIsRunning(false);
 
     if (mode === 'pomodoro') {
       const newCount = completedPomodoros + 1;
@@ -197,6 +198,13 @@ export function usePomodoro() {
         setMode('shortBreak');
         setTimeLeft(settings.shortBreakDuration * 60);
       }
+      
+      // Auto-start next session if enabled
+      if (settings.autoStartNextSession) {
+        setIsRunning(true);
+      } else {
+        setIsRunning(false);
+      }
     } else if (mode === 'meditation') {
       // Meditation complete - stay in meditation mode, just stop
       showPiPNotification({
@@ -212,6 +220,7 @@ export function usePomodoro() {
       );
       // Reset meditation timer but don't switch mode
       setTimeLeft(settings.meditationDuration * 60);
+      setIsRunning(false);
     } else {
       // Break is over, back to pomodoro
       showPiPNotification({
@@ -227,6 +236,13 @@ export function usePomodoro() {
       );
       setMode('pomodoro');
       setTimeLeft(settings.pomodoroDuration * 60);
+      
+      // Auto-start next pomodoro if enabled
+      if (settings.autoStartNextSession) {
+        setIsRunning(true);
+      } else {
+        setIsRunning(false);
+      }
     }
   }, [mode, completedPomodoros, settings, playNotificationSound, showBrowserNotification, showPiPNotification]);
 

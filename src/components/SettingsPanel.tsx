@@ -2,6 +2,7 @@ import { Settings, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
+import { Switch } from '@/components/ui/switch';
 import { usePomodoro, PomodoroSettings } from '@/hooks/usePomodoro';
 import { usePexelsVideo } from '@/hooks/usePexelsVideo';
 import { PexelsSettings } from '@/components/PexelsSettings';
@@ -122,6 +123,20 @@ export function SettingsPanel({ pomodoro, pexels }: SettingsPanelProps) {
               min={5}
               max={60}
               step={5}
+            />
+          </div>
+
+          {/* Auto-start next session */}
+          <div className="flex items-center justify-between py-2">
+            <div className="space-y-0.5">
+              <Label>Tự động chuyển chế độ</Label>
+              <p className="text-xs text-muted-foreground">
+                Tự bắt đầu phiên tiếp theo
+              </p>
+            </div>
+            <Switch
+              checked={settings.autoStartNextSession}
+              onCheckedChange={(checked) => updateSettings({ autoStartNextSession: checked })}
             />
           </div>
 
