@@ -1,11 +1,10 @@
 import { Settings, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { usePomodoro, PomodoroSettings } from '@/hooks/usePomodoro';
-import { useBackground } from '@/hooks/useBackground';
-import { BackgroundSettings } from '@/components/BackgroundSettings';
+import { usePexelsVideo } from '@/hooks/usePexelsVideo';
+import { PexelsSettings } from '@/components/PexelsSettings';
 import { Separator } from '@/components/ui/separator';
 import {
   Sheet,
@@ -18,10 +17,10 @@ import {
 
 interface SettingsPanelProps {
   pomodoro: ReturnType<typeof usePomodoro>;
-  background: ReturnType<typeof useBackground>;
+  pexels: ReturnType<typeof usePexelsVideo>;
 }
 
-export function SettingsPanel({ pomodoro, background }: SettingsPanelProps) {
+export function SettingsPanel({ pomodoro, pexels }: SettingsPanelProps) {
   const { settings, updateSettings, resetSession } = pomodoro;
 
   const handleChange = (key: keyof PomodoroSettings, value: number) => {
@@ -35,7 +34,7 @@ export function SettingsPanel({ pomodoro, background }: SettingsPanelProps) {
           <Settings className="h-5 w-5" />
         </Button>
       </SheetTrigger>
-      <SheetContent className="w-80 sm:w-96">
+      <SheetContent className="w-80 sm:w-96 overflow-y-auto">
         <SheetHeader>
           <SheetTitle>Cài đặt</SheetTitle>
           <SheetDescription>Tùy chỉnh thời gian Pomodoro và các tùy chọn khác</SheetDescription>
@@ -124,9 +123,9 @@ export function SettingsPanel({ pomodoro, background }: SettingsPanelProps) {
             </p>
           </div>
 
-          {/* Background Settings */}
+          {/* Pexels Video Settings */}
           <Separator className="my-4" />
-          <BackgroundSettings background={background} />
+          <PexelsSettings pexels={pexels} />
         </div>
       </SheetContent>
     </Sheet>
