@@ -18,9 +18,16 @@ import { cn } from '@/lib/utils';
 const Index = () => {
   useTheme();
   
-  const pomodoro = usePomodoro();
-  const reminders = useHealthReminders();
   const pexels = usePexelsVideo();
+  
+  const pomodoro = usePomodoro({
+    onPomodoroComplete: () => {
+      if (pexels.settings.refreshOnPomodoroComplete && pexels.settings.enabled && pexels.settings.apiKey) {
+        pexels.refreshVideo();
+      }
+    },
+  });
+  const reminders = useHealthReminders();
   const youtube = useYouTubePlayer();
 
   const isFocusing = pomodoro.mode === 'pomodoro' && pomodoro.isRunning;

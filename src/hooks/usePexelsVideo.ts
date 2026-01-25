@@ -5,12 +5,16 @@ export interface PexelsSettings {
   enabled: boolean;
   category: string;
   apiKey: string;
+  autoRefreshInterval: number; // 0 = off, otherwise minutes
+  refreshOnPomodoroComplete: boolean;
 }
 
 const DEFAULT_SETTINGS: PexelsSettings = {
   enabled: true,
   category: 'nature',
   apiKey: '',
+  autoRefreshInterval: 0,
+  refreshOnPomodoroComplete: true,
 };
 
 const CATEGORIES = [
@@ -100,6 +104,20 @@ export function usePexelsVideo() {
       fetchRandomVideo();
     }
   }, [settings.category, settings.apiKey, settings.enabled]);
+
+  // Auto-refresh video at interval
+  useEffect(() => {
+    if (!settings.enabled || !settings.apiKey || settings.autoRefreshInterval === 0) {
+      return;
+    }
+
+    const intervalMs = settings.autoRefreshInterval * 60 * 1000;
+    const intervalId = setInterval(() => {
+      fetchRandomVideo();
+    }, intervalMs);
+
+    return () => clearInterval(intervalId);
+  }, [settings.enabled, settings.apiKey, settings.autoRefreshInterval, fetchRandomVideo]);
 
   const updateSettings = useCallback((updates: Partial<PexelsSettings>) => {
     setSettings(prev => ({ ...prev, ...updates }));
