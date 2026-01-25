@@ -130,10 +130,6 @@ const Index = () => {
             </div>
           </main>
 
-          {/* Footer */}
-          <footer className="fixed bottom-0 left-0 right-0 py-3 sm:py-4 text-center text-xs text-muted-foreground">
-            <p>Tập trung. Nghỉ ngơi. Lặp lại. 🍅</p>
-          </footer>
         </>
       )}
     </div>
