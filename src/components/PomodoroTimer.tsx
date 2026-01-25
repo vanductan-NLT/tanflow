@@ -26,7 +26,7 @@ export function PomodoroTimer({ pomodoro }: PomodoroTimerProps) {
     pomodoro: 'Tập trung',
     shortBreak: 'Nghỉ ngắn',
     longBreak: 'Nghỉ dài',
-    meditation: 'Thiền 🧘',
+    meditation: 'Thiền',
   };
 
   const modeColors: Record<TimerMode, string> = {

@@ -201,15 +201,24 @@ export function usePomodoro() {
     }
   }, [mode, completedPomodoros, settings, playNotificationSound, showBrowserNotification, showPiPNotification]);
 
-  // Timer countdown
+  // Timer countdown using timestamp-based approach to handle background tabs
+  const lastTickRef = useRef<number>(Date.now());
+  
   useEffect(() => {
     if (isRunning && timeLeft > 0) {
+      lastTickRef.current = Date.now();
+      
       intervalRef.current = window.setInterval(() => {
+        const now = Date.now();
+        const elapsed = Math.floor((now - lastTickRef.current) / 1000);
+        lastTickRef.current = now;
+        
         setTimeLeft((prev) => {
-          if (prev <= 1) {
+          const newTime = prev - elapsed;
+          if (newTime <= 0) {
             return 0;
           }
-          return prev - 1;
+          return newTime;
         });
       }, 1000);
     }

@@ -9,6 +9,7 @@ import { VideoBackground } from '@/components/VideoBackground';
 import { BackgroundScene } from '@/components/BackgroundScene';
 import { AudioVisualizer } from '@/components/AudioVisualizer';
 import { MinimalReminders } from '@/components/MinimalReminders';
+import { QuoteDisplay } from '@/components/QuoteDisplay';
 import { usePomodoro } from '@/hooks/usePomodoro';
 import { useHealthReminders } from '@/hooks/useHealthReminders';
 import { useTheme } from '@/hooks/useTheme';
@@ -56,6 +57,11 @@ const Index = () => {
       {/* ===== FOCUS MODE UI ===== */}
       {isFocusing ? (
         <div className="min-h-screen flex flex-col items-center justify-center px-4 animate-fade-in">
+          {/* Inspirational Quote */}
+          <div className="absolute top-8 sm:top-12 md:top-16 left-0 right-0 px-4">
+            <QuoteDisplay mode={pomodoro.mode} />
+          </div>
+
           {/* Minimal Timer */}
           <MinimalTimer pomodoro={pomodoro} />
 
