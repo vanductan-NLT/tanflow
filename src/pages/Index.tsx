@@ -20,10 +20,10 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background/80 transition-theme">
       {/* Dynamic Background */}
-      <BackgroundScene />
+      <BackgroundScene timerMode={pomodoro.mode} />
 
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-40 glass-effect">
+      <header className="fixed top-0 left-0 right-0 z-40 glass-effect animate-slide-down">
         <div className="container max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <img src="/favicon.png" alt="FocusFlow" className="w-7 h-7" />
@@ -40,20 +40,36 @@ const Index = () => {
       <main className="container max-w-4xl mx-auto px-4 pt-24 pb-8">
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Left Column - Timer */}
-          <div className="flex-1 flex flex-col items-center justify-center py-8">
+          <div 
+            className="flex-1 flex flex-col items-center justify-center py-8 animate-zoom-in"
+            style={{ animationDelay: '0.15s' }}
+          >
             <PomodoroTimer pomodoro={pomodoro} />
           </div>
 
           {/* Right Column - Music & Reminders */}
           <div className="lg:w-80 space-y-4">
-            <YouTubePlayer />
-            <HealthReminders reminders={reminders} />
+            <div 
+              className="animate-slide-up"
+              style={{ animationDelay: '0.25s' }}
+            >
+              <YouTubePlayer />
+            </div>
+            <div 
+              className="animate-slide-up"
+              style={{ animationDelay: '0.35s' }}
+            >
+              <HealthReminders reminders={reminders} />
+            </div>
           </div>
         </div>
       </main>
 
       {/* Footer */}
-      <footer className="fixed bottom-0 left-0 right-0 py-4 text-center text-xs text-muted-foreground">
+      <footer 
+        className="fixed bottom-0 left-0 right-0 py-4 text-center text-xs text-muted-foreground animate-fade-in"
+        style={{ animationDelay: '0.5s' }}
+      >
         <p>Tập trung. Nghỉ ngơi. Lặp lại. 🍅</p>
       </footer>
     </div>

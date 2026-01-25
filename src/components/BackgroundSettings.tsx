@@ -1,42 +1,26 @@
-import { RefreshCw, Image } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Palette } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Slider } from '@/components/ui/slider';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { useBackground, BackgroundSettings as BGSettings } from '@/hooks/useBackground';
-
-const CATEGORIES = [
-  { value: 'nature', label: '🌿 Thiên nhiên' },
-  { value: 'forest', label: '🌲 Rừng' },
-  { value: 'mountain', label: '⛰️ Núi' },
-  { value: 'ocean', label: '🌊 Biển' },
-  { value: 'sky', label: '☁️ Bầu trời' },
-];
+import { useBackground, GRADIENT_THEMES, GradientTheme } from '@/hooks/useBackground';
+import { cn } from '@/lib/utils';
 
 interface BackgroundSettingsProps {
   background: ReturnType<typeof useBackground>;
 }
 
 export function BackgroundSettings({ background }: BackgroundSettingsProps) {
-  const { settings, updateSettings, refreshImage, isLoading } = background;
+  const { settings, updateSettings } = background;
 
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2 text-sm font-medium">
-        <Image className="h-4 w-4" />
-        <span>Hình nền động</span>
+        <Palette className="h-4 w-4" />
+        <span>Nền động</span>
       </div>
 
       {/* Enable/Disable */}
       <div className="flex items-center justify-between">
-        <Label htmlFor="bg-enabled">Bật hình nền</Label>
+        <Label htmlFor="bg-enabled">Bật nền gradient</Label>
         <Switch
           id="bg-enabled"
           checked={settings.enabled}
@@ -46,71 +30,51 @@ export function BackgroundSettings({ background }: BackgroundSettingsProps) {
 
       {settings.enabled && (
         <>
-          {/* Category selection */}
+          {/* Theme Selection */}
           <div className="space-y-2">
-            <Label>Chủ đề</Label>
-            <Select
-              value={settings.category}
-              onValueChange={(category) => updateSettings({ category })}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {CATEGORIES.map((cat) => (
-                  <SelectItem key={cat.value} value={cat.value}>
-                    {cat.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Auto-change toggle */}
-          <div className="flex items-center justify-between">
-            <Label htmlFor="auto-change">Tự động đổi ảnh</Label>
-            <Switch
-              id="auto-change"
-              checked={settings.autoChange}
-              onCheckedChange={(autoChange) => updateSettings({ autoChange })}
-            />
-          </div>
-
-          {/* Change interval */}
-          {settings.autoChange && (
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <Label>Thời gian đổi ảnh</Label>
-                <span className="text-sm font-mono text-muted-foreground">
-                  {settings.changeInterval} phút
-                </span>
-              </div>
-              <Slider
-                value={[settings.changeInterval]}
-                onValueChange={([v]) => updateSettings({ changeInterval: v })}
-                min={1}
-                max={30}
-                step={1}
-              />
+            <Label className="text-sm">Chủ đề gradient</Label>
+            <div className="grid grid-cols-3 gap-2">
+              {(Object.keys(GRADIENT_THEMES) as GradientTheme[]).map((themeKey) => {
+                const themeData = GRADIENT_THEMES[themeKey];
+                const isSelected = settings.theme === themeKey;
+                
+                return (
+                  <button
+                    key={themeKey}
+                    onClick={() => updateSettings({ theme: themeKey })}
+                    className={cn(
+                      "relative h-12 rounded-lg overflow-hidden transition-all duration-200",
+                      "border-2",
+                      isSelected 
+                        ? "border-primary ring-2 ring-primary/30" 
+                        : "border-border hover:border-primary/50"
+                    )}
+                  >
+                    {/* Gradient preview */}
+                    <div 
+                      className={cn(
+                        "absolute inset-0 bg-gradient-to-br",
+                        themeData.colors
+                      )} 
+                    />
+                    {/* Label overlay */}
+                    <div className="absolute inset-0 flex items-end justify-center bg-gradient-to-t from-black/60 to-transparent">
+                      <span className="text-[10px] font-medium text-white pb-1 drop-shadow-sm">
+                        {themeData.name}
+                      </span>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
-          )}
+          </div>
 
-          {/* Refresh button */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={refreshImage}
-            disabled={isLoading}
-            className="w-full"
-          >
-            <RefreshCw className={cn("h-4 w-4 mr-2", isLoading && "animate-spin")} />
-            Đổi ảnh nền
-          </Button>
+          {/* Info text */}
+          <p className="text-xs text-muted-foreground">
+            💡 Gradient sẽ rõ nét hơn khi bạn đang tập trung
+          </p>
         </>
       )}
     </div>
   );
 }
-
-// Helper import
-import { cn } from '@/lib/utils';

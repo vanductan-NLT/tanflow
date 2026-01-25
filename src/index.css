@@ -135,6 +135,67 @@
   .bg-radial-vignette {
     background: radial-gradient(ellipse at center, transparent 0%, hsl(var(--background) / 0.3) 100%);
   }
+
+  /* Animated gradient background */
+  .animated-gradient {
+    background-size: 400% 400%;
+    animation: gradient-shift 15s ease infinite;
+  }
+
+  @keyframes gradient-shift {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+
+  /* Floating particles effect */
+  .particles::before,
+  .particles::after {
+    content: '';
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background: white;
+    border-radius: 50%;
+    opacity: 0.3;
+    animation: float-particle 20s linear infinite;
+  }
+
+  .particles::before {
+    top: 20%;
+    left: 30%;
+    animation-delay: -5s;
+  }
+
+  .particles::after {
+    top: 60%;
+    right: 20%;
+    animation-delay: -10s;
+    width: 6px;
+    height: 6px;
+    opacity: 0.2;
+  }
+
+  @keyframes float-particle {
+    0%, 100% {
+      transform: translateY(0) translateX(0);
+    }
+    25% {
+      transform: translateY(-30px) translateX(20px);
+    }
+    50% {
+      transform: translateY(-10px) translateX(-20px);
+    }
+    75% {
+      transform: translateY(-40px) translateX(10px);
+    }
+  }
 }
 
 /* Custom scrollbar */

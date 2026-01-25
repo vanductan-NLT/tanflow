@@ -1,32 +1,43 @@
-import { useBackground } from '@/hooks/useBackground';
+import { useBackground, GRADIENT_THEMES } from '@/hooks/useBackground';
 import { cn } from '@/lib/utils';
+import { TimerMode } from '@/hooks/usePomodoro';
 
-export function BackgroundScene() {
-  const { settings, imageUrl, imageKey, isLoading } = useBackground();
+interface BackgroundSceneProps {
+  timerMode?: TimerMode;
+}
+
+export function BackgroundScene({ timerMode = 'pomodoro' }: BackgroundSceneProps) {
+  const { settings, theme } = useBackground();
 
   if (!settings.enabled) {
     return null;
   }
 
+  // When focusing (pomodoro), show gradient more clearly
+  // When resting, overlay is heavier for a calmer feel
+  const isFocusing = timerMode === 'pomodoro';
+  
   return (
     <div className="fixed inset-0 -z-10 overflow-hidden">
-      {/* Background image with slow zoom animation */}
-      {imageUrl && (
-        <div
-          key={imageKey}
-          className={cn(
-            "absolute inset-0 bg-cover bg-center bg-no-repeat",
-            "animate-background-zoom transition-opacity duration-1000",
-            isLoading ? "opacity-0" : "opacity-100"
-          )}
-          style={{ backgroundImage: `url(${imageUrl})` }}
-        />
-      )}
+      {/* Animated gradient background */}
+      <div
+        className={cn(
+          "absolute inset-0 bg-gradient-to-br animated-gradient particles transition-all duration-1000",
+          theme.colors
+        )}
+      />
 
-      {/* Gradient overlay for readability */}
-      <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/40 to-background/80" />
+      {/* Overlay that adjusts based on timer mode */}
+      <div 
+        className={cn(
+          "absolute inset-0 bg-gradient-to-b transition-all duration-700",
+          isFocusing 
+            ? "from-background/20 via-background/10 to-background/40" 
+            : "from-background/50 via-background/40 to-background/70"
+        )} 
+      />
       
-      {/* Additional vignette effect */}
+      {/* Subtle vignette effect */}
       <div className="absolute inset-0 bg-radial-vignette" />
     </div>
   );
