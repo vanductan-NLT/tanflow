@@ -20,7 +20,7 @@ const Index = () => {
       <header className="fixed top-0 left-0 right-0 z-40 glass-effect">
         <div className="container max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-2xl">🍅</span>
+            <img src="/favicon.png" alt="FocusFlow" className="w-7 h-7" />
             <span className="font-semibold text-lg">FocusFlow</span>
           </div>
           <div className="flex items-center gap-2">
