@@ -19,6 +19,7 @@ export function useYouTubePlayer() {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [shouldAutoPlay, setShouldAutoPlay] = useState(false);
   const playerRef = useRef<YT.Player | null>(null);
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -82,6 +83,11 @@ export function useYouTubePlayer() {
             event.target.setVolume(volume);
             const dur = event.target.getDuration();
             if (dur) setDuration(dur);
+            // Auto play if triggered by custom URL
+            if (shouldAutoPlay) {
+              event.target.playVideo();
+              setShouldAutoPlay(false);
+            }
           },
           onStateChange: (event: YT.OnStateChangeEvent) => {
             setIsPlaying(event.data === window.YT.PlayerState.PLAYING);
@@ -171,6 +177,12 @@ export function useYouTubePlayer() {
     }
   }, []);
 
+  // Function to set video and auto-play
+  const setVideoAndPlay = useCallback((videoId: string) => {
+    setShouldAutoPlay(true);
+    setSavedVideoId(videoId);
+  }, [setSavedVideoId]);
+
   return {
     isPlaying,
     isPlayerReady,
@@ -182,6 +194,7 @@ export function useYouTubePlayer() {
     playlists: PLAYLISTS,
     savedVideoId,
     setSavedVideoId,
+    setVideoAndPlay,
     handlePlayPause,
     handleNext,
     handlePrev,
