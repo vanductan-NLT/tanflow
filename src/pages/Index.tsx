@@ -115,23 +115,8 @@ const Index = () => {
             <QuoteDisplay mode={pomodoro.mode} />
           </div>
 
-          {/* Minimal Timer + Task List below */}
-          <div className="flex flex-col items-center gap-6 sm:gap-8">
-            <MinimalTimer pomodoro={pomodoro} activeTask={tasks.activeTask} />
-            
-            {/* Compact Task List - Below Timer */}
-            {tasks.incompleteTasks.length > 0 && !isMeditating && (
-              <TaskList
-                tasks={tasks.tasks}
-                activeTaskId={tasks.activeTaskId}
-                pomodoroDuration={pomodoro.settings.pomodoroDuration}
-                onAddTask={tasks.addTask}
-                onDeleteTask={tasks.deleteTask}
-                onSetActiveTask={tasks.setActiveTask}
-                compact
-              />
-            )}
-          </div>
+          {/* Minimal Timer (shows active task name) */}
+          <MinimalTimer pomodoro={pomodoro} activeTask={tasks.activeTask} />
 
           {/* Bottom bar: Visualizer + Reminders (hide reminders in meditation) */}
           <div className="fixed bottom-4 sm:bottom-6 md:bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 sm:gap-3 md:gap-4 w-full max-w-sm sm:max-w-md md:max-w-lg px-4">
