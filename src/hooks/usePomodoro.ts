@@ -87,6 +87,8 @@ export function usePomodoro() {
   const [timeLeft, setTimeLeft] = useState(initVals?.timeLeft ?? savedState.timeLeft);
   const [isRunning, setIsRunning] = useState(initVals?.isRunning ?? false);
   const [completedPomodoros, setCompletedPomodoros] = useState(initVals?.completedPomodoros ?? 0);
+  // Used to force-restart the running interval when we start a new session while staying in "running" state
+  const [runToken, setRunToken] = useState(0);
   
   // Mark first mount as complete
   useEffect(() => {
@@ -170,6 +172,9 @@ export function usePomodoro() {
 
   // Handle timer completion
   const handleTimerComplete = useCallback(() => {
+    // Stop current interval before switching session to avoid the old interval
+    // immediately driving the new session back to 0 and causing loops/flicker.
+    setIsRunning(false);
     playNotificationSound();
 
     if (mode === 'pomodoro') {
@@ -201,9 +206,8 @@ export function usePomodoro() {
       
       // Auto-start next session if enabled
       if (settings.autoStartNextSession) {
+        setRunToken((t) => t + 1);
         setIsRunning(true);
-      } else {
-        setIsRunning(false);
       }
     } else if (mode === 'meditation') {
       // Meditation complete - stay in meditation mode, just stop
@@ -239,9 +243,8 @@ export function usePomodoro() {
       
       // Auto-start next pomodoro if enabled
       if (settings.autoStartNextSession) {
+        setRunToken((t) => t + 1);
         setIsRunning(true);
-      } else {
-        setIsRunning(false);
       }
     }
   }, [mode, completedPomodoros, settings, playNotificationSound, showBrowserNotification, showPiPNotification]);
@@ -279,9 +282,10 @@ export function usePomodoro() {
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
+        intervalRef.current = null;
       }
     };
-  }, [isRunning, playTickSound]);
+  }, [isRunning, runToken, playTickSound]);
 
   // Track if we've already handled completion for current cycle
   const hasCompletedRef = useRef(false);
@@ -337,7 +341,10 @@ export function usePomodoro() {
   }, [mode, timeLeft, isRunning, completedPomodoros, setSavedState]);
 
   // Controls
-  const start = () => setIsRunning(true);
+  const start = () => {
+    setRunToken((t) => t + 1);
+    setIsRunning(true);
+  };
   const pause = () => setIsRunning(false);
   const reset = () => {
     setIsRunning(false);
