@@ -50,6 +50,7 @@ export function usePexelsVideo() {
     DEFAULT_SETTINGS
   );
   const [videoUrl, setVideoUrl] = useState<string>('');
+  const [videoKey, setVideoKey] = useState(0); // Force re-render when same URL
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
@@ -59,6 +60,11 @@ export function usePexelsVideo() {
 
   const fetchRandomVideo = useCallback(async () => {
     const currentSettings = settingsRef.current;
+    console.log('[Pexels] fetchRandomVideo called', { 
+      apiKey: currentSettings.apiKey ? 'exists' : 'missing',
+      enabled: currentSettings.enabled,
+      category: currentSettings.category
+    });
     
     if (!currentSettings.apiKey || !currentSettings.enabled) {
       setError('Cần nhập Pexels API key');
@@ -92,7 +98,9 @@ export function usePexelsVideo() {
           f => f.quality === 'hd' && f.width >= 1280
         ) || randomVideo.video_files[0];
         
+        console.log('[Pexels] Setting new video URL:', hdFile.link);
         setVideoUrl(hdFile.link);
+        setVideoKey(prev => prev + 1); // Force VideoBackground to update
       } else {
         setError('Không tìm thấy video');
       }
@@ -143,6 +151,7 @@ export function usePexelsVideo() {
     settings,
     updateSettings,
     videoUrl,
+    videoKey,
     isLoading,
     error,
     refreshVideo,
