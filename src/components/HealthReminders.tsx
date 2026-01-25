@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Bell, BellOff, Plus, Trash2, Clock, Timer, Pencil, RotateCcw } from 'lucide-react';
+import { Bell, BellOff, Plus, Trash2, Clock, Timer, Pencil, RotateCcw, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
@@ -39,6 +39,7 @@ export function HealthReminders({ reminders: reminderHook }: HealthRemindersProp
   const [newName, setNewName] = useState('');
   const [newIcon, setNewIcon] = useState('droplets');
   const [newInterval, setNewInterval] = useState(30);
+  const [isExpanded, setIsExpanded] = useState(true);
 
   // Edit dialog state
   const [editingReminder, setEditingReminder] = useState<HealthReminder | null>(null);
@@ -58,6 +59,8 @@ export function HealthReminders({ reminders: reminderHook }: HealthRemindersProp
     });
     return next;
   })();
+
+  const enabledReminders = reminders.filter((r) => r.enabled);
 
   const handleAddReminder = () => {
     if (newName.trim()) {
@@ -189,7 +192,7 @@ export function HealthReminders({ reminders: reminderHook }: HealthRemindersProp
             <Bell className="h-5 w-5 text-primary" strokeWidth={1.5} />
             <span className="font-medium">Nhắc nhở sức khỏe</span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
             <Button
               variant="ghost"
               size="icon"
@@ -207,133 +210,175 @@ export function HealthReminders({ reminders: reminderHook }: HealthRemindersProp
             >
               {isActive ? <Bell className="h-4 w-4" strokeWidth={1.5} /> : <BellOff className="h-4 w-4" strokeWidth={1.5} />}
             </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="text-xs h-8 px-2"
+            >
+              {isExpanded ? (
+                <ChevronUp className="h-4 w-4" />
+              ) : (
+                <ChevronDown className="h-4 w-4" />
+              )}
+            </Button>
           </div>
         </div>
 
-        {/* Next Reminder Preview */}
-        {isActive && nextReminder && (
-          <div className="flex items-center justify-between p-3 rounded-xl bg-muted/30">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10">
-                <ReminderIcon iconKey={nextReminder.reminder.icon} size="lg" className="text-primary" />
-              </div>
-              <div>
-                <p className="text-sm font-medium">{nextReminder.reminder.name}</p>
-                <p className="text-xs text-muted-foreground">Sắp đến</p>
-              </div>
+        {/* Collapsed View - Show icons only */}
+        {!isExpanded && (
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              {enabledReminders.slice(0, 5).map((reminder) => (
+                <div
+                  key={reminder.id}
+                  className="flex items-center justify-center w-8 h-8 rounded-full bg-muted/50"
+                  title={`${reminder.name} - ${formatTimeRemaining(timeUntilNext[reminder.id] || 0)}`}
+                >
+                  <ReminderIcon iconKey={reminder.icon} size="md" className="text-muted-foreground" />
+                </div>
+              ))}
+              {enabledReminders.length > 5 && (
+                <span className="text-xs text-muted-foreground">+{enabledReminders.length - 5}</span>
+              )}
             </div>
-            <span className="text-lg font-mono tabular-nums text-primary">
-              {formatTimeRemaining(nextReminder.timeLeft)}
-            </span>
+            {nextReminder && (
+              <span className="text-sm font-mono tabular-nums text-primary">
+                {formatTimeRemaining(nextReminder.timeLeft)}
+              </span>
+            )}
           </div>
         )}
 
-        {/* Reminder List */}
-        <div className="space-y-2 max-h-48 overflow-y-auto scrollbar-thin">
-          {reminders.map((reminder) => (
-            <div
-              key={reminder.id}
-              className={cn(
-                'flex items-center justify-between p-3 rounded-xl transition-colors group',
-                reminder.enabled ? 'bg-muted/20' : 'bg-muted/5 opacity-60'
-              )}
-            >
-              <div className="flex items-center gap-3 flex-1 min-w-0">
-                <div className="flex items-center justify-center w-9 h-9 rounded-full bg-muted shrink-0">
-                  <ReminderIcon iconKey={reminder.icon} size="lg" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-sm font-medium truncate">{reminder.name}</p>
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <Clock className="h-3 w-3 shrink-0" strokeWidth={1.5} />
-                    <span>Mỗi {reminder.intervalMinutes} phút</span>
-                    {reminder.enabled && timeUntilNext[reminder.id] && (
-                      <span className="ml-2 text-primary">
-                        ({formatTimeRemaining(timeUntilNext[reminder.id])})
-                      </span>
-                    )}
+        {/* Expanded View */}
+        {isExpanded && (
+          <>
+            {/* Next Reminder Preview */}
+            {isActive && nextReminder && (
+              <div className="flex items-center justify-between p-3 rounded-xl bg-muted/30">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10">
+                    <ReminderIcon iconKey={nextReminder.reminder.icon} size="lg" className="text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium">{nextReminder.reminder.name}</p>
+                    <p className="text-xs text-muted-foreground">Sắp đến</p>
                   </div>
                 </div>
+                <span className="text-lg font-mono tabular-nums text-primary">
+                  {formatTimeRemaining(nextReminder.timeLeft)}
+                </span>
               </div>
-              <div className="flex items-center gap-1 shrink-0">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => openEditDialog(reminder)}
-                  className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
-                  title="Chỉnh sửa"
-                >
-                  <Pencil className="h-3.5 w-3.5" strokeWidth={1.5} />
-                </Button>
-                <Switch
-                  checked={reminder.enabled}
-                  onCheckedChange={() => toggleReminder(reminder.id)}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
+            )}
 
-        {/* Add Reminder */}
-        <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-          <DialogTrigger asChild>
-            <Button variant="outline" size="sm" className="w-full">
-              <Plus className="h-4 w-4 mr-2" strokeWidth={1.5} />
-              Thêm nhắc nhở
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Thêm nhắc nhở mới</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 pt-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Biểu tượng</label>
-                <div className="flex flex-wrap gap-2">
-                  {ICON_OPTIONS.map((option) => {
-                    const IconComponent = REMINDER_ICONS[option.key];
-                    return (
-                      <button
-                        key={option.key}
-                        onClick={() => setNewIcon(option.key)}
-                        className={cn(
-                          'w-10 h-10 flex items-center justify-center rounded-lg transition-colors',
-                          newIcon === option.key
-                            ? 'bg-primary text-primary-foreground'
-                            : 'bg-muted hover:bg-muted/80'
+            {/* Reminder List */}
+            <div className="space-y-2 max-h-48 overflow-y-auto scrollbar-thin">
+              {reminders.map((reminder) => (
+                <div
+                  key={reminder.id}
+                  className={cn(
+                    'flex items-center justify-between p-3 rounded-xl transition-colors group',
+                    reminder.enabled ? 'bg-muted/20' : 'bg-muted/5 opacity-60'
+                  )}
+                >
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <div className="flex items-center justify-center w-9 h-9 rounded-full bg-muted shrink-0">
+                      <ReminderIcon iconKey={reminder.icon} size="lg" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium truncate">{reminder.name}</p>
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <Clock className="h-3 w-3 shrink-0" strokeWidth={1.5} />
+                        <span>Mỗi {reminder.intervalMinutes} phút</span>
+                        {reminder.enabled && timeUntilNext[reminder.id] && (
+                          <span className="ml-2 text-primary">
+                            ({formatTimeRemaining(timeUntilNext[reminder.id])})
+                          </span>
                         )}
-                        title={option.label}
-                      >
-                        <IconComponent className="h-5 w-5" strokeWidth={1.5} />
-                      </button>
-                    );
-                  })}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => openEditDialog(reminder)}
+                      className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                      title="Chỉnh sửa"
+                    >
+                      <Pencil className="h-3.5 w-3.5" strokeWidth={1.5} />
+                    </Button>
+                    <Switch
+                      checked={reminder.enabled}
+                      onCheckedChange={() => toggleReminder(reminder.id)}
+                    />
+                  </div>
                 </div>
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Tên nhắc nhở</label>
-                <Input
-                  value={newName}
-                  onChange={(e) => setNewName(e.target.value)}
-                  placeholder="VD: Uống trà"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Chu kỳ (phút)</label>
-                <Input
-                  type="number"
-                  value={newInterval}
-                  onChange={(e) => setNewInterval(parseInt(e.target.value) || 30)}
-                  min={1}
-                  max={120}
-                />
-              </div>
-              <Button onClick={handleAddReminder} className="w-full" disabled={!newName.trim()}>
-                Thêm
-              </Button>
+              ))}
             </div>
-          </DialogContent>
-        </Dialog>
+
+            {/* Add Reminder */}
+            <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm" className="w-full">
+                  <Plus className="h-4 w-4 mr-2" strokeWidth={1.5} />
+                  Thêm nhắc nhở
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Thêm nhắc nhở mới</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 pt-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Biểu tượng</label>
+                    <div className="flex flex-wrap gap-2">
+                      {ICON_OPTIONS.map((option) => {
+                        const IconComponent = REMINDER_ICONS[option.key];
+                        return (
+                          <button
+                            key={option.key}
+                            onClick={() => setNewIcon(option.key)}
+                            className={cn(
+                              'w-10 h-10 flex items-center justify-center rounded-lg transition-colors',
+                              newIcon === option.key
+                                ? 'bg-primary text-primary-foreground'
+                                : 'bg-muted hover:bg-muted/80'
+                            )}
+                            title={option.label}
+                          >
+                            <IconComponent className="h-5 w-5" strokeWidth={1.5} />
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Tên nhắc nhở</label>
+                    <Input
+                      value={newName}
+                      onChange={(e) => setNewName(e.target.value)}
+                      placeholder="VD: Uống trà"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Chu kỳ (phút)</label>
+                    <Input
+                      type="number"
+                      value={newInterval}
+                      onChange={(e) => setNewInterval(parseInt(e.target.value) || 30)}
+                      min={1}
+                      max={120}
+                    />
+                  </div>
+                  <Button onClick={handleAddReminder} className="w-full" disabled={!newName.trim()}>
+                    Thêm
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </>
+        )}
       </div>
     </>
   );

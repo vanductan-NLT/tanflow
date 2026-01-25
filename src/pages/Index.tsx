@@ -177,6 +177,7 @@ const Index = () => {
                     activeTaskId={tasks.activeTaskId}
                     pomodoroDuration={pomodoro.settings.pomodoroDuration}
                     onAddTask={tasks.addTask}
+                    onUpdateTask={tasks.updateTask}
                     onDeleteTask={tasks.deleteTask}
                     onSetActiveTask={tasks.setActiveTask}
                   />
