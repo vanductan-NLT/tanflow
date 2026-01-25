@@ -49,51 +49,33 @@ export function usePomodoro() {
     { ...DEFAULT_STATE, timeLeft: DEFAULT_SETTINGS.pomodoroDuration * 60 }
   );
 
-  // Use refs to track if this is first mount
-  const isFirstMount = useRef(true);
-  
   // PiP notification hook
   const { showNotification: showPiPNotification } = useNotificationPopup();
 
-  // Calculate initial values once
-  const initialValues = useRef(() => {
+  // Calculate initial values using lazy initialization in useState
+  const [mode, setMode] = useState<TimerMode>(() => savedState.mode);
+  const [timeLeft, setTimeLeft] = useState(() => {
     const state = savedState;
-    let initialTimeLeft = state.timeLeft;
-    let initialIsRunning = state.isRunning;
-    
-    // If timer was running, calculate elapsed time
     if (state.isRunning && state.lastUpdated) {
       const elapsed = Math.floor((Date.now() - state.lastUpdated) / 1000);
-      initialTimeLeft = Math.max(0, state.timeLeft - elapsed);
-      // Stop if time ran out
-      if (initialTimeLeft <= 0) {
-        initialIsRunning = false;
-        initialTimeLeft = 0;
-      }
+      const remaining = Math.max(0, state.timeLeft - elapsed);
+      return remaining;
     }
-    
-    return {
-      mode: state.mode,
-      timeLeft: initialTimeLeft,
-      isRunning: initialIsRunning,
-      completedPomodoros: state.completedPomodoros,
-    };
+    return state.timeLeft;
   });
-
-  // Get initial values only once
-  const initVals = isFirstMount.current ? initialValues.current() : null;
-  
-  const [mode, setMode] = useState<TimerMode>(initVals?.mode ?? savedState.mode);
-  const [timeLeft, setTimeLeft] = useState(initVals?.timeLeft ?? savedState.timeLeft);
-  const [isRunning, setIsRunning] = useState(initVals?.isRunning ?? false);
-  const [completedPomodoros, setCompletedPomodoros] = useState(initVals?.completedPomodoros ?? 0);
+  const [isRunning, setIsRunning] = useState(() => {
+    const state = savedState;
+    if (state.isRunning && state.lastUpdated) {
+      const elapsed = Math.floor((Date.now() - state.lastUpdated) / 1000);
+      const remaining = Math.max(0, state.timeLeft - elapsed);
+      // Stop if time ran out
+      return remaining > 0;
+    }
+    return false;
+  });
+  const [completedPomodoros, setCompletedPomodoros] = useState(() => savedState.completedPomodoros);
   // Used to force-restart the running interval when we start a new session while staying in "running" state
   const [runToken, setRunToken] = useState(0);
-  
-  // Mark first mount as complete
-  useEffect(() => {
-    isFirstMount.current = false;
-  }, []);
   
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const tickAudioRef = useRef<HTMLAudioElement | null>(null);
