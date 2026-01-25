@@ -4,8 +4,8 @@ export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T 
   // Use ref to track if this is the initial mount
   const isInitialMount = useRef(true);
   
-  // Read initial value from localStorage
-  const getInitialValue = (): T => {
+  // Use lazy initialization with arrow function to ensure it only runs once
+  const [storedValue, setStoredValue] = useState<T>(() => {
     if (typeof window === 'undefined') {
       return initialValue;
     }
@@ -19,9 +19,7 @@ export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T 
       console.warn(`Error reading localStorage key "${key}":`, error);
     }
     return initialValue;
-  };
-
-  const [storedValue, setStoredValue] = useState<T>(getInitialValue);
+  });
 
   // Sync to localStorage whenever value changes (except on initial mount)
   useEffect(() => {
