@@ -165,23 +165,26 @@ export function usePomodoro(notificationCallbacks?: NotificationCallbacks) {
     setIsRunning(false);
     playNotificationSound();
 
+    const willAutoStart = settings.autoStartNextSession;
+
     if (mode === 'pomodoro') {
       const newCount = completedPomodoros + 1;
       setCompletedPomodoros(newCount);
       
-      // Show PiP/Popup notification
-      notificationCallbacks?.showPiPNotification({
-        type: 'pomodoro-complete',
-        title: 'Hoàn thành Pomodoro! 🍅',
-        message: `Tuyệt vời! Bạn đã hoàn thành ${newCount} phiên tập trung. Nghỉ ngơi thôi!`,
-        onDismiss: () => {},
-      });
-      
-      // Browser notification as fallback
-      notificationCallbacks?.showBrowserNotification(
-        'FocusFlow - Hoàn thành Pomodoro! 🍅',
-        `Tuyệt vời! Bạn đã hoàn thành ${newCount} phiên tập trung. Nghỉ ngơi thôi!`
-      );
+      // Only show notification if NOT auto-starting (avoid conflict with manual continue button)
+      if (!willAutoStart) {
+        notificationCallbacks?.showPiPNotification({
+          type: 'pomodoro-complete',
+          title: 'Hoàn thành Pomodoro! 🍅',
+          message: `Tuyệt vời! Bạn đã hoàn thành ${newCount} phiên tập trung. Nghỉ ngơi thôi!`,
+          onDismiss: () => {},
+        });
+        
+        notificationCallbacks?.showBrowserNotification(
+          'FocusFlow - Hoàn thành Pomodoro! 🍅',
+          `Tuyệt vời! Bạn đã hoàn thành ${newCount} phiên tập trung. Nghỉ ngơi thôi!`
+        );
+      }
       
       // Check if it's time for long break
       if (newCount % settings.longBreakInterval === 0) {
@@ -193,7 +196,7 @@ export function usePomodoro(notificationCallbacks?: NotificationCallbacks) {
       }
       
       // Auto-start next session if enabled
-      if (settings.autoStartNextSession) {
+      if (willAutoStart) {
         setRunToken((t) => t + 1);
         setIsRunning(true);
       }
@@ -215,22 +218,25 @@ export function usePomodoro(notificationCallbacks?: NotificationCallbacks) {
       setIsRunning(false);
     } else {
       // Break is over, back to pomodoro
-      notificationCallbacks?.showPiPNotification({
-        type: 'break-complete',
-        title: 'Hết giờ nghỉ! ⏰',
-        message: 'Đã đến lúc quay lại tập trung rồi!',
-        onDismiss: () => {},
-      });
-      
-      notificationCallbacks?.showBrowserNotification(
-        'FocusFlow - Hết giờ nghỉ! ⏰',
-        'Đã đến lúc quay lại tập trung rồi!'
-      );
+      // Only show notification if NOT auto-starting
+      if (!willAutoStart) {
+        notificationCallbacks?.showPiPNotification({
+          type: 'break-complete',
+          title: 'Hết giờ nghỉ! ⏰',
+          message: 'Đã đến lúc quay lại tập trung rồi!',
+          onDismiss: () => {},
+        });
+        
+        notificationCallbacks?.showBrowserNotification(
+          'FocusFlow - Hết giờ nghỉ! ⏰',
+          'Đã đến lúc quay lại tập trung rồi!'
+        );
+      }
       setMode('pomodoro');
       setTimeLeft(settings.pomodoroDuration * 60);
       
       // Auto-start next pomodoro if enabled
-      if (settings.autoStartNextSession) {
+      if (willAutoStart) {
         setRunToken((t) => t + 1);
         setIsRunning(true);
       }
