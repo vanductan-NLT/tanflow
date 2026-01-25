@@ -80,16 +80,22 @@ export function VideoBackground({ timerMode, isRunning, pexels }: VideoBackgroun
     const targetLayer = inactiveLayer;
     setReadyFor(targetLayer, false);
     setUrlFor(targetLayer, videoUrl);
-
-    // Force load/play on the inactive element as soon as src is set.
-    // Note: src assignment causes a new resource fetch; keeping the element mounted avoids flashes.
-    queueMicrotask(() => {
-      const el = refs[targetLayer].current;
-      if (!el) return;
-      el.load();
-      void el.play().catch(() => {});
-    });
   }, [videoUrl, videoKey, activeLayer, inactiveLayer, refs, setReadyFor, setUrlFor, urls]);
+
+  // Actually load/play when the src state has been committed to the DOM.
+  useEffect(() => {
+    const el = videoARef.current;
+    if (!el || !urlA) return;
+    el.load();
+    void el.play().catch(() => {});
+  }, [urlA]);
+
+  useEffect(() => {
+    const el = videoBRef.current;
+    if (!el || !urlB) return;
+    el.load();
+    void el.play().catch(() => {});
+  }, [urlB]);
 
   const crossfadeTo = useCallback(
     (layer: 'A' | 'B') => {
