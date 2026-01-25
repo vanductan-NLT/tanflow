@@ -2,13 +2,14 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocalStorage } from './useLocalStorage';
 import { useNotificationPopup } from './useNotificationPopup';
 
-export type TimerMode = 'pomodoro' | 'shortBreak' | 'longBreak';
+export type TimerMode = 'pomodoro' | 'shortBreak' | 'longBreak' | 'meditation';
 
 export interface PomodoroSettings {
   pomodoroDuration: number; // in minutes
   shortBreakDuration: number;
   longBreakDuration: number;
   longBreakInterval: number; // number of pomodoros before long break
+  meditationDuration: number; // in minutes
 }
 
 export interface PomodoroState {
@@ -24,6 +25,7 @@ const DEFAULT_SETTINGS: PomodoroSettings = {
   shortBreakDuration: 5,
   longBreakDuration: 15,
   longBreakInterval: 4,
+  meditationDuration: 10,
 };
 
 const DEFAULT_STATE: PomodoroState = {
@@ -101,6 +103,8 @@ export function usePomodoro() {
         return settings.shortBreakDuration * 60;
       case 'longBreak':
         return settings.longBreakDuration * 60;
+      case 'meditation':
+        return settings.meditationDuration * 60;
     }
   }, [settings]);
 
@@ -164,6 +168,21 @@ export function usePomodoro() {
         setMode('shortBreak');
         setTimeLeft(settings.shortBreakDuration * 60);
       }
+    } else if (mode === 'meditation') {
+      // Meditation complete - stay in meditation mode, just stop
+      showPiPNotification({
+        type: 'break-complete',
+        title: 'Hoàn thành thiền! 🧘',
+        message: 'Bạn đã hoàn thành phiên thiền. Cảm thấy thư giãn hơn chưa?',
+        onDismiss: () => {},
+      });
+      
+      showBrowserNotification(
+        'FocusFlow - Hoàn thành thiền! 🧘',
+        'Bạn đã hoàn thành phiên thiền. Cảm thấy thư giãn hơn chưa?'
+      );
+      // Reset meditation timer but don't switch mode
+      setTimeLeft(settings.meditationDuration * 60);
     } else {
       // Break is over, back to pomodoro
       showPiPNotification({
@@ -215,6 +234,7 @@ export function usePomodoro() {
       pomodoro: '🍅 Tập trung',
       shortBreak: '☕ Nghỉ ngắn',
       longBreak: '🌴 Nghỉ dài',
+      meditation: '🧘 Thiền',
     };
     
     const mins = Math.floor(timeLeft / 60);
@@ -263,6 +283,9 @@ export function usePomodoro() {
         setMode('shortBreak');
         setTimeLeft(settings.shortBreakDuration * 60);
       }
+    } else if (mode === 'meditation') {
+      // Skip just resets meditation timer
+      setTimeLeft(settings.meditationDuration * 60);
     } else {
       setMode('pomodoro');
       setTimeLeft(settings.pomodoroDuration * 60);
@@ -287,6 +310,8 @@ export function usePomodoro() {
           ? newSettings.shortBreakDuration * 60
           : newSettings.longBreakDuration !== undefined && mode === 'longBreak'
           ? newSettings.longBreakDuration * 60
+          : newSettings.meditationDuration !== undefined && mode === 'meditation'
+          ? newSettings.meditationDuration * 60
           : timeLeft
       );
     }

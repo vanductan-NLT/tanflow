@@ -26,7 +26,13 @@ const DEFAULT_REMINDERS: HealthReminder[] = [
   { id: 'stretch', name: 'Vươn vai', icon: 'stretch', intervalMinutes: 45, enabled: false },
 ];
 
-export function useHealthReminders() {
+interface UseHealthRemindersOptions {
+  pauseReminders?: boolean;
+}
+
+export function useHealthReminders(options: UseHealthRemindersOptions = {}) {
+  const { pauseReminders = false } = options;
+  
   const [reminders, setReminders] = useLocalStorage<HealthReminder[]>(
     'focusflow-health-reminders',
     DEFAULT_REMINDERS
@@ -110,7 +116,8 @@ export function useHealthReminders() {
 
   // Update countdown timers
   useEffect(() => {
-    if (!isActive) return;
+    // Skip if reminders are paused (e.g., during meditation)
+    if (!isActive || pauseReminders) return;
 
     const interval = setInterval(() => {
       const now = Date.now();
@@ -142,7 +149,7 @@ export function useHealthReminders() {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [reminders, isActive, triggerReminderNotification]);
+  }, [reminders, isActive, pauseReminders, triggerReminderNotification]);
 
   // Format time as MM:SS
   const formatTimeRemaining = (seconds: number) => {

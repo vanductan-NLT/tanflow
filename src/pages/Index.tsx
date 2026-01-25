@@ -19,7 +19,7 @@ const Index = () => {
   useTheme();
   
   const pomodoro = usePomodoro();
-  const reminders = useHealthReminders();
+  const reminders = useHealthReminders({ pauseReminders: pomodoro.mode === 'meditation' && pomodoro.isRunning });
   const pexels = usePexelsVideo();
   const youtube = useYouTubePlayer();
 
@@ -36,7 +36,8 @@ const Index = () => {
     prevCompletedRef.current = pomodoro.completedPomodoros;
   }, [pomodoro.completedPomodoros, pexels]);
 
-  const isFocusing = pomodoro.mode === 'pomodoro' && pomodoro.isRunning;
+  const isFocusing = (pomodoro.mode === 'pomodoro' || pomodoro.mode === 'meditation') && pomodoro.isRunning;
+  const isMeditating = pomodoro.mode === 'meditation';
 
   return (
     <div className="min-h-screen transition-theme">
@@ -58,7 +59,7 @@ const Index = () => {
           {/* Minimal Timer */}
           <MinimalTimer pomodoro={pomodoro} />
 
-          {/* Bottom bar: Visualizer + Reminders */}
+          {/* Bottom bar: Visualizer + Reminders (hide reminders in meditation) */}
           <div className="fixed bottom-4 sm:bottom-6 md:bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 sm:gap-3 md:gap-4 w-full max-w-sm sm:max-w-md md:max-w-lg px-4">
             {/* Audio Visualizer */}
             <AudioVisualizer 
@@ -67,12 +68,14 @@ const Index = () => {
               barCount={24}
             />
 
-            {/* Health reminder icons */}
-            <MinimalReminders 
-              reminders={reminders.reminders}
-              timeUntilNext={reminders.timeUntilNext}
-              formatTimeRemaining={reminders.formatTimeRemaining}
-            />
+            {/* Health reminder icons - only show when NOT meditating */}
+            {!isMeditating && (
+              <MinimalReminders 
+                reminders={reminders.reminders}
+                timeUntilNext={reminders.timeUntilNext}
+                formatTimeRemaining={reminders.formatTimeRemaining}
+              />
+            )}
           </div>
         </div>
       ) : (

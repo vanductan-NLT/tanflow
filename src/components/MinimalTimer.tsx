@@ -11,6 +11,7 @@ const modeColors: Record<TimerMode, string> = {
   pomodoro: 'text-primary',
   shortBreak: 'text-info',
   longBreak: 'text-[hsl(var(--timer-long-break))]',
+  meditation: 'text-[hsl(var(--timer-meditation))]',
 };
 
 export function MinimalTimer({ pomodoro }: MinimalTimerProps) {
