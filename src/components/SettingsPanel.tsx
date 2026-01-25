@@ -135,9 +135,6 @@ export function SettingsPanel({ pomodoro, pexels }: SettingsPanelProps) {
               <RotateCcw className="h-4 w-4 mr-2" />
               Reset phiên làm việc
             </Button>
-            <p className="text-xs text-muted-foreground mt-2 text-center">
-              Đặt lại timer và đếm số pomodoro về 0
-            </p>
           </div>
 
           {/* Pexels Video Settings */}
