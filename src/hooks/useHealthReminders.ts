@@ -114,12 +114,17 @@ export function useHealthReminders(options: UseHealthRemindersOptions = {}) {
     showBrowserNotification('FocusFlow - Nhắc nhở sức khỏe', `Đã đến lúc: ${reminder.name}`);
   }, [playSound, showPiPNotification, showBrowserNotification]);
 
+  // Store trigger function in ref to avoid re-creating interval
+  const triggerNotificationRef = useRef(triggerReminderNotification);
+  triggerNotificationRef.current = triggerReminderNotification;
+
   // Update countdown timers
   useEffect(() => {
     // Skip if reminders are paused (e.g., during meditation)
     if (!isActive || pauseReminders) return;
 
-    const interval = setInterval(() => {
+    // Run immediately on mount
+    const updateTimers = () => {
       const now = Date.now();
       const newTimeUntil: Record<string, number> = {};
 
@@ -139,17 +144,23 @@ export function useHealthReminders(options: UseHealthRemindersOptions = {}) {
           const lastTriggered = lastTriggeredRef.current[reminder.id] || 0;
           // Prevent triggering more than once per cycle
           if (now - lastTriggered > intervalSeconds * 1000 - 5000) {
-            triggerReminderNotification(reminder);
+            triggerNotificationRef.current(reminder);
             lastTriggeredRef.current[reminder.id] = now;
           }
         }
       });
 
       setTimeUntilNext(newTimeUntil);
-    }, 1000);
+    };
+
+    // Run immediately
+    updateTimers();
+
+    // Then run every second
+    const interval = setInterval(updateTimers, 1000);
 
     return () => clearInterval(interval);
-  }, [reminders, isActive, pauseReminders, triggerReminderNotification]);
+  }, [reminders, isActive, pauseReminders]);
 
   // Format time as MM:SS
   const formatTimeRemaining = (seconds: number) => {
