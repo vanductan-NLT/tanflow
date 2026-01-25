@@ -1,6 +1,7 @@
-import { Bell, Droplets, Eye, Footprints } from 'lucide-react';
+import { Bell } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { HealthReminder } from '@/hooks/useHealthReminders';
+import { ReminderIcon } from '@/components/icons/ReminderIcon';
 
 interface UpcomingRemindersProps {
   reminders: HealthReminder[];
@@ -8,12 +9,6 @@ interface UpcomingRemindersProps {
   formatTimeRemaining: (seconds: number) => string;
   className?: string;
 }
-
-const iconMap: Record<string, React.ReactNode> = {
-  '💧': <Droplets className="h-4 w-4 text-info" strokeWidth={1.5} />,
-  '👀': <Eye className="h-4 w-4 text-warning" strokeWidth={1.5} />,
-  '🚶': <Footprints className="h-4 w-4 text-success" strokeWidth={1.5} />,
-};
 
 export function UpcomingReminders({ reminders, timeUntilNext, formatTimeRemaining, className }: UpcomingRemindersProps) {
   const enabledReminders = reminders.filter(r => r.enabled).slice(0, 3);
@@ -49,7 +44,7 @@ export function UpcomingReminders({ reminders, timeUntilNext, formatTimeRemainin
             key={reminder.id}
             className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted/50 text-xs"
           >
-            {iconMap[reminder.icon] || <span>{reminder.icon}</span>}
+            <ReminderIcon iconKey={reminder.icon} size="sm" />
             <span>{reminder.name}</span>
           </div>
         ))}
