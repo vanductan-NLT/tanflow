@@ -130,6 +130,16 @@ export function PexelsSettings({ pexels }: PexelsSettingsProps) {
             />
           </div>
 
+          {/* Refresh on video end */}
+          <div className="flex items-center justify-between">
+            <Label htmlFor="refresh-video-end">Đổi video khi phát xong</Label>
+            <Switch
+              id="refresh-video-end"
+              checked={settings.refreshOnVideoEnd}
+              onCheckedChange={(checked) => updateSettings({ refreshOnVideoEnd: checked })}
+            />
+          </div>
+
           {/* Error message */}
           {error && (
             <p className="text-sm text-destructive">{error}</p>

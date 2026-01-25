@@ -1,15 +1,16 @@
-import { useRef, useEffect, useState } from 'react';
-import { usePexelsVideo } from '@/hooks/usePexelsVideo';
+import { useRef, useEffect, useState, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { TimerMode } from '@/hooks/usePomodoro';
+import { usePexelsVideo } from '@/hooks/usePexelsVideo';
 
 interface VideoBackgroundProps {
   timerMode: TimerMode;
   isRunning: boolean;
+  pexels: ReturnType<typeof usePexelsVideo>;
 }
 
-export function VideoBackground({ timerMode, isRunning }: VideoBackgroundProps) {
-  const { settings, videoUrl, isLoading } = usePexelsVideo();
+export function VideoBackground({ timerMode, isRunning, pexels }: VideoBackgroundProps) {
+  const { settings, videoUrl, isLoading, refreshVideo } = pexels;
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isVideoLoaded, setIsVideoLoaded] = useState(false);
 
@@ -17,9 +18,17 @@ export function VideoBackground({ timerMode, isRunning }: VideoBackgroundProps) 
 
   useEffect(() => {
     if (videoRef.current && videoUrl) {
+      setIsVideoLoaded(false);
       videoRef.current.load();
     }
   }, [videoUrl]);
+
+  // Handle video end - refresh if setting is enabled
+  const handleVideoEnded = useCallback(() => {
+    if (settings.refreshOnVideoEnd) {
+      refreshVideo();
+    }
+  }, [settings.refreshOnVideoEnd, refreshVideo]);
 
   if (!settings.enabled || !settings.apiKey) {
     return null;
@@ -32,10 +41,11 @@ export function VideoBackground({ timerMode, isRunning }: VideoBackgroundProps) 
         <video
           ref={videoRef}
           autoPlay
-          loop
+          loop={!settings.refreshOnVideoEnd}
           muted
           playsInline
           onLoadedData={() => setIsVideoLoaded(true)}
+          onEnded={handleVideoEnded}
           className={cn(
             "absolute inset-0 w-full h-full object-cover transition-all duration-1000",
             isLoading || !isVideoLoaded ? "opacity-0" : "opacity-100",
