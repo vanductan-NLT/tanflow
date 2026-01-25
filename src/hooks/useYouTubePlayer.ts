@@ -134,8 +134,12 @@ export function useYouTubePlayer() {
   }, [isPlaying]);
 
   useEffect(() => {
-    if (isPlayerReady && playerRef.current) {
-      playerRef.current.setVolume(isMuted ? 0 : volume);
+    if (isPlayerReady && playerRef.current && typeof playerRef.current.setVolume === 'function') {
+      try {
+        playerRef.current.setVolume(isMuted ? 0 : volume);
+      } catch (e) {
+        console.warn('Failed to set volume:', e);
+      }
     }
   }, [volume, isMuted, isPlayerReady]);
 
