@@ -36,6 +36,15 @@ export function VideoBackground({ timerMode, isRunning, pexels }: VideoBackgroun
     }
   }, [videoUrl, videoKey, currentUrl, currentKey]);
 
+  // Force browser to load the new source (changing <source> doesn't reliably reload in all browsers)
+  useEffect(() => {
+    if (!videoRef.current) return;
+    // When currentUrl/currentKey changes, remount may not happen fast enough; ensure a load()
+    videoRef.current.load();
+    // Autoplay can be blocked in rare cases even when muted; ignore errors
+    void videoRef.current.play().catch(() => {});
+  }, [currentUrl, currentKey]);
+
   // When new video is loaded, fade it in
   const handleNewVideoLoaded = useCallback(() => {
     setIsNewVideoReady(true);
@@ -61,6 +70,7 @@ export function VideoBackground({ timerMode, isRunning, pexels }: VideoBackgroun
       {/* Previous video - fades out */}
       {prevUrl && (
         <video
+          key={`prev-${prevUrl}`}
           ref={prevVideoRef}
           autoPlay
           loop
@@ -78,6 +88,7 @@ export function VideoBackground({ timerMode, isRunning, pexels }: VideoBackgroun
       {/* Current video - fades in */}
       {currentUrl && (
         <video
+          key={`cur-${currentKey}`}
           ref={videoRef}
           autoPlay
           loop={!shouldRefreshOnVideoEnd}
