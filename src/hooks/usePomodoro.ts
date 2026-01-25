@@ -100,6 +100,24 @@ export function usePomodoro() {
     }
   }, [settings]);
 
+  // Request notification permission on mount
+  useEffect(() => {
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  }, []);
+
+  // Show browser notification
+  const showBrowserNotification = useCallback((title: string, body: string) => {
+    if ('Notification' in window && Notification.permission === 'granted') {
+      new Notification(title, {
+        body,
+        icon: '/favicon.png',
+        tag: 'pomodoro-complete',
+      });
+    }
+  }, []);
+
   // Play notification sound
   const playNotificationSound = useCallback(() => {
     if (!audioRef.current) {
@@ -120,6 +138,12 @@ export function usePomodoro() {
       const newCount = completedPomodoros + 1;
       setCompletedPomodoros(newCount);
       
+      // Show notification
+      showBrowserNotification(
+        'FocusFlow - Hoàn thành Pomodoro! 🍅',
+        `Tuyệt vời! Bạn đã hoàn thành ${newCount} phiên tập trung. Nghỉ ngơi thôi!`
+      );
+      
       // Check if it's time for long break
       if (newCount % settings.longBreakInterval === 0) {
         setMode('longBreak');
@@ -130,10 +154,14 @@ export function usePomodoro() {
       }
     } else {
       // Break is over, back to pomodoro
+      showBrowserNotification(
+        'FocusFlow - Hết giờ nghỉ! ⏰',
+        'Đã đến lúc quay lại tập trung rồi!'
+      );
       setMode('pomodoro');
       setTimeLeft(settings.pomodoroDuration * 60);
     }
-  }, [mode, completedPomodoros, settings, playNotificationSound]);
+  }, [mode, completedPomodoros, settings, playNotificationSound, showBrowserNotification]);
 
   // Timer countdown
   useEffect(() => {
