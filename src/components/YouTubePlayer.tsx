@@ -15,6 +15,7 @@ interface YouTubePlayerProps {
   currentTrack: { id: string; name: string; videoId: string; thumbnail: string };
   savedVideoId: string;
   setSavedVideoId: (id: string) => void;
+  setVideoAndPlay: (id: string) => void;
   handlePlayPause: () => void;
   handleNext: () => void;
   autoPlay: boolean;
@@ -36,7 +37,7 @@ export function YouTubePlayer({
   setIsMuted,
   currentTrack,
   savedVideoId,
-  setSavedVideoId,
+  setVideoAndPlay,
   handlePlayPause,
   handleNext,
   autoPlay,
@@ -66,7 +67,7 @@ export function YouTubePlayer({
   const handleCustomUrl = () => {
     const videoId = extractVideoId(customUrl);
     if (videoId) {
-      setSavedVideoId(videoId);
+      setVideoAndPlay(videoId);
       setCustomUrl('');
     }
   };
