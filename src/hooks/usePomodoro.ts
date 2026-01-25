@@ -44,19 +44,46 @@ export function usePomodoro() {
     { ...DEFAULT_STATE, timeLeft: DEFAULT_SETTINGS.pomodoroDuration * 60 }
   );
 
-  // Initialize state from localStorage, accounting for elapsed time if was running
-  const getInitialTimeLeft = () => {
-    if (savedState.isRunning && savedState.lastUpdated) {
-      const elapsed = Math.floor((Date.now() - savedState.lastUpdated) / 1000);
-      return Math.max(0, savedState.timeLeft - elapsed);
-    }
-    return savedState.timeLeft;
-  };
+  // Use refs to track if this is first mount
+  const isFirstMount = useRef(true);
 
-  const [mode, setMode] = useState<TimerMode>(savedState.mode);
-  const [timeLeft, setTimeLeft] = useState(getInitialTimeLeft);
-  const [isRunning, setIsRunning] = useState(savedState.isRunning && getInitialTimeLeft() > 0);
-  const [completedPomodoros, setCompletedPomodoros] = useState(savedState.completedPomodoros);
+  // Calculate initial values once
+  const initialValues = useRef(() => {
+    const state = savedState;
+    let initialTimeLeft = state.timeLeft;
+    let initialIsRunning = state.isRunning;
+    
+    // If timer was running, calculate elapsed time
+    if (state.isRunning && state.lastUpdated) {
+      const elapsed = Math.floor((Date.now() - state.lastUpdated) / 1000);
+      initialTimeLeft = Math.max(0, state.timeLeft - elapsed);
+      // Stop if time ran out
+      if (initialTimeLeft <= 0) {
+        initialIsRunning = false;
+        initialTimeLeft = 0;
+      }
+    }
+    
+    return {
+      mode: state.mode,
+      timeLeft: initialTimeLeft,
+      isRunning: initialIsRunning,
+      completedPomodoros: state.completedPomodoros,
+    };
+  });
+
+  // Get initial values only once
+  const initVals = isFirstMount.current ? initialValues.current() : null;
+  
+  const [mode, setMode] = useState<TimerMode>(initVals?.mode ?? savedState.mode);
+  const [timeLeft, setTimeLeft] = useState(initVals?.timeLeft ?? savedState.timeLeft);
+  const [isRunning, setIsRunning] = useState(initVals?.isRunning ?? false);
+  const [completedPomodoros, setCompletedPomodoros] = useState(initVals?.completedPomodoros ?? 0);
+  
+  // Mark first mount as complete
+  useEffect(() => {
+    isFirstMount.current = false;
+  }, []);
   
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const intervalRef = useRef<number | null>(null);
