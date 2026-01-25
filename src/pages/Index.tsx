@@ -46,12 +46,12 @@ const Index = () => {
           <MinimalTimer pomodoro={pomodoro} />
 
           {/* Bottom bar: Visualizer + Reminders */}
-          <div className="fixed bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4">
+          <div className="fixed bottom-4 sm:bottom-6 md:bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 sm:gap-3 md:gap-4 w-full max-w-sm sm:max-w-md md:max-w-lg px-4">
             {/* Audio Visualizer */}
             <AudioVisualizer 
               isPlaying={youtube.isPlaying} 
-              className="h-16 w-64 md:w-80"
-              barCount={32}
+              className="h-10 sm:h-12 md:h-16 w-full max-w-[200px] sm:max-w-[256px] md:max-w-[320px]"
+              barCount={24}
             />
 
             {/* Health reminder icons */}
