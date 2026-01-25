@@ -32,8 +32,8 @@ export function VideoBackground({ timerMode, isRunning, pexels }: VideoBackgroun
       setPrevUrl(currentUrl || null);
       setCurrentUrl(videoUrl);
       setCurrentKey(videoKey);
-      // Avoid a black flash on first ever load (no previous video to crossfade from)
-      setIsNewVideoReady(Boolean(currentUrl));
+      // Keep showing previous video until the new one can play, then crossfade.
+      setIsNewVideoReady(false);
     }
   }, [videoUrl, videoKey, currentUrl, currentKey]);
 
@@ -80,6 +80,7 @@ export function VideoBackground({ timerMode, isRunning, pexels }: VideoBackgroun
           preload="auto"
           className={cn(
             "absolute inset-0 w-full h-full object-cover transition-opacity duration-1000",
+            // While the new video isn't ready, keep previous fully visible.
             isNewVideoReady ? "opacity-0" : "opacity-100"
           )}
         >
@@ -101,7 +102,7 @@ export function VideoBackground({ timerMode, isRunning, pexels }: VideoBackgroun
           onEnded={handleVideoEnded}
           className={cn(
             "absolute inset-0 w-full h-full object-cover transition-all duration-1000",
-            // If we have a previous video, crossfade; otherwise show immediately to avoid black flash.
+            // Crossfade only when we have a previous video; otherwise show current (initial load).
             prevUrl ? (isNewVideoReady ? "opacity-100" : "opacity-0") : "opacity-100",
             isFocusing ? "scale-105" : "scale-100"
           )}
