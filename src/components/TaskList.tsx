@@ -40,12 +40,12 @@ export function TaskList({
     const remainingCycles = incompleteTasks.reduce((sum, task) => {
       return sum + Math.max(0, task.targetCycles - task.completedCycles);
     }, 0);
-    
+
     if (remainingCycles === 0) return null;
-    
+
     const totalMinutes = remainingCycles * pomodoroDuration;
     const completionTime = new Date(Date.now() + totalMinutes * 60 * 1000);
-    
+
     return {
       cycles: remainingCycles,
       minutes: totalMinutes,
@@ -75,12 +75,30 @@ export function TaskList({
                 )}
                 onClick={() => onSetActiveTask(task.id)}
               >
-                <Circle className={cn(
-                  "h-3 w-3 flex-shrink-0",
-                  task.id === activeTaskId ? "text-primary" : "text-white/50"
-                )} />
-                <span className="truncate flex-1">{task.title}</span>
-                <span className="text-white/50">{task.completedCycles}/{task.targetCycles}</span>
+                {task.completedCycles >= task.targetCycles ? (
+                  <CheckCircle2 className={cn(
+                    "h-3 w-3 flex-shrink-0 text-primary",
+                    task.id === activeTaskId && "animate-pulse"
+                  )} />
+                ) : (
+                  <Circle className={cn(
+                    "h-3 w-3 flex-shrink-0",
+                    task.id === activeTaskId ? "text-primary" : "text-white/50"
+                  )} />
+                )}
+                <span className={cn(
+                  "truncate flex-1",
+                  task.completedCycles >= task.targetCycles && "font-semibold text-primary"
+                )}>
+                  {task.title}
+                </span>
+                <span className={cn(
+                  task.completedCycles >= task.targetCycles
+                    ? "text-primary font-semibold"
+                    : "text-white/50"
+                )}>
+                  {task.completedCycles}/{task.targetCycles}
+                </span>
               </div>
             ))
           )}
@@ -193,7 +211,7 @@ export function TaskList({
                 )}
                 <span>Đã hoàn thành ({completedTasks.length})</span>
               </button>
-              
+
               {showCompleted && (
                 <div className="space-y-2 mt-2 opacity-60">
                   {completedTasks.map((task) => (
@@ -202,8 +220,8 @@ export function TaskList({
                       task={task}
                       isActive={false}
                       isCompleted
-                      onSelect={() => {}}
-                      onEdit={() => {}}
+                      onSelect={() => { }}
+                      onEdit={() => { }}
                       onDelete={() => onDeleteTask(task.id)}
                     />
                   ))}
@@ -268,16 +286,19 @@ function TaskItem({ task, isActive, isCompleted, onSelect, onEdit, onDelete }: T
         isCompleted
           ? "bg-muted/30"
           : isActive
-          ? "bg-primary/10 ring-2 ring-primary/30"
-          : "bg-muted/50 hover:bg-muted"
+            ? "bg-primary/10 ring-2 ring-primary/30"
+            : "bg-muted/50 hover:bg-muted"
       )}
       onClick={!isCompleted ? onSelect : undefined}
     >
       <div className="flex items-start gap-2">
         {/* Status Icon */}
         <div className="mt-0.5">
-          {isCompleted ? (
-            <CheckCircle2 className="h-4 w-4 text-primary" />
+          {isCompleted || task.completedCycles >= task.targetCycles ? (
+            <CheckCircle2 className={cn(
+              "h-4 w-4 text-primary",
+              !isCompleted && task.completedCycles >= task.targetCycles && "animate-pulse"
+            )} />
           ) : (
             <Circle className={cn(
               "h-4 w-4",
@@ -290,15 +311,21 @@ function TaskItem({ task, isActive, isCompleted, onSelect, onEdit, onDelete }: T
         <div className="flex-1 min-w-0">
           <h4 className={cn(
             "font-medium text-sm truncate",
-            isCompleted && "line-through text-muted-foreground"
+            isCompleted && "line-through text-muted-foreground",
+            !isCompleted && task.completedCycles >= task.targetCycles && "text-primary font-semibold"
           )}>
             {task.title}
           </h4>
-          
+
           {!isCompleted && (
             <div className="flex items-center gap-2 mt-1.5">
               <Progress value={progress} className="h-1.5 flex-1" />
-              <span className="text-xs text-muted-foreground whitespace-nowrap">
+              <span className={cn(
+                "text-xs whitespace-nowrap",
+                task.completedCycles >= task.targetCycles
+                  ? "text-primary font-semibold"
+                  : "text-muted-foreground"
+              )}>
                 {task.completedCycles}/{task.targetCycles}
               </span>
             </div>

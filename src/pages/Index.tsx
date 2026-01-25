@@ -22,15 +22,15 @@ import { useTasks, Task } from '@/hooks/useTasks';
 
 const Index = () => {
   useTheme();
-  
+
   // Task management
   const tasks = useTasks();
   const [taskCompleteDialogOpen, setTaskCompleteDialogOpen] = useState(false);
   const [completedTask, setCompletedTask] = useState<Task | null>(null);
-  
+
   // Notification system - must be called before usePomodoro
   const { showNotification: showPiPNotification } = useNotificationPopup();
-  
+
   // Browser notification helper
   const showBrowserNotification = useCallback((title: string, body: string) => {
     if ('Notification' in window && Notification.permission === 'granted') {
@@ -41,7 +41,7 @@ const Index = () => {
       });
     }
   }, []);
-  
+
   // Handle pomodoro complete - increment task cycle
   const handlePomodoroComplete = useCallback(() => {
     if (tasks.activeTaskId) {
@@ -56,7 +56,7 @@ const Index = () => {
       }
     }
   }, [tasks]);
-  
+
   const pomodoro = usePomodoro({
     showPiPNotification,
     showBrowserNotification,
@@ -68,7 +68,15 @@ const Index = () => {
 
   // Track previous completed count to detect new completions
   const prevCompletedRef = useRef(pomodoro.completedPomodoros);
-  
+
+  // Check for completed tasks on mount (when returning to the page)
+  useEffect(() => {
+    if (tasks.activeTask && tasks.activeTask.completedCycles >= tasks.activeTask.targetCycles && !tasks.activeTask.isCompleted) {
+      setCompletedTask(tasks.activeTask);
+      setTaskCompleteDialogOpen(true);
+    }
+  }, []); // Run only on mount
+
   // Refresh video when a pomodoro completes
   useEffect(() => {
     if (pomodoro.completedPomodoros > prevCompletedRef.current) {
@@ -121,15 +129,15 @@ const Index = () => {
           {/* Bottom bar: Visualizer + Reminders (hide reminders in meditation) */}
           <div className="fixed bottom-4 sm:bottom-6 md:bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 sm:gap-3 md:gap-4 w-full max-w-sm sm:max-w-md md:max-w-lg px-4">
             {/* Audio Visualizer */}
-            <AudioVisualizer 
-              isPlaying={youtube.isPlaying} 
+            <AudioVisualizer
+              isPlaying={youtube.isPlaying}
               className="h-10 sm:h-12 md:h-16 w-full max-w-[200px] sm:max-w-[256px] md:max-w-[320px]"
               barCount={24}
             />
 
             {/* Health reminder icons - only show when NOT meditating */}
             {!isMeditating && (
-              <MinimalReminders 
+              <MinimalReminders
                 reminders={reminders.reminders}
                 timeUntilNext={reminders.timeUntilNext}
                 formatTimeRemaining={reminders.formatTimeRemaining}
@@ -158,7 +166,7 @@ const Index = () => {
           <main className="container max-w-6xl xl:max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 pt-20 sm:pt-24 pb-16 sm:pb-8">
             <div className="flex flex-col lg:flex-row gap-6 md:gap-8 lg:gap-12 xl:gap-16">
               {/* Left Column - Timer */}
-              <div 
+              <div
                 className="flex-1 flex flex-col items-center justify-center py-4 sm:py-6 md:py-8 lg:py-12 animate-zoom-in"
                 style={{ animationDelay: '0.15s' }}
               >
@@ -168,7 +176,7 @@ const Index = () => {
               {/* Right Column - Tasks, Music & Reminders */}
               <div className="w-full lg:w-80 xl:w-96 space-y-4 lg:space-y-6">
                 {/* Tasks */}
-                <div 
+                <div
                   className="animate-slide-up"
                   style={{ animationDelay: '0.20s' }}
                 >
@@ -182,13 +190,13 @@ const Index = () => {
                     onSetActiveTask={tasks.setActiveTask}
                   />
                 </div>
-                <div 
+                <div
                   className="animate-slide-up"
                   style={{ animationDelay: '0.30s' }}
                 >
                   <YouTubePlayer {...youtube} />
                 </div>
-                <div 
+                <div
                   className="animate-slide-up"
                   style={{ animationDelay: '0.40s' }}
                 >

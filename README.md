@@ -1,73 +1,52 @@
-# Welcome to your Lovable project
+# TanFlow (FocusFlow) 🍅
 
-## Project info
+> A personalized, immersive productivity environment designed to help you enter and maintain a flow state.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+TanFlow combines a powerful Pomodoro timer with smart task management and ambient environments to create the ultimate focus capability.
 
-## How can I edit this code?
+## ✨ Key Features
 
-There are several ways of editing your application.
+### 🎯 Smart Task Management
+- **Flow-Centric Workflow**: Tasks are automatically sorted - active/incomplete tasks float to the top, while completed ones settle at the bottom.
+- **Visual Progress**: Track your focus cycles directly on each task card.
+- **Celebration Mode**: Get rewarded with a confetti celebration 🎊 when you crush your targets!
+- **Flexible Completion**: Choose to mark a task as done or extend your session if you're in the zone.
 
-**Use Lovable**
+### 🧘‍♀️ Immersive Focus Mode
+- **Distraction-Free Interface**: A minimal timer view that hides clutter, showing only what matters: your time and your active task.
+- **Ambient Backgrounds**: Dynamic video backgrounds powered by Pexels or soothing gradients to set the mood.
+- **Audio Visualization**: Syncs with your focus music for a truly immersive experience.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+### ⚡ Wellness & Balance
+- **Health Reminders**: Smart notifications to drink water, correct posture, and give your eyes a break.
+- **Meditation Mode**: Dedicated timer modes for short and long breaks or meditation sessions.
 
-Changes made via Lovable will be committed automatically to this repo.
+## 🛠 Tech Stack
 
-**Use your preferred IDE**
+Built with a modern, performant stack:
+- **Framework**: React + Vite
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS + shadcn/ui
+- **State Management**: React Query + Local Storage (Persistence)
+- **Animations**: Framer Motion + Canvas API
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## 🚀 Getting Started
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+1. **Clone the repo**
+   ```bash
+   git clone <your-repo-url>
+   cd tanflow
+   ```
 
-Follow these steps:
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+3. **Start development server**
+   ```bash
+   npm run dev
+   ```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+---
+*Built with ❤️ for personal productivity.*

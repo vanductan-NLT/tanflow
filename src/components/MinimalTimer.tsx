@@ -31,7 +31,7 @@ export function MinimalTimer({ pomodoro, activeTask }: MinimalTimerProps) {
       </div>
 
       {/* Active Task Name - Below timer */}
-      {activeTask && mode === 'pomodoro' && (
+      {activeTask && !activeTask.isCompleted && mode === 'pomodoro' && (
         <p className="text-lg sm:text-xl text-white/80 font-medium truncate max-w-[280px] sm:max-w-md text-center animate-fade-in">
           {activeTask.title}
         </p>
@@ -53,8 +53,8 @@ export function MinimalTimer({ pomodoro, activeTask }: MinimalTimerProps) {
           size="lg"
           className={cn(
             "h-14 w-14 sm:h-16 sm:w-16 md:h-20 md:w-20 rounded-full shadow-2xl transition-all",
-            isRunning 
-              ? "bg-white/20 hover:bg-white/30 text-white backdrop-blur-sm" 
+            isRunning
+              ? "bg-white/20 hover:bg-white/30 text-white backdrop-blur-sm"
               : "bg-primary hover:bg-primary/90"
           )}
         >

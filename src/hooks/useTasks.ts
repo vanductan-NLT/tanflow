@@ -21,6 +21,13 @@ const initialState: TasksState = {
   activeTaskId: null,
 };
 
+// Helper function to sort tasks: incomplete first, completed last
+const sortTasks = (tasks: Task[]): Task[] => {
+  const incomplete = tasks.filter(t => !t.isCompleted).sort((a, b) => a.createdAt - b.createdAt);
+  const completed = tasks.filter(t => t.isCompleted).sort((a, b) => a.createdAt - b.createdAt);
+  return [...incomplete, ...completed];
+};
+
 export function useTasks() {
   const [state, setState] = useLocalStorage<TasksState>('focusflow-tasks', initialState);
 
@@ -60,13 +67,13 @@ export function useTasks() {
     setState((prev) => {
       const newTasks = prev.tasks.filter((task) => task.id !== id);
       let newActiveId = prev.activeTaskId;
-      
+
       // If deleting active task, select next incomplete task
       if (prev.activeTaskId === id) {
         const nextTask = newTasks.find((t) => !t.isCompleted);
         newActiveId = nextTask?.id || null;
       }
-      
+
       return {
         tasks: newTasks,
         activeTaskId: newActiveId,
@@ -83,7 +90,7 @@ export function useTasks() {
 
   const incrementCycle = useCallback((id: string) => {
     let taskCompleted = false;
-    
+
     setState((prev) => {
       const updatedTasks = prev.tasks.map((task) => {
         if (task.id === id) {
@@ -95,10 +102,10 @@ export function useTasks() {
         }
         return task;
       });
-      
+
       return { ...prev, tasks: updatedTasks };
     });
-    
+
     return taskCompleted;
   }, [setState]);
 
@@ -107,16 +114,19 @@ export function useTasks() {
       const updatedTasks = prev.tasks.map((task) =>
         task.id === id ? { ...task, isCompleted: true } : task
       );
-      
+
+      // Sort tasks: incomplete first, completed last
+      const sortedTasks = sortTasks(updatedTasks);
+
       // Auto-select next incomplete task
       let newActiveId = prev.activeTaskId;
       if (prev.activeTaskId === id) {
-        const nextTask = updatedTasks.find((t) => !t.isCompleted);
+        const nextTask = sortedTasks.find((t) => !t.isCompleted);
         newActiveId = nextTask?.id || null;
       }
-      
+
       return {
-        tasks: updatedTasks,
+        tasks: sortedTasks,
         activeTaskId: newActiveId,
       };
     });
