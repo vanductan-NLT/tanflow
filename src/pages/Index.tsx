@@ -115,6 +115,21 @@ const Index = () => {
             <QuoteDisplay mode={pomodoro.mode} />
           </div>
 
+          {/* Task List - Top Right */}
+          {tasks.incompleteTasks.length > 0 && !isMeditating && (
+            <div className="absolute top-8 sm:top-12 md:top-16 right-4 sm:right-6 md:right-8">
+              <TaskList
+                tasks={tasks.tasks}
+                activeTaskId={tasks.activeTaskId}
+                pomodoroDuration={pomodoro.settings.pomodoroDuration}
+                onAddTask={tasks.addTask}
+                onDeleteTask={tasks.deleteTask}
+                onSetActiveTask={tasks.setActiveTask}
+                compact
+              />
+            </div>
+          )}
+
           {/* Minimal Timer */}
           <MinimalTimer pomodoro={pomodoro} activeTask={tasks.activeTask} />
 
@@ -175,6 +190,7 @@ const Index = () => {
                   <TaskList
                     tasks={tasks.tasks}
                     activeTaskId={tasks.activeTaskId}
+                    pomodoroDuration={pomodoro.settings.pomodoroDuration}
                     onAddTask={tasks.addTask}
                     onDeleteTask={tasks.deleteTask}
                     onSetActiveTask={tasks.setActiveTask}
