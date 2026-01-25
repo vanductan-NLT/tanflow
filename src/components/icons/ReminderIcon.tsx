@@ -13,8 +13,9 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-// Icon key to component mapping
+// Icon key to component mapping (supports both new keys and old emojis)
 export const REMINDER_ICONS: Record<string, LucideIcon> = {
+  // New icon keys
   droplets: Droplets,
   footprints: Footprints,
   eye: Eye,
@@ -25,6 +26,17 @@ export const REMINDER_ICONS: Record<string, LucideIcon> = {
   dumbbell: Dumbbell,
   brain: Brain,
   heart: Heart,
+  // Legacy emoji keys (for backwards compatibility)
+  '💧': Droplets,
+  '🚶': Footprints,
+  '👀': Eye,
+  '🧘': Activity,
+  '☕': Coffee,
+  '🍎': Apple,
+  '🌿': Leaf,
+  '💪': Dumbbell,
+  '🧠': Brain,
+  '❤️': Heart,
 };
 
 // Icon options for picker
