@@ -29,10 +29,11 @@ export function VideoBackground({ timerMode, isRunning, pexels }: VideoBackgroun
   useEffect(() => {
     if (videoUrl && (videoUrl !== currentUrl || videoKey !== currentKey)) {
       // Keep old video visible, prepare new one
-      setPrevUrl(currentUrl);
+      setPrevUrl(currentUrl || null);
       setCurrentUrl(videoUrl);
       setCurrentKey(videoKey);
-      setIsNewVideoReady(false);
+      // Avoid a black flash on first ever load (no previous video to crossfade from)
+      setIsNewVideoReady(Boolean(currentUrl));
     }
   }, [videoUrl, videoKey, currentUrl, currentKey]);
 
@@ -45,7 +46,7 @@ export function VideoBackground({ timerMode, isRunning, pexels }: VideoBackgroun
     void videoRef.current.play().catch(() => {});
   }, [currentUrl, currentKey]);
 
-  // When new video is loaded, fade it in
+  // When new video can play, fade it in
   const handleNewVideoLoaded = useCallback(() => {
     setIsNewVideoReady(true);
     // Clear previous video after transition
@@ -76,6 +77,7 @@ export function VideoBackground({ timerMode, isRunning, pexels }: VideoBackgroun
           loop
           muted
           playsInline
+          preload="auto"
           className={cn(
             "absolute inset-0 w-full h-full object-cover transition-opacity duration-1000",
             isNewVideoReady ? "opacity-0" : "opacity-100"
@@ -94,11 +96,13 @@ export function VideoBackground({ timerMode, isRunning, pexels }: VideoBackgroun
           loop={!shouldRefreshOnVideoEnd}
           muted
           playsInline
-          onLoadedData={handleNewVideoLoaded}
+          preload="auto"
+          onCanPlay={handleNewVideoLoaded}
           onEnded={handleVideoEnded}
           className={cn(
             "absolute inset-0 w-full h-full object-cover transition-all duration-1000",
-            isNewVideoReady ? "opacity-100" : "opacity-0",
+            // If we have a previous video, crossfade; otherwise show immediately to avoid black flash.
+            prevUrl ? (isNewVideoReady ? "opacity-100" : "opacity-0") : "opacity-100",
             isFocusing ? "scale-105" : "scale-100"
           )}
         >
