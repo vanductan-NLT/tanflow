@@ -42,6 +42,7 @@
     --timer-accent: 142 76% 36%;
     --timer-break: 199 89% 48%;
     --timer-long-break: 262 83% 58%;
+    --timer-meditation: 280 70% 50%;
     
     --surface-elevated: 0 0% 100%;
     --surface-sunken: 0 0% 96%;
@@ -86,6 +87,7 @@
     --timer-accent: 142 70% 45%;
     --timer-break: 199 89% 55%;
     --timer-long-break: 262 83% 65%;
+    --timer-meditation: 280 70% 60%;
     
     --surface-elevated: 0 0% 14%;
     --surface-sunken: 0 0% 6%;

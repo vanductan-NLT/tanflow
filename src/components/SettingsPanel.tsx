@@ -108,6 +108,23 @@ export function SettingsPanel({ pomodoro, pexels }: SettingsPanelProps) {
             />
           </div>
 
+          {/* Meditation Duration */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label>Thời gian thiền</Label>
+              <span className="text-sm font-mono text-muted-foreground">
+                {settings.meditationDuration} phút
+              </span>
+            </div>
+            <Slider
+              value={[settings.meditationDuration]}
+              onValueChange={([v]) => handleChange('meditationDuration', v)}
+              min={5}
+              max={60}
+              step={5}
+            />
+          </div>
+
           {/* Reset Session */}
           <div className="pt-4 border-t">
             <Button

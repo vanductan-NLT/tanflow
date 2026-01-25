@@ -26,25 +26,28 @@ export function PomodoroTimer({ pomodoro }: PomodoroTimerProps) {
     pomodoro: 'Tập trung',
     shortBreak: 'Nghỉ ngắn',
     longBreak: 'Nghỉ dài',
+    meditation: 'Thiền 🧘',
   };
 
   const modeColors: Record<TimerMode, string> = {
     pomodoro: 'text-primary',
     shortBreak: 'text-info',
     longBreak: 'text-[hsl(var(--timer-long-break))]',
+    meditation: 'text-[hsl(var(--timer-meditation))]',
   };
 
   const progressColors: Record<TimerMode, string> = {
     pomodoro: 'bg-primary',
     shortBreak: 'bg-info',
     longBreak: 'bg-[hsl(var(--timer-long-break))]',
+    meditation: 'bg-[hsl(var(--timer-meditation))]',
   };
 
   return (
     <div className="flex flex-col items-center gap-8">
       {/* Mode Tabs */}
-      <div className="flex gap-2 p-1 rounded-full bg-muted/50">
-        {(['pomodoro', 'shortBreak', 'longBreak'] as TimerMode[]).map((m) => (
+      <div className="flex gap-2 p-1 rounded-full bg-muted/50 flex-wrap justify-center">
+        {(['pomodoro', 'shortBreak', 'longBreak', 'meditation'] as TimerMode[]).map((m) => (
           <button
             key={m}
             onClick={() => switchMode(m)}
