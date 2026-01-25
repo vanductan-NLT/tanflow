@@ -39,7 +39,18 @@ export function HealthReminders({ reminders: reminderHook }: HealthRemindersProp
   const [newIcon, setNewIcon] = useState('droplets');
   const [newInterval, setNewInterval] = useState(30);
 
-  const nextReminder = getNextReminder();
+  // Find next reminder using live timeUntilNext values
+  const nextReminder = (() => {
+    let next: { reminder: typeof reminders[0]; timeLeft: number } | null = null;
+    reminders.forEach((reminder) => {
+      if (!reminder.enabled) return;
+      const timeLeft = timeUntilNext[reminder.id] || reminder.intervalMinutes * 60;
+      if (!next || timeLeft < next.timeLeft) {
+        next = { reminder, timeLeft };
+      }
+    });
+    return next;
+  })();
 
   const handleAddReminder = () => {
     if (newName.trim()) {
