@@ -4,6 +4,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { usePomodoro, PomodoroSettings } from '@/hooks/usePomodoro';
+import { useBackground } from '@/hooks/useBackground';
+import { BackgroundSettings } from '@/components/BackgroundSettings';
+import { Separator } from '@/components/ui/separator';
 import {
   Sheet,
   SheetContent,
@@ -15,9 +18,10 @@ import {
 
 interface SettingsPanelProps {
   pomodoro: ReturnType<typeof usePomodoro>;
+  background: ReturnType<typeof useBackground>;
 }
 
-export function SettingsPanel({ pomodoro }: SettingsPanelProps) {
+export function SettingsPanel({ pomodoro, background }: SettingsPanelProps) {
   const { settings, updateSettings, resetSession } = pomodoro;
 
   const handleChange = (key: keyof PomodoroSettings, value: number) => {
@@ -119,6 +123,10 @@ export function SettingsPanel({ pomodoro }: SettingsPanelProps) {
               Đặt lại timer và đếm số pomodoro về 0
             </p>
           </div>
+
+          {/* Background Settings */}
+          <Separator className="my-4" />
+          <BackgroundSettings background={background} />
         </div>
       </SheetContent>
     </Sheet>

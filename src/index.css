@@ -131,6 +131,10 @@
   .transition-theme {
     @apply transition-colors duration-300 ease-in-out;
   }
+
+  .bg-radial-vignette {
+    background: radial-gradient(ellipse at center, transparent 0%, hsl(var(--background) / 0.3) 100%);
+  }
 }
 
 /* Custom scrollbar */

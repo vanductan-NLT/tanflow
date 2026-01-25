@@ -3,9 +3,11 @@ import { PomodoroTimer } from '@/components/PomodoroTimer';
 import { YouTubePlayer } from '@/components/YouTubePlayer';
 import { HealthReminders } from '@/components/HealthReminders';
 import { SettingsPanel } from '@/components/SettingsPanel';
+import { BackgroundScene } from '@/components/BackgroundScene';
 import { usePomodoro } from '@/hooks/usePomodoro';
 import { useHealthReminders } from '@/hooks/useHealthReminders';
 import { useTheme } from '@/hooks/useTheme';
+import { useBackground } from '@/hooks/useBackground';
 
 const Index = () => {
   // Initialize theme on mount
@@ -13,9 +15,13 @@ const Index = () => {
   
   const pomodoro = usePomodoro();
   const reminders = useHealthReminders();
+  const background = useBackground();
 
   return (
-    <div className="min-h-screen bg-background transition-theme">
+    <div className="min-h-screen bg-background/80 transition-theme">
+      {/* Dynamic Background */}
+      <BackgroundScene />
+
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-40 glass-effect">
         <div className="container max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
@@ -25,7 +31,7 @@ const Index = () => {
           </div>
           <div className="flex items-center gap-2">
             <ThemeToggle />
-            <SettingsPanel pomodoro={pomodoro} />
+            <SettingsPanel pomodoro={pomodoro} background={background} />
           </div>
         </div>
       </header>
