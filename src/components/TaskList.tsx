@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Plus, Trash2, CheckCircle2, Circle, ChevronDown, ChevronUp } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Plus, Trash2, CheckCircle2, Circle, ChevronDown, ChevronUp, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
@@ -9,23 +9,84 @@ import type { Task } from '@/hooks/useTasks';
 interface TaskListProps {
   tasks: Task[];
   activeTaskId: string | null;
+  pomodoroDuration?: number; // in minutes
   onAddTask: (title: string, description: string, targetCycles: number) => void;
   onDeleteTask: (id: string) => void;
   onSetActiveTask: (id: string | null) => void;
+  compact?: boolean; // for focus mode
 }
 
 export function TaskList({
   tasks,
   activeTaskId,
+  pomodoroDuration = 25,
   onAddTask,
   onDeleteTask,
   onSetActiveTask,
+  compact = false,
 }: TaskListProps) {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showCompleted, setShowCompleted] = useState(false);
 
   const incompleteTasks = tasks.filter((t) => !t.isCompleted);
   const completedTasks = tasks.filter((t) => t.isCompleted);
+
+  // Calculate estimated completion time
+  const estimatedCompletion = useMemo(() => {
+    const remainingCycles = incompleteTasks.reduce((sum, task) => {
+      return sum + Math.max(0, task.targetCycles - task.completedCycles);
+    }, 0);
+    
+    if (remainingCycles === 0) return null;
+    
+    const totalMinutes = remainingCycles * pomodoroDuration;
+    const completionTime = new Date(Date.now() + totalMinutes * 60 * 1000);
+    
+    return {
+      cycles: remainingCycles,
+      minutes: totalMinutes,
+      time: completionTime.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+    };
+  }, [incompleteTasks, pomodoroDuration]);
+
+  if (compact) {
+    // Compact mode for Focus UI
+    return (
+      <div className="bg-black/20 backdrop-blur-sm rounded-xl p-3 w-full max-w-xs">
+        <div className="space-y-1.5 max-h-32 overflow-y-auto">
+          {incompleteTasks.length === 0 ? (
+            <p className="text-xs text-white/50 text-center py-2">Không có task</p>
+          ) : (
+            incompleteTasks.slice(0, 3).map((task) => (
+              <div
+                key={task.id}
+                className={cn(
+                  "flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs cursor-pointer transition-all",
+                  task.id === activeTaskId
+                    ? "bg-white/20 text-white"
+                    : "text-white/70 hover:bg-white/10"
+                )}
+                onClick={() => onSetActiveTask(task.id)}
+              >
+                <Circle className={cn(
+                  "h-3 w-3 flex-shrink-0",
+                  task.id === activeTaskId ? "text-primary" : "text-white/50"
+                )} />
+                <span className="truncate flex-1">{task.title}</span>
+                <span className="text-white/50">{task.completedCycles}/{task.targetCycles}</span>
+              </div>
+            ))
+          )}
+        </div>
+        {estimatedCompletion && (
+          <div className="flex items-center justify-center gap-1.5 mt-2 pt-2 border-t border-white/10 text-xs text-white/60">
+            <Clock className="h-3 w-3" />
+            <span>Xong lúc {estimatedCompletion.time}</span>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="card-glass rounded-2xl p-4 sm:p-5">
@@ -91,6 +152,24 @@ export function TaskList({
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {/* Estimated Completion Time */}
+      {estimatedCompletion && (
+        <div className="mt-4 pt-4 border-t border-border/50">
+          <div className="flex items-center justify-between text-sm">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Clock className="h-4 w-4" />
+              <span>Dự kiến hoàn thành</span>
+            </div>
+            <div className="text-right">
+              <span className="font-semibold text-primary">{estimatedCompletion.time}</span>
+              <p className="text-xs text-muted-foreground">
+                {estimatedCompletion.cycles} 🍅 · {Math.round(estimatedCompletion.minutes / 60 * 10) / 10}h
+              </p>
+            </div>
+          </div>
         </div>
       )}
 
