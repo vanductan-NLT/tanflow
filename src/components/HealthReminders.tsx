@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Bell, BellOff, Plus, Trash2, Clock, X, Timer } from 'lucide-react';
+import { Bell, BellOff, Plus, Trash2, Clock, Timer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
@@ -59,7 +59,7 @@ export function HealthReminders({ reminders: reminderHook }: HealthRemindersProp
       {activeReminder && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm animate-fade-in">
           <div className="glass-effect rounded-2xl p-8 max-w-sm mx-4 text-center space-y-4 animate-scale-in">
-            <span className="text-6xl">{activeReminder.icon}</span>
+            <span className="text-5xl">{activeReminder.icon}</span>
             <h3 className="text-xl font-semibold">{activeReminder.name}</h3>
             <p className="text-muted-foreground">Đã đến lúc rồi!</p>
             <div className="flex gap-3 justify-center">
@@ -67,7 +67,7 @@ export function HealthReminders({ reminders: reminderHook }: HealthRemindersProp
                 variant="outline"
                 onClick={() => snoozeReminder(activeReminder.id, 5)}
               >
-                <Timer className="h-4 w-4 mr-2" />
+                <Timer className="h-4 w-4 mr-2" strokeWidth={1.5} />
                 +5 phút
               </Button>
               <Button onClick={dismissReminder}>
@@ -83,7 +83,7 @@ export function HealthReminders({ reminders: reminderHook }: HealthRemindersProp
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Bell className="h-5 w-5 text-primary" />
+            <Bell className="h-5 w-5 text-primary" strokeWidth={1.5} />
             <span className="font-medium">Nhắc nhở sức khỏe</span>
           </div>
           <div className="flex items-center gap-2">
@@ -93,7 +93,7 @@ export function HealthReminders({ reminders: reminderHook }: HealthRemindersProp
               onClick={toggleActive}
               className={cn('h-8 w-8', !isActive && 'text-muted-foreground')}
             >
-              {isActive ? <Bell className="h-4 w-4" /> : <BellOff className="h-4 w-4" />}
+              {isActive ? <Bell className="h-4 w-4" strokeWidth={1.5} /> : <BellOff className="h-4 w-4" strokeWidth={1.5} />}
             </Button>
           </div>
         </div>
@@ -129,7 +129,7 @@ export function HealthReminders({ reminders: reminderHook }: HealthRemindersProp
                 <div>
                   <p className="text-sm font-medium">{reminder.name}</p>
                   <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <Clock className="h-3 w-3" />
+                    <Clock className="h-3 w-3" strokeWidth={1.5} />
                     <span>Mỗi {reminder.intervalMinutes} phút</span>
                     {reminder.enabled && timeUntilNext[reminder.id] && (
                       <span className="ml-2 text-primary">
@@ -151,7 +151,7 @@ export function HealthReminders({ reminders: reminderHook }: HealthRemindersProp
                     onClick={() => removeReminder(reminder.id)}
                     className="h-7 w-7 text-muted-foreground hover:text-destructive"
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Trash2 className="h-4 w-4" strokeWidth={1.5} />
                   </Button>
                 )}
               </div>
@@ -163,7 +163,7 @@ export function HealthReminders({ reminders: reminderHook }: HealthRemindersProp
         <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
           <DialogTrigger asChild>
             <Button variant="outline" size="sm" className="w-full">
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="h-4 w-4 mr-2" strokeWidth={1.5} />
               Thêm nhắc nhở
             </Button>
           </DialogTrigger>

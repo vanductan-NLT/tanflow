@@ -15,10 +15,10 @@ interface MinimalRemindersProps {
 }
 
 const iconComponents: Record<string, React.ReactNode> = {
-  '💧': <Droplets className="h-5 w-5" />,
-  '👀': <Eye className="h-5 w-5" />,
-  '🚶': <Footprints className="h-5 w-5" />,
-  '🧘': <Dumbbell className="h-5 w-5" />,
+  '💧': <Droplets className="h-5 w-5" strokeWidth={1.5} />,
+  '👀': <Eye className="h-5 w-5" strokeWidth={1.5} />,
+  '🚶': <Footprints className="h-5 w-5" strokeWidth={1.5} />,
+  '🧘': <Dumbbell className="h-5 w-5" strokeWidth={1.5} />,
 };
 
 export function MinimalReminders({ reminders, timeUntilNext, formatTimeRemaining }: MinimalRemindersProps) {
