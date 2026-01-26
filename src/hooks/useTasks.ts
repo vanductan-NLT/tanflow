@@ -88,26 +88,26 @@ export function useTasks() {
     }));
   }, [setState]);
 
-  const incrementCycle = useCallback((id: string) => {
-    let taskCompleted = false;
+  const incrementCycle = useCallback((id: string): { taskCompleted: boolean; updatedTask: Task | null } => {
+    // Find the task BEFORE updating to check if it will complete
+    const task = state.tasks.find((t) => t.id === id);
+    if (!task) {
+      return { taskCompleted: false, updatedTask: null };
+    }
+
+    const newCompletedCycles = task.completedCycles + 1;
+    const taskCompleted = newCompletedCycles >= task.targetCycles;
+    const updatedTask: Task = { ...task, completedCycles: newCompletedCycles };
 
     setState((prev) => {
-      const updatedTasks = prev.tasks.map((task) => {
-        if (task.id === id) {
-          const newCompletedCycles = task.completedCycles + 1;
-          if (newCompletedCycles >= task.targetCycles) {
-            taskCompleted = true;
-          }
-          return { ...task, completedCycles: newCompletedCycles };
-        }
-        return task;
-      });
-
+      const updatedTasks = prev.tasks.map((t) =>
+        t.id === id ? { ...t, completedCycles: newCompletedCycles } : t
+      );
       return { ...prev, tasks: updatedTasks };
     });
 
-    return taskCompleted;
-  }, [setState]);
+    return { taskCompleted, updatedTask };
+  }, [setState, state.tasks]);
 
   const markComplete = useCallback((id: string) => {
     setState((prev) => {
