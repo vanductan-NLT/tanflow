@@ -45,14 +45,11 @@ const Index = () => {
   // Handle pomodoro complete - increment task cycle
   const handlePomodoroComplete = useCallback(() => {
     if (tasks.activeTaskId) {
-      const taskCompleted = tasks.incrementCycle(tasks.activeTaskId);
-      if (taskCompleted) {
-        // Task reached target cycles, show completion dialog
-        const task = tasks.tasks.find(t => t.id === tasks.activeTaskId);
-        if (task) {
-          setCompletedTask({ ...task, completedCycles: task.completedCycles + 1 });
-          setTaskCompleteDialogOpen(true);
-        }
+      const { taskCompleted, updatedTask } = tasks.incrementCycle(tasks.activeTaskId);
+      if (taskCompleted && updatedTask) {
+        // Task reached target cycles, show completion dialog immediately
+        setCompletedTask(updatedTask);
+        setTaskCompleteDialogOpen(true);
       }
     }
   }, [tasks]);
