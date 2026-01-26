@@ -18,6 +18,7 @@ const DEFAULT_SETTINGS: PexelsSettings = {
 };
 
 const CATEGORIES = [
+  'random',
   'nature',
   'forest',
   'ocean',
@@ -29,6 +30,9 @@ const CATEGORIES = [
 ] as const;
 
 export type VideoCategory = typeof CATEGORIES[number];
+
+// Categories to pick from when random is selected
+const RANDOM_POOL = ['nature', 'forest', 'ocean', 'mountains', 'sky', 'rain', 'sunset', 'clouds'] as const;
 
 interface PexelsVideo {
   id: number;
@@ -76,8 +80,13 @@ export function usePexelsVideo() {
 
     try {
       const randomPage = Math.floor(Math.random() * 5) + 1;
+      // If category is 'random', pick a random category from the pool
+      const searchCategory = currentSettings.category === 'random'
+        ? RANDOM_POOL[Math.floor(Math.random() * RANDOM_POOL.length)]
+        : currentSettings.category;
+      
       const response = await fetch(
-        `https://api.pexels.com/videos/search?query=${currentSettings.category}&per_page=15&page=${randomPage}&orientation=landscape`,
+        `https://api.pexels.com/videos/search?query=${searchCategory}&per_page=15&page=${randomPage}&orientation=landscape`,
         {
           headers: {
             Authorization: currentSettings.apiKey,

@@ -1,4 +1,4 @@
-import { Video, RefreshCw, ExternalLink, Trees, TreePine, Waves, Mountain, Cloud, CloudRain, Sunset, CloudSun, LucideIcon } from 'lucide-react';
+import { Video, RefreshCw, ExternalLink, Trees, TreePine, Waves, Mountain, Cloud, CloudRain, Sunset, CloudSun, Shuffle, LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -24,6 +24,7 @@ interface CategoryConfig {
 }
 
 const CATEGORY_CONFIG: Record<string, CategoryConfig> = {
+  random: { label: 'Ngẫu nhiên', icon: Shuffle, color: 'text-purple-500' },
   nature: { label: 'Thiên nhiên', icon: Trees, color: 'text-green-500' },
   forest: { label: 'Rừng', icon: TreePine, color: 'text-emerald-600' },
   ocean: { label: 'Biển', icon: Waves, color: 'text-blue-500' },
