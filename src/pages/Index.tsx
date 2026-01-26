@@ -185,6 +185,7 @@ const Index = () => {
                     onUpdateTask={tasks.updateTask}
                     onDeleteTask={tasks.deleteTask}
                     onSetActiveTask={tasks.setActiveTask}
+                    onMarkComplete={tasks.markComplete}
                   />
                 </div>
                 <div
