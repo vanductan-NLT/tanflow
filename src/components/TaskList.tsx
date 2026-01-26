@@ -2,6 +2,8 @@ import { useState, useMemo } from 'react';
 import { Plus, Trash2, CheckCircle2, Circle, ChevronDown, ChevronUp, Clock, Pencil, ListTodo } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Confetti } from '@/components/Confetti';
 import { cn } from '@/lib/utils';
 import { AddTaskDialog } from './AddTaskDialog';
 import { EditTaskDialog } from './EditTaskDialog';
@@ -15,6 +17,7 @@ interface TaskListProps {
   onUpdateTask: (id: string, updates: Partial<Pick<Task, 'title' | 'description' | 'targetCycles'>>) => void;
   onDeleteTask: (id: string) => void;
   onSetActiveTask: (id: string | null) => void;
+  onMarkComplete?: (id: string) => void;
   compact?: boolean;
 }
 
@@ -26,12 +29,20 @@ export function TaskList({
   onUpdateTask,
   onDeleteTask,
   onSetActiveTask,
+  onMarkComplete,
   compact = false,
 }: TaskListProps) {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showCompleted, setShowCompleted] = useState(false);
   const [isExpanded, setIsExpanded] = useState(true);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [showConfetti, setShowConfetti] = useState(false);
+
+  const handleManualComplete = (taskId: string) => {
+    setShowConfetti(true);
+    setTimeout(() => setShowConfetti(false), 3000);
+    onMarkComplete?.(taskId);
+  };
 
   const incompleteTasks = tasks.filter((t) => !t.isCompleted);
   const completedTasks = tasks.filter((t) => t.isCompleted);
@@ -114,7 +125,9 @@ export function TaskList({
   }
 
   return (
-    <div className="w-full glass-effect rounded-2xl p-4 space-y-4">
+    <>
+      <Confetti active={showConfetti} duration={3000} />
+      <div className="w-full glass-effect rounded-2xl p-4 space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -192,6 +205,7 @@ export function TaskList({
                   onSelect={() => onSetActiveTask(task.id)}
                   onEdit={() => setEditingTask(task)}
                   onDelete={() => onDeleteTask(task.id)}
+                  onManualComplete={() => handleManualComplete(task.id)}
                 />
               ))
             )}
@@ -263,10 +277,10 @@ export function TaskList({
         onSave={handleEditSave}
         onDelete={onDeleteTask}
       />
-    </div>
+      </div>
+    </>
   );
 }
-
 interface TaskItemProps {
   task: Task;
   isActive: boolean;
@@ -274,9 +288,10 @@ interface TaskItemProps {
   onSelect: () => void;
   onEdit: () => void;
   onDelete: () => void;
+  onManualComplete?: () => void;
 }
 
-function TaskItem({ task, isActive, isCompleted, onSelect, onEdit, onDelete }: TaskItemProps) {
+function TaskItem({ task, isActive, isCompleted, onSelect, onEdit, onDelete, onManualComplete }: TaskItemProps) {
   const progress = (task.completedCycles / task.targetCycles) * 100;
 
   return (
@@ -292,18 +307,21 @@ function TaskItem({ task, isActive, isCompleted, onSelect, onEdit, onDelete }: T
       onClick={!isCompleted ? onSelect : undefined}
     >
       <div className="flex items-start gap-2">
-        {/* Status Icon */}
-        <div className="mt-0.5">
-          {isCompleted || task.completedCycles >= task.targetCycles ? (
-            <CheckCircle2 className={cn(
-              "h-4 w-4 text-primary",
-              !isCompleted && task.completedCycles >= task.targetCycles && "animate-pulse"
-            )} />
+        {/* Checkbox for manual completion */}
+        <div className="mt-0.5" onClick={(e) => e.stopPropagation()}>
+          {isCompleted ? (
+            <CheckCircle2 className="h-4 w-4 text-primary" />
           ) : (
-            <Circle className={cn(
-              "h-4 w-4",
-              isActive ? "text-primary" : "text-muted-foreground"
-            )} />
+            <Checkbox
+              checked={false}
+              onCheckedChange={() => onManualComplete?.()}
+              className={cn(
+                "h-4 w-4 rounded-full border-2 transition-colors",
+                isActive 
+                  ? "border-primary data-[state=checked]:bg-primary" 
+                  : "border-muted-foreground/50 hover:border-primary"
+              )}
+            />
           )}
         </div>
 
