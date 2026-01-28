@@ -15,7 +15,7 @@ export function VideoBackground({ timerMode, isRunning, pexels }: VideoBackgroun
     return null;
   }
 
-  const { settings, videoUrl, videoKey, refreshVideo, shouldRefreshOnVideoEnd } = pexels;
+  const { settings, videoUrl, videoKey, refreshVideo, shouldRefreshOnVideoEnd, hasApiKey } = pexels;
 
   // Double-buffered video layers (A/B) to avoid unmount/remount flashes during source swaps.
   const videoARef = useRef<HTMLVideoElement>(null);
@@ -124,7 +124,7 @@ export function VideoBackground({ timerMode, isRunning, pexels }: VideoBackgroun
     [shouldRefreshOnVideoEnd, refreshVideo, activeLayer]
   );
 
-  if (!settings.enabled || !settings.apiKey) {
+  if (!settings.enabled || !hasApiKey) {
     return null;
   }
 

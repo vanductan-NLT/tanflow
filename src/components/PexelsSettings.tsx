@@ -1,6 +1,5 @@
-import { Video, RefreshCw, ExternalLink, Trees, TreePine, Waves, Mountain, Cloud, CloudRain, Sunset, CloudSun, Shuffle, LucideIcon } from 'lucide-react';
+import { Video, RefreshCw, Trees, TreePine, Waves, Mountain, Cloud, CloudRain, Sunset, CloudSun, Shuffle, LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import {
@@ -46,7 +45,7 @@ const REFRESH_MODE_OPTIONS: { value: VideoRefreshMode; label: string }[] = [
 ];
 
 export function PexelsSettings({ pexels }: PexelsSettingsProps) {
-  const { settings, updateSettings, refreshVideo, isLoading, error, categories } = pexels;
+  const { settings, updateSettings, refreshVideo, isLoading, error, categories, hasApiKey } = pexels;
 
   return (
     <div className="space-y-4">
@@ -67,28 +66,6 @@ export function PexelsSettings({ pexels }: PexelsSettingsProps) {
 
       {settings.enabled && (
         <>
-          {/* API Key */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label>Pexels API Key</Label>
-              <a
-                href="https://www.pexels.com/api/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-primary flex items-center gap-1 hover:underline"
-              >
-                Lấy key miễn phí <ExternalLink className="h-3 w-3" />
-              </a>
-            </div>
-            <Input
-              type="password"
-              value={settings.apiKey}
-              onChange={(e) => updateSettings({ apiKey: e.target.value })}
-              placeholder="Nhập API key..."
-              className="text-sm"
-            />
-          </div>
-
           {/* Category */}
           <div className="space-y-2">
             <Label>Chủ đề video</Label>
@@ -159,7 +136,7 @@ export function PexelsSettings({ pexels }: PexelsSettingsProps) {
             variant="outline"
             size="sm"
             onClick={refreshVideo}
-            disabled={isLoading || !settings.apiKey}
+            disabled={isLoading || !hasApiKey}
             className="w-full"
           >
             <RefreshCw className={cn("h-4 w-4 mr-2", isLoading && "animate-spin")} />

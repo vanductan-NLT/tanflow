@@ -77,7 +77,7 @@ const Index = () => {
   // Refresh video when a pomodoro completes
   useEffect(() => {
     if (pomodoro.completedPomodoros > prevCompletedRef.current) {
-      if (pexels.shouldRefreshOnPomodoro && pexels.settings.enabled && pexels.settings.apiKey) {
+      if (pexels.shouldRefreshOnPomodoro && pexels.settings.enabled && pexels.hasApiKey) {
         pexels.refreshVideo();
       }
     }
@@ -106,7 +106,7 @@ const Index = () => {
       </div>
 
       {/* Background: Video if API key exists, otherwise gradient */}
-      {pexels.settings.enabled && pexels.settings.apiKey ? (
+      {pexels.settings.enabled && pexels.hasApiKey ? (
         <VideoBackground timerMode={pomodoro.mode} isRunning={pomodoro.isRunning} pexels={pexels} />
       ) : (
         <BackgroundScene timerMode={pomodoro.mode} />

@@ -44,8 +44,13 @@ export function SettingsPanel({ pomodoro, pexels }: SettingsPanelProps) {
           {/* Pomodoro Duration */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <Label>Thời gian tập trung</Label>
-              <span className="text-sm font-mono text-muted-foreground">
+              <div>
+                <Label>Thời gian tập trung</Label>
+                <p className="text-xs text-muted-foreground mt-1">
+                  45 phút là khoảng thời gian tối ưu cho não bộ hoạt động hết năng suất
+                </p>
+              </div>
+              <span className="text-sm font-mono text-muted-foreground whitespace-nowrap ml-4">
                 {settings.pomodoroDuration} phút
               </span>
             </div>
@@ -53,7 +58,7 @@ export function SettingsPanel({ pomodoro, pexels }: SettingsPanelProps) {
               value={[settings.pomodoroDuration]}
               onValueChange={([v]) => handleChange('pomodoroDuration', v)}
               min={5}
-              max={60}
+              max={90}
               step={5}
             />
           </div>
