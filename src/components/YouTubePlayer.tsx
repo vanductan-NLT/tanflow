@@ -1,9 +1,10 @@
-import { Music, Play, Pause, Volume2, VolumeX, ExternalLink, Loader2, SkipForward, Repeat, ChevronDown, ChevronUp } from 'lucide-react';
+import { Music, Play, Pause, Volume2, VolumeX, ExternalLink, Loader2, SkipForward, Repeat, ChevronDown, ChevronUp, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
+import { YouTubeSearch } from '@/components/YouTubeSearch';
 
 interface YouTubePlayerProps {
   isPlaying: boolean;
@@ -51,6 +52,7 @@ export function YouTubePlayer({
 }: YouTubePlayerProps) {
   const [customUrl, setCustomUrl] = useState('');
   const [isExpanded, setIsExpanded] = useState(true);
+  const [showSearch, setShowSearch] = useState(false);
 
   const extractVideoId = (url: string): string | null => {
     const patterns = [
@@ -243,12 +245,32 @@ export function YouTubePlayer({
           )}
 
           {/* Custom URL Input */}
-          <div className="space-y-2 pt-2 border-t border-border/50">
+          <div className="space-y-3 pt-2 border-t border-border/50">
+            {/* Search Toggle */}
+            <Button
+              variant={showSearch ? "default" : "outline"}
+              size="sm"
+              onClick={() => setShowSearch(!showSearch)}
+              className="w-full"
+            >
+              <Search className="h-4 w-4 mr-2" />
+              {showSearch ? 'Ẩn tìm kiếm' : 'Tìm kiếm nhạc trên YouTube'}
+            </Button>
+
+            {/* YouTube Search Component */}
+            {showSearch && (
+              <YouTubeSearch onVideoSelect={(videoId) => {
+                setVideoAndPlay(videoId);
+                setShowSearch(false);
+              }} />
+            )}
+
+            {/* Manual URL Input */}
             <div className="flex gap-2">
               <Input
                 value={customUrl}
                 onChange={(e) => setCustomUrl(e.target.value)}
-                placeholder="Dán link YouTube..."
+                placeholder="Hoặc dán link YouTube..."
                 className="text-sm"
                 onKeyDown={(e) => e.key === 'Enter' && handleCustomUrl()}
               />

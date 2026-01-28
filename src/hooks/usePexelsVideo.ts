@@ -1,19 +1,20 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocalStorage } from './useLocalStorage';
 
+// API key từ biến môi trường (centralized)
+const ENV_PEXELS_API_KEY = import.meta.env.VITE_PEXELS_API_KEY || '';
+
 export type VideoRefreshMode = 'off' | 'on-pomodoro' | 'on-video-end' | '10' | '15' | '30' | '60';
 
 export interface PexelsSettings {
   enabled: boolean;
   category: string;
-  apiKey: string;
   refreshMode: VideoRefreshMode;
 }
 
 const DEFAULT_SETTINGS: PexelsSettings = {
   enabled: true,
   category: 'nature',
-  apiKey: '',
   refreshMode: 'on-pomodoro',
 };
 
@@ -64,14 +65,16 @@ export function usePexelsVideo() {
 
   const fetchRandomVideo = useCallback(async () => {
     const currentSettings = settingsRef.current;
+    const apiKey = ENV_PEXELS_API_KEY;
+    
     console.log('[Pexels] fetchRandomVideo called', { 
-      apiKey: currentSettings.apiKey ? 'exists' : 'missing',
+      apiKey: apiKey ? 'exists' : 'missing',
       enabled: currentSettings.enabled,
       category: currentSettings.category
     });
     
-    if (!currentSettings.apiKey || !currentSettings.enabled) {
-      setError('Cần nhập Pexels API key');
+    if (!apiKey || !currentSettings.enabled) {
+      setError('API key chưa được cấu hình');
       return;
     }
 
@@ -89,7 +92,7 @@ export function usePexelsVideo() {
         `https://api.pexels.com/videos/search?query=${searchCategory}&per_page=15&page=${randomPage}&orientation=landscape`,
         {
           headers: {
-            Authorization: currentSettings.apiKey,
+            Authorization: apiKey,
           },
         }
       );
@@ -123,15 +126,15 @@ export function usePexelsVideo() {
 
   // Fetch video on mount and when category changes
   useEffect(() => {
-    if (settings.enabled && settings.apiKey) {
+    if (settings.enabled && ENV_PEXELS_API_KEY) {
       fetchRandomVideo();
     }
-  }, [settings.category, settings.apiKey, settings.enabled, fetchRandomVideo]);
+  }, [settings.category, settings.enabled, fetchRandomVideo]);
 
   // Auto-refresh video at interval (only for interval modes)
   useEffect(() => {
     const intervalMinutes = parseInt(settings.refreshMode);
-    if (!settings.enabled || !settings.apiKey || isNaN(intervalMinutes) || intervalMinutes === 0) {
+    if (!settings.enabled || !ENV_PEXELS_API_KEY || isNaN(intervalMinutes) || intervalMinutes === 0) {
       return;
     }
 
@@ -141,7 +144,7 @@ export function usePexelsVideo() {
     }, intervalMs);
 
     return () => clearInterval(intervalId);
-  }, [settings.enabled, settings.apiKey, settings.refreshMode, fetchRandomVideo]);
+  }, [settings.enabled, settings.refreshMode, fetchRandomVideo]);
 
   const updateSettings = useCallback((updates: Partial<PexelsSettings>) => {
     setSettings(prev => ({ ...prev, ...updates }));
@@ -155,6 +158,7 @@ export function usePexelsVideo() {
   // Helper getters for compatibility
   const shouldRefreshOnPomodoro = settings.refreshMode === 'on-pomodoro';
   const shouldRefreshOnVideoEnd = settings.refreshMode === 'on-video-end';
+  const hasApiKey = !!ENV_PEXELS_API_KEY;
 
   return {
     settings,
@@ -167,5 +171,6 @@ export function usePexelsVideo() {
     categories: CATEGORIES,
     shouldRefreshOnPomodoro,
     shouldRefreshOnVideoEnd,
+    hasApiKey,
   };
 }
