@@ -1,14 +1,9 @@
 import { useState } from 'react';
-import { Search, Loader2, Play, AlertCircle, ExternalLink, Info } from 'lucide-react';
+import { Search, Loader2, Play, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface YouTubeVideo {
   id: string;
@@ -29,18 +24,9 @@ export function YouTubeSearch({ onVideoSelect }: YouTubeSearchProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
-  const [showApiGuide, setShowApiGuide] = useState(false);
-
-  const hasApiKey = !!YOUTUBE_API_KEY;
 
   const handleSearch = async () => {
     if (!query.trim()) return;
-    
-    if (!hasApiKey) {
-      setError('Chưa cấu hình YouTube API Key');
-      setShowApiGuide(true);
-      return;
-    }
 
     setIsLoading(true);
     setError(null);
@@ -101,43 +87,9 @@ export function YouTubeSearch({ onVideoSelect }: YouTubeSearchProps) {
         </Button>
       </div>
 
-      {/* API Key Guide */}
-      {!hasApiKey && (
-        <Collapsible open={showApiGuide} onOpenChange={setShowApiGuide}>
-          <CollapsibleTrigger asChild>
-            <Alert className="cursor-pointer hover:bg-muted/50 transition-colors">
-              <Info className="h-4 w-4" />
-              <AlertTitle className="flex items-center gap-2">
-                Cần YouTube API Key
-                <span className="text-xs text-muted-foreground">
-                  (Nhấp để xem hướng dẫn)
-                </span>
-              </AlertTitle>
-            </Alert>
-          </CollapsibleTrigger>
-          <CollapsibleContent>
-            <div className="mt-3 p-4 bg-muted/30 rounded-lg text-sm space-y-3">
-              <p className="font-medium">Cách lấy YouTube Data API Key:</p>
-              <ol className="list-decimal list-inside space-y-2 text-muted-foreground">
-                <li>Truy cập <a href="https://console.cloud.google.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline inline-flex items-center gap-1">
-                  Google Cloud Console <ExternalLink className="h-3 w-3" />
-                </a></li>
-                <li>Tạo dự án mới hoặc chọn dự án có sẵn</li>
-                <li>Vào "APIs & Services" → "Library"</li>
-                <li>Tìm "YouTube Data API v3" và bật nó</li>
-                <li>Vào "Credentials" → "Create Credentials" → "API Key"</li>
-                <li>Copy API Key và thêm vào dự án với tên <code className="bg-muted px-1.5 py-0.5 rounded text-xs">VITE_YOUTUBE_API_KEY</code></li>
-              </ol>
-              <p className="text-xs text-muted-foreground italic">
-                * API này có quota miễn phí 10,000 units/ngày (khoảng 100 lượt tìm kiếm)
-              </p>
-            </div>
-          </CollapsibleContent>
-        </Collapsible>
-      )}
 
       {/* Error */}
-      {error && hasApiKey && (
+      {error && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>{error}</AlertDescription>
