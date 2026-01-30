@@ -82,22 +82,41 @@ export function usePexelsVideo() {
 
       if (fnError) {
         console.error('[Pexels] backend function error:', fnError);
-        setError('Lỗi kết nối Pexels API');
+        // Kiểm tra lỗi cụ thể
+        const errorMsg = fnError.message?.toLowerCase() || '';
+        if (errorMsg.includes('api key') || errorMsg.includes('unauthorized')) {
+          setError('Chưa cấu hình API key trên server');
+        } else {
+          setError('Không thể tải video. Thử lại sau.');
+        }
+        return;
+      }
+
+      // Kiểm tra lỗi từ response body
+      const responseError = (data as any)?.error;
+      if (responseError) {
+        console.error('[Pexels] API error:', responseError);
+        if (responseError.includes('Missing Pexels API key')) {
+          setError('Chưa cấu hình Pexels API key');
+        } else {
+          setError('Không thể tải video');
+        }
         return;
       }
 
       const url = (data as any)?.videoUrl as string | undefined;
       if (!url) {
-        setError('Không tìm thấy video');
+        setError('Không tìm thấy video phù hợp');
         return;
       }
 
       console.log('[Pexels] Setting new video URL:', url);
       setVideoUrl(url);
       setVideoKey(prev => prev + 1);
+      setError(null); // Clear any previous error on success
     } catch (err) {
-      setError('Lỗi kết nối Pexels API');
-      console.error('Pexels error:', err);
+      console.error('[Pexels] Network error:', err);
+      setError('Lỗi kết nối. Kiểm tra mạng và thử lại.');
     } finally {
       setIsLoading(false);
     }
