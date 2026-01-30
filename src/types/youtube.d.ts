@@ -56,6 +56,7 @@ declare namespace YT {
     getPlayerState(): PlayerState;
     getCurrentTime(): number;
     getDuration(): number;
+    getVideoData(): { video_id: string; title: string; author: string };
     destroy(): void;
   }
 }

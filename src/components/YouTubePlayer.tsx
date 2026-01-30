@@ -5,6 +5,7 @@ import { Slider } from '@/components/ui/slider';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import { YouTubeSearch } from '@/components/YouTubeSearch';
+import { MusicTopicSelector, MusicTopic } from '@/components/MusicTopicSelector';
 
 interface YouTubePlayerProps {
   isPlaying: boolean;
@@ -27,6 +28,10 @@ interface YouTubePlayerProps {
   seekTo: (s: number) => void;
   formatTime: (s: number) => string;
   error: string | null;
+  currentVideoTitle: string;
+  currentTopic: string;
+  searchAndPlayTopic: (topic: MusicTopic) => Promise<void>;
+  isSearchingTopic: boolean;
 }
 
 export function YouTubePlayer({
@@ -49,6 +54,10 @@ export function YouTubePlayer({
   seekTo,
   formatTime,
   error,
+  currentVideoTitle,
+  currentTopic,
+  searchAndPlayTopic,
+  isSearchingTopic,
 }: YouTubePlayerProps) {
   const [customUrl, setCustomUrl] = useState('');
   const [isExpanded, setIsExpanded] = useState(true);
@@ -81,7 +90,7 @@ export function YouTubePlayer({
         <div className="flex items-center gap-2">
           <Music className="h-5 w-5 text-primary" strokeWidth={1.5} />
           <span className="font-medium">Nhạc nền</span>
-          {!isPlayerReady && (
+          {(!isPlayerReady || isSearchingTopic) && (
             <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
           )}
         </div>
@@ -117,7 +126,8 @@ export function YouTubePlayer({
               <Play className="h-4 w-4 ml-0.5" />
             )}
           </Button>
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
+            <p className="text-xs text-muted-foreground truncate mb-1">{currentVideoTitle}</p>
             <div 
               className="relative h-1.5 bg-muted rounded-full cursor-pointer overflow-hidden"
               onClick={(e) => {
@@ -134,7 +144,7 @@ export function YouTubePlayer({
               />
             </div>
           </div>
-          <span className="text-xs text-muted-foreground tabular-nums">
+          <span className="text-xs text-muted-foreground tabular-nums shrink-0">
             {formatTime(currentTime)}
           </span>
         </div>
@@ -143,8 +153,15 @@ export function YouTubePlayer({
       {/* Expanded View */}
       {isExpanded && (
         <>
+          {/* Topic Selector */}
+          <MusicTopicSelector
+            currentTopic={currentTopic}
+            onTopicSelect={searchAndPlayTopic}
+            isLoading={isSearchingTopic}
+          />
+
           {/* Track Name */}
-          <p className="text-xs text-muted-foreground truncate">{currentTrack.name}</p>
+          <p className="text-xs text-muted-foreground truncate">{currentVideoTitle}</p>
 
           {/* Progress Bar */}
           <div className="space-y-1">
@@ -194,7 +211,7 @@ export function YouTubePlayer({
               variant="ghost"
               size="icon"
               onClick={handleNext}
-              disabled={!isPlayerReady}
+              disabled={!isPlayerReady || isSearchingTopic}
               className="h-8 w-8 rounded-full"
               title="Bài tiếp theo"
             >
