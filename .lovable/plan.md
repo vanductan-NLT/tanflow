@@ -1,155 +1,188 @@
 
+# Kế hoạch: Topic Recommendations + Sửa lỗi Track Name & Phát liên tục
 
-# Kế hoạch Cá nhân hóa FocusFlow
+## Tóm tắt
 
-## Tổng quan
-
-Cập nhật ứng dụng FocusFlow với các cải tiến sau:
-1. **Pexels API**: Chuyển sang sử dụng API key tập trung từ biến môi trường
-2. **Âm thanh hoàn thành**: Thêm âm thanh riêng biệt cho Focus (Alarm) và Meditation (Temple Bell)
-3. **Thời gian mặc định**: Đổi thời gian tập trung mặc định từ 25 phút lên 45 phút
-4. **YouTube Search**: Tạm hoãn vì cần YouTube Data API Key (tương lai sẽ thêm, nên cứ làm và hướng dẫn cách thêm)
+Thêm tính năng chọn topic nhạc có sẵn (Lofi, Jazz, Piano...), hiển thị đúng tên bài hát từ YouTube API với truncate "...", và sửa lỗi phát liên tục khi video kết thúc.
 
 ---
 
-## Chi tiết thay đổi
+## Phần 1: Sửa hiển thị tên bài nhạc đúng
 
-### 1. Pexels API - Sử dụng biến môi trường
+### Vấn đề hiện tại
+- `currentTrack.name` được lấy từ mảng `PLAYLISTS` hardcoded (5 video preset)
+- Khi user chọn video từ search/custom URL, videoId không có trong PLAYLISTS → fallback về "Lofi Hip Hop"
 
-**Mục tiêu**: Loại bỏ yêu cầu người dùng nhập API key, sử dụng key tập trung.
+### Giải pháp
+- Sử dụng `player.getVideoData().title` từ YouTube IFrame API để lấy tên thực của video đang phát
+- Thêm state `currentVideoTitle` trong `useYouTubePlayer`
+- Cập nhật title khi video ready hoặc state change sang PLAYING
+- UI tự động truncate với CSS `truncate` class (đã có)
 
-```text
-┌─────────────────────────────────────────┐
-│  Trước đây                              │
-│  ┌─────────┐    ┌───────────────────┐   │
-│  │ User    │───>│ Nhập API Key vào  │   │
-│  │         │    │ Settings Panel    │   │
-│  └─────────┘    └───────────────────┘   │
-└─────────────────────────────────────────┘
-               ↓
-┌─────────────────────────────────────────┐
-│  Sau khi cập nhật                       │
-│  ┌─────────────┐   ┌─────────────────┐  │
-│  │ .env file   │──>│ VITE_PEXELS_    │  │
-│  │             │   │ API_KEY         │  │
-│  └─────────────┘   └─────────────────┘  │
-│         ↓                               │
-│  ┌─────────────────────────────────┐    │
-│  │ usePexelsVideo.ts đọc từ        │    │
-│  │ import.meta.env.VITE_PEXELS_... │    │
-│  └─────────────────────────────────┘    │
-└─────────────────────────────────────────┘
+### Thay đổi kỹ thuật
+
+**File: `src/types/youtube.d.ts`**
+```typescript
+// Thêm method getVideoData vào Player class
+getVideoData(): { video_id: string; title: string; author: string };
 ```
 
-**File thay đổi**:
-- `src/hooks/usePexelsVideo.ts`: Đọc API key từ `import.meta.env.VITE_PEXELS_API_KEY`
-- `src/components/PexelsSettings.tsx`: Xóa ô nhập API key và link "Lấy key miễn phí"
+**File: `src/hooks/useYouTubePlayer.ts`**
+```typescript
+const [currentVideoTitle, setCurrentVideoTitle] = useState<string>('');
 
-### 2. Âm thanh hoàn thành riêng biệt
+// Trong onReady event
+const videoData = event.target.getVideoData();
+if (videoData?.title) setCurrentVideoTitle(videoData.title);
 
-**Mục tiêu**: Phát âm thanh khác nhau khi hoàn thành Focus vs Meditation.
+// Trong onStateChange khi PLAYING
+if (event.data === window.YT.PlayerState.PLAYING) {
+  const videoData = event.target.getVideoData();
+  if (videoData?.title) setCurrentVideoTitle(videoData.title);
+}
 
-| Chế độ | Âm thanh | Mô tả |
-|--------|----------|-------|
-| Focus/Pomodoro | Alarm | Tiếng chuông báo thức rõ ràng |
-| Meditation | Temple Bell | Tiếng chuông chùa nhẹ nhàng |
-
-**File thay đổi**:
-- `src/hooks/usePomodoro.ts`:
-  - Cập nhật `playNotificationSound` để nhận tham số `mode`
-  - Thêm 2 URL âm thanh (sử dụng base64 hoặc file audio trong `/public`)
-
-### 3. Thời gian mặc định 45 phút
-
-**Mục tiêu**: Thay đổi thời gian tập trung mặc định thành 45 phút (nghiên cứu cho thấy đây là thời gian tối ưu).
-
-**File thay đổi**:
-- `src/hooks/usePomodoro.ts`: Đổi `DEFAULT_SETTINGS.pomodoroDuration` từ 25 → 45
-- `src/components/SettingsPanel.tsx`: Thêm gợi ý bên cạnh slider
-
-### 4. YouTube Search (Tạm hoãn)
-
-**Lý do**: Tính năng tìm kiếm YouTube cần YouTube Data API v3 key. Vì bạn chưa có key này, tính năng sẽ được tạm hoãn.
-
-**Khi có API key**, sẽ triển khai:
-- Component `YouTubeSearch.tsx` với ô tìm kiếm
-- Hiển thị kết quả với thumbnail
-- Click để phát video
+// Export currentVideoTitle thay vì currentTrack.name
+```
 
 ---
 
-## Yêu cầu từ bạn
+## Phần 2: Sửa lỗi phát liên tục
 
-Trước khi triển khai, bạn cần cung cấp **Pexels API Key** để lưu vào biến môi trường. Bạn có thể cung cấp key sau khi approve plan.
+### Vấn đề hiện tại
+- `handleNext()` tìm video trong `PLAYLISTS` hardcoded (chỉ 5 video)
+- Khi user phát video từ search/custom URL → không tìm thấy → logic sai
+- `autoPlay` flag không được kiểm tra đúng cách trong một số trường hợp
 
----
+### Giải pháp
+- Tạo **queue system** lưu danh sách video đã search/chọn
+- Khi video kết thúc + autoPlay bật: tự động search thêm video cùng topic và phát tiếp
+- Nếu không có queue, replay video hiện tại hoặc search thêm
 
-## Phần kỹ thuật
+### Thay đổi kỹ thuật
 
-### Thay đổi trong usePexelsVideo.ts
+**File: `src/hooks/useYouTubePlayer.ts`**
 
 ```typescript
-// Đọc API key từ biến môi trường thay vì localStorage
-const ENV_API_KEY = import.meta.env.VITE_PEXELS_API_KEY || '';
+// Thêm state cho queue và current topic
+const [videoQueue, setVideoQueue] = useState<Array<{id: string, title: string}>>([]);
+const [currentQueueIndex, setCurrentQueueIndex] = useState(0);
+const [currentTopic, setCurrentTopic] = useLocalStorage<string>('focusflow-music-topic', 'lofi');
 
-// Trong hàm fetchRandomVideo
-const apiKey = ENV_API_KEY || currentSettings.apiKey;
-if (!apiKey || !currentSettings.enabled) {
-  setError('Cần cấu hình Pexels API key');
-  return;
+// handleNext mới
+const handleNext = useCallback(() => {
+  // Nếu có queue và còn video
+  if (videoQueue.length > 0 && currentQueueIndex < videoQueue.length - 1) {
+    const nextIndex = currentQueueIndex + 1;
+    setCurrentQueueIndex(nextIndex);
+    setShouldAutoPlay(true);
+    setSavedVideoId(videoQueue[nextIndex].id);
+  } else {
+    // Không còn video trong queue → search thêm hoặc loop lại
+    // Gọi searchAndQueue(currentTopic)
+  }
+}, [videoQueue, currentQueueIndex, currentTopic]);
+```
+
+---
+
+## Phần 3: Topic Recommendations UI
+
+### Tính năng mới
+- Hiển thị các topic có sẵn dưới dạng chips/buttons: Lofi, Jazz, Piano, Nature, Ambient, Classical, Chill
+- Khi user chọn topic → auto search YouTube với query tương ứng → phát video đầu tiên
+- Topic được lưu vào localStorage để nhớ lần sau
+
+### UI Design
+
+```
+┌─────────────────────────────────────────────┐
+│ 🎵 Nhạc nền                            [▲] │
+├─────────────────────────────────────────────┤
+│                                             │
+│  Chọn thể loại:                            │
+│  [🎵 Lofi] [☕ Jazz] [🎹 Piano] [🌿 Nature]│
+│  [🌙 Ambient] [🎻 Classical] [✨ Chill]    │
+│                                             │
+│  ─────────────────────────────────────      │
+│  ▶ Lofi Girl - beats to relax/study...     │
+│  ━━━━━━━━━●──────────── 2:45 / 10:30       │
+│                                             │
+│  [⏯] [⏭] [🔊 ━━━━] [🔁]                   │
+│                                             │
+│  [🔍 Tìm kiếm nhạc trên YouTube]           │
+│  [ Hoặc dán link YouTube...        ] [↗]   │
+└─────────────────────────────────────────────┘
+```
+
+### Thay đổi kỹ thuật
+
+**File: `src/components/MusicTopicSelector.tsx`** (tạo mới)
+
+```typescript
+const MUSIC_TOPICS = [
+  { id: 'lofi', name: 'Lofi', emoji: '🎵', query: 'lofi hip hop beats' },
+  { id: 'jazz', name: 'Jazz', emoji: '☕', query: 'jazz coffee shop music' },
+  { id: 'piano', name: 'Piano', emoji: '🎹', query: 'piano study music' },
+  { id: 'nature', name: 'Nature', emoji: '🌿', query: 'nature sounds relaxing' },
+  { id: 'ambient', name: 'Ambient', emoji: '🌙', query: 'ambient study music' },
+  { id: 'classical', name: 'Classical', emoji: '🎻', query: 'classical music focus' },
+  { id: 'chill', name: 'Chill', emoji: '✨', query: 'chill music playlist' },
+];
+
+interface Props {
+  currentTopic: string;
+  onTopicSelect: (topic: typeof MUSIC_TOPICS[0]) => void;
+  isLoading: boolean;
 }
 ```
 
-### Thay đổi trong PexelsSettings.tsx
-
-Xóa hoàn toàn phần:
-- Ô Input nhập API key
-- Link "Lấy key miễn phí"
-- Các reference tới `settings.apiKey`
-
-### Thay đổi trong usePomodoro.ts
+**File: `src/hooks/useYouTubePlayer.ts`**
 
 ```typescript
-// Mặc định mới
-const DEFAULT_SETTINGS: PomodoroSettings = {
-  pomodoroDuration: 45,  // Thay đổi từ 25
-  // ...
-};
-
-// Hàm phát âm thanh theo mode
-const playNotificationSound = useCallback((timerMode: TimerMode) => {
-  const soundUrl = timerMode === 'meditation' 
-    ? TEMPLE_BELL_SOUND_URL 
-    : ALARM_SOUND_URL;
-  // Phát âm thanh
+// Thêm function để search và phát theo topic
+const searchAndPlayTopic = useCallback(async (topic: MusicTopic) => {
+  setCurrentTopic(topic.id);
+  setIsSearchingTopic(true);
+  
+  // Gọi edge function youtube-search với topic.query
+  const { data } = await supabase.functions.invoke('youtube-search', {
+    body: { query: topic.query, maxResults: 10 }
+  });
+  
+  const videos = data?.videos ?? [];
+  if (videos.length > 0) {
+    setVideoQueue(videos);
+    setCurrentQueueIndex(0);
+    setVideoAndPlay(videos[0].id);
+  }
+  
+  setIsSearchingTopic(false);
 }, []);
 ```
 
-### Thay đổi trong SettingsPanel.tsx
-
-```typescript
-// Thêm gợi ý
-<div className="flex items-center justify-between">
-  <div>
-    <Label>Thời gian tập trung</Label>
-    <p className="text-xs text-muted-foreground">
-      45 phút là khoảng thời gian tối ưu cho não bộ
-    </p>
-  </div>
-  <span className="text-sm font-mono text-muted-foreground">
-    {settings.pomodoroDuration} phút
-  </span>
-</div>
-```
+**File: `src/components/YouTubePlayer.tsx`**
+- Import và thêm `MusicTopicSelector` component
+- Pass props: currentTopic, onTopicSelect, isSearchingTopic
 
 ---
 
-## Kế hoạch kiểm tra
+## Tóm tắt files cần thay đổi
 
-| Tính năng | Cách kiểm tra |
-|-----------|---------------|
-| Pexels API | Mở settings, xác nhận không còn ô nhập API key, video vẫn load |
-| Âm thanh Focus | Chạy timer 10 giây, kiểm tra âm thanh alarm |
-| Âm thanh Meditation | Chạy meditation 10 giây, kiểm tra âm thanh temple bell |
-| Thời gian mặc định | Reset settings, xác nhận mặc định là 45 phút |
+| File | Thay đổi |
+|------|----------|
+| `src/types/youtube.d.ts` | Thêm `getVideoData()` type |
+| `src/hooks/useYouTubePlayer.ts` | Thêm currentVideoTitle, videoQueue, currentTopic, searchAndPlayTopic |
+| `src/components/MusicTopicSelector.tsx` | **Tạo mới** - UI chọn topic |
+| `src/components/YouTubePlayer.tsx` | Thêm MusicTopicSelector, hiển thị currentVideoTitle |
+| `src/components/MiniMusicPlayer.tsx` | Cập nhật hiển thị tên bài thực |
 
+---
+
+## Thứ tự triển khai
+
+1. Cập nhật `youtube.d.ts` - thêm type cho getVideoData
+2. Sửa `useYouTubePlayer.ts` - lấy title thực + queue system
+3. Tạo `MusicTopicSelector.tsx` - UI chọn topic
+4. Cập nhật `YouTubePlayer.tsx` - tích hợp topic selector + title mới
+5. Cập nhật `MiniMusicPlayer.tsx` - đồng bộ logic nếu cần
+6. Test end-to-end: chọn topic → phát nhạc → hết bài → tự chuyển bài
