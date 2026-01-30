@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { supabase } from '@/integrations/supabase/client';
 
 interface YouTubeVideo {
   id: string;
@@ -15,8 +16,6 @@ interface YouTubeVideo {
 interface YouTubeSearchProps {
   onVideoSelect: (videoId: string) => void;
 }
-
-const YOUTUBE_API_KEY = import.meta.env.VITE_YOUTUBE_API_KEY || '';
 
 export function YouTubeSearch({ onVideoSelect }: YouTubeSearchProps) {
   const [query, setQuery] = useState('');
@@ -33,27 +32,19 @@ export function YouTubeSearch({ onVideoSelect }: YouTubeSearchProps) {
     setHasSearched(true);
 
     try {
-      const response = await fetch(
-        `https://www.googleapis.com/youtube/v3/search?` +
-        `part=snippet&type=video&videoCategoryId=10&maxResults=10&q=${encodeURIComponent(query + ' lofi music study')}&key=${YOUTUBE_API_KEY}`
-      );
+      const { data, error: fnError } = await supabase.functions.invoke('youtube-search', {
+        body: {
+          query,
+          maxResults: 10,
+        },
+      });
 
-      if (!response.ok) {
-        if (response.status === 403) {
-          throw new Error('API key không hợp lệ hoặc đã hết quota');
-        }
+      if (fnError) {
+        console.error('[YouTubeSearch] backend function error:', fnError);
         throw new Error('Không thể tìm kiếm video');
       }
 
-      const data = await response.json();
-      
-      const videos: YouTubeVideo[] = data.items.map((item: any) => ({
-        id: item.id.videoId,
-        title: item.snippet.title,
-        thumbnail: item.snippet.thumbnails.medium?.url || item.snippet.thumbnails.default?.url,
-        channelTitle: item.snippet.channelTitle,
-      }));
-
+      const videos = ((data as any)?.videos ?? []) as YouTubeVideo[];
       setResults(videos);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Lỗi khi tìm kiếm');
