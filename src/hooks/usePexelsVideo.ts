@@ -1,8 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocalStorage } from './useLocalStorage';
-
-// API key từ biến môi trường (centralized)
-const ENV_PEXELS_API_KEY = import.meta.env.VITE_PEXELS_API_KEY || '';
+import { supabase } from '@/integrations/supabase/client';
 
 export type VideoRefreshMode = 'off' | 'on-pomodoro' | 'on-video-end' | '10' | '15' | '30' | '60';
 
@@ -65,57 +63,38 @@ export function usePexelsVideo() {
 
   const fetchRandomVideo = useCallback(async () => {
     const currentSettings = settingsRef.current;
-    const apiKey = ENV_PEXELS_API_KEY;
-    
-    console.log('[Pexels] fetchRandomVideo called', { 
-      apiKey: apiKey ? 'exists' : 'missing',
+    console.log('[Pexels] fetchRandomVideo called', {
       enabled: currentSettings.enabled,
-      category: currentSettings.category
+      category: currentSettings.category,
     });
-    
-    if (!apiKey || !currentSettings.enabled) {
-      setError('API key chưa được cấu hình');
-      return;
-    }
+
+    if (!currentSettings.enabled) return;
 
     setIsLoading(true);
     setError(null);
 
     try {
-      const randomPage = Math.floor(Math.random() * 5) + 1;
-      // If category is 'random', pick a random category from the pool
-      const searchCategory = currentSettings.category === 'random'
-        ? RANDOM_POOL[Math.floor(Math.random() * RANDOM_POOL.length)]
-        : currentSettings.category;
-      
-      const response = await fetch(
-        `https://api.pexels.com/videos/search?query=${searchCategory}&per_page=15&page=${randomPage}&orientation=landscape`,
-        {
-          headers: {
-            Authorization: apiKey,
-          },
-        }
-      );
+      const { data, error: fnError } = await supabase.functions.invoke('pexels-video', {
+        body: {
+          category: currentSettings.category,
+        },
+      });
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch video');
+      if (fnError) {
+        console.error('[Pexels] backend function error:', fnError);
+        setError('Lỗi kết nối Pexels API');
+        return;
       }
 
-      const data: PexelsResponse = await response.json();
-      
-      if (data.videos && data.videos.length > 0) {
-        const randomVideo = data.videos[Math.floor(Math.random() * data.videos.length)];
-        // Find HD quality video file
-        const hdFile = randomVideo.video_files.find(
-          f => f.quality === 'hd' && f.width >= 1280
-        ) || randomVideo.video_files[0];
-        
-        console.log('[Pexels] Setting new video URL:', hdFile.link);
-        setVideoUrl(hdFile.link);
-        setVideoKey(prev => prev + 1); // Force VideoBackground to update
-      } else {
+      const url = (data as any)?.videoUrl as string | undefined;
+      if (!url) {
         setError('Không tìm thấy video');
+        return;
       }
+
+      console.log('[Pexels] Setting new video URL:', url);
+      setVideoUrl(url);
+      setVideoKey(prev => prev + 1);
     } catch (err) {
       setError('Lỗi kết nối Pexels API');
       console.error('Pexels error:', err);
@@ -126,15 +105,13 @@ export function usePexelsVideo() {
 
   // Fetch video on mount and when category changes
   useEffect(() => {
-    if (settings.enabled && ENV_PEXELS_API_KEY) {
-      fetchRandomVideo();
-    }
+    if (settings.enabled) fetchRandomVideo();
   }, [settings.category, settings.enabled, fetchRandomVideo]);
 
   // Auto-refresh video at interval (only for interval modes)
   useEffect(() => {
     const intervalMinutes = parseInt(settings.refreshMode);
-    if (!settings.enabled || !ENV_PEXELS_API_KEY || isNaN(intervalMinutes) || intervalMinutes === 0) {
+    if (!settings.enabled || isNaN(intervalMinutes) || intervalMinutes === 0) {
       return;
     }
 
@@ -158,7 +135,8 @@ export function usePexelsVideo() {
   // Helper getters for compatibility
   const shouldRefreshOnPomodoro = settings.refreshMode === 'on-pomodoro';
   const shouldRefreshOnVideoEnd = settings.refreshMode === 'on-video-end';
-  const hasApiKey = !!ENV_PEXELS_API_KEY;
+  // Key is stored server-side, client can't reliably detect.
+  const hasApiKey = true;
 
   return {
     settings,

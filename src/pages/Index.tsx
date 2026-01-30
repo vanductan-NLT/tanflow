@@ -77,7 +77,7 @@ const Index = () => {
   // Refresh video when a pomodoro completes
   useEffect(() => {
     if (pomodoro.completedPomodoros > prevCompletedRef.current) {
-      if (pexels.shouldRefreshOnPomodoro && pexels.settings.enabled && pexels.hasApiKey) {
+      if (pexels.shouldRefreshOnPomodoro && pexels.settings.enabled) {
         pexels.refreshVideo();
       }
     }
@@ -105,8 +105,8 @@ const Index = () => {
         <div id="hidden-youtube-player" />
       </div>
 
-      {/* Background: Video if API key exists, otherwise gradient */}
-      {pexels.settings.enabled && pexels.hasApiKey ? (
+      {/* Background: Video when enabled + we have a URL, otherwise gradient */}
+      {pexels.settings.enabled && !!pexels.videoUrl ? (
         <VideoBackground timerMode={pomodoro.mode} isRunning={pomodoro.isRunning} pexels={pexels} />
       ) : (
         <BackgroundScene timerMode={pomodoro.mode} />

@@ -45,7 +45,7 @@ const REFRESH_MODE_OPTIONS: { value: VideoRefreshMode; label: string }[] = [
 ];
 
 export function PexelsSettings({ pexels }: PexelsSettingsProps) {
-  const { settings, updateSettings, refreshVideo, isLoading, error, categories, hasApiKey } = pexels;
+  const { settings, updateSettings, refreshVideo, isLoading, error, categories } = pexels;
 
   return (
     <div className="space-y-4">
@@ -136,7 +136,7 @@ export function PexelsSettings({ pexels }: PexelsSettingsProps) {
             variant="outline"
             size="sm"
             onClick={refreshVideo}
-            disabled={isLoading || !hasApiKey}
+            disabled={isLoading}
             className="w-full"
           >
             <RefreshCw className={cn("h-4 w-4 mr-2", isLoading && "animate-spin")} />
