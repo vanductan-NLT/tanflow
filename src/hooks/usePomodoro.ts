@@ -49,11 +49,11 @@ const DEFAULT_STATE: PomodoroState = {
 };
 
 // Âm thanh riêng cho từng chế độ
-// Alarm sound cho Focus (tiếng chuông báo thức)
+// Alarm sound cho Focus (tiếng chuông báo thức ngắn)
 const ALARM_SOUND_BASE64 = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2teleQoAMprcmqiFJQBBr+GZdC0AWrDieVUhR7vh9qdaC0q04NmrfxQFbMP52ZJQABCmz+O3k1wCOK3l9rJ0EgFLtuD3r4ENAFq04/q1ixMBWrri+rJ/CgFfvOj8tnwKAV294fqzfQsCV73f+bF7CgJbvN/5sHkJAl6+4fqxdwgCX7/i+7B1BwJgwOP7r3MFAmHA4/ytcQQCYcDj/K1vAgJhwOP8rG0BAmHA4/ysawECYcDj/KtpAQJhwOP8q2cAAmHA4/yqZQACYcDj/KpjAAJhwOP8qWEAAmHA4/ypXwACYcHk/KldAAJhweT8qFsAAmHB5PynWQACYcHk/KdXAAJhweT8plQAAmHB5PylUgACYcHk/KVQAAJhweX8pE4AAmHB5fykTAACYcHl/KNKAAJhweX8o0gAAmHB5fyjRgACYcHl/KJEAAJhweX8okIAAmHC5vyiQAACYcLm/KE+AAJhwub8oTwAAmHC5vygOgACYcLm/KA4AAJhwub8oDYAAmHC5/yfNAACYcLn/J8yAAJhwuf8ny8AAmHC5/yeL gACYcLn/J4sAAJhwuf8nioAAmHC5/ydKAACYcPo/J0mAAJhw+j8nSQAAmHD6PycIgACYcPo/JwgAAJhw+j8nB4AAmHD6PybHAACYcPo/JsaAAJhw+n8mxgAAmHD6fybFgACYcPp/JoUAAJhw+n8mhIAAmHD6fyaEAACYcTq/JkOAAJhxOr8mQwAAmHE6vyZCgACYcTq/JkIAAJhxOr8mAYAAmHE6vyYBAACYcTq/JgDAAJhxOr8l/8AAmHE6/yX/AACYcTr/Jf6AAJhxOv8l/gAAmHE6/yW9gACYcTr/Jb0AAJhxOv8lvIAAmHF7PyW8AACYcXs/JbuAAJhxez8lu0AAmHF7PyW6wACYcXs/JbpAAJhxez8lugAAmHF7PyV5gACYcXs/JXkAAJhxe38leIAAmHF7fyV4AACYcXt/JXeAAJhxe38ld0AAmHG7vyU2wACYcbu/JTZAAJhxu78lNcAAmHG7vyU1QACYcbu/JTUAAFKPF5ob29zZg==';
 
-// Temple bell sound cho Meditation (tiếng chuông chùa)
-const TEMPLE_BELL_BASE64 = 'data:audio/wav;base64,UklGRiQFAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAFAAB/f39/f39/f4GEiI6UmpqWj4R4aVtPS0lLUFtqfI2dnqCemZGHe25jW1dXXGVvfIqVnZ6blo6DdmlfV1RWW2Rxf4yYn5+blo2CdGdcVVNXXWl4hpKbnpuWjoJ0Z1xVU1dfanmHk52empWMgXNmXFVUV19rf4yYoJ+blIyAcmVbVFRYYG1+jJmgn5qUi4BxZFpUU1hhbn+Nmp+em5OKf3BjWVNTWGJvgI6boJ2alIp+cGJZU1NZY3GCkJ2gnpqTiX5vYVlTU1lkc4SRnqCdmZKIfm9gWFNTWmV0hpOfn52Ykod9bmBYU1NbZnWIlaCfnJeRhn1tX1hTVFxneIqXoJ+clpCEfGxeV1NUXWl6jJmgn5uVj4N7a11XU1VeanuNmp+enJSNgXlqXVZUVl9sfI6bn56blIx/eGldVlRXYW1/kJ2gnpqTi394aV1WVFhjcIKSn5+dm5KJfnZnXFVUWGRyhJSfn52ZkYd9dGVaVFRZZXWGlp+fnJiQhXtzZFpUVFpmd4iYoJ+bmI+DeXJjWVRUW2h5ipmgn5uXjoJ4cGFZVFRcanqLm5+em5aPgXdvYVhUVFxrfIybn56alY1/dW5gV1RVXWx+jp2fnZmUi35zbV5XVFZecH+Qnp+dmZOKfXFsXldVV19xgZGfn52Yk4l8cGtdV1VYYHODk5+fnZiSiHtvallWVVlic4WUnp+dmJGHem5oWVVVWmN1hpafn5yXkIV5bGdYVVVbZXeImZ+fnJaPhHdsZldVVVxneYqan5+clI6CdmplV1VVXWl7jJufnpuUjYB0aGRWVVVeaniNm5+empOLfnJnY1ZVVl9seY6cn56ak4p8cGZiVlVXYW17j52fnpmSiXtwZWFWVVdibn2Qnp+emJGIem9kYFZVV2NwgJKfn56YkId5bmNfVlVXZHGBk5+fn5eQhnhuYl5WVVdldIOU';
+// Temple bell sound cho Meditation (file MP3 dài, văng vảng)
+const TEMPLE_BELL_SOUND = '/sounds/temple-bell.mp3';
 
 export function usePomodoro(notificationCallbacks?: NotificationCallbacks) {
   const [settings, setSettings] = useLocalStorage<PomodoroSettings>(
@@ -136,7 +136,8 @@ export function usePomodoro(notificationCallbacks?: NotificationCallbacks) {
     
     // Sử dụng âm thanh khác nhau cho từng chế độ
     if (timerMode === 'meditation') {
-      audioRef.current.src = TEMPLE_BELL_BASE64;
+      // Tiếng chuông chùa dài, văng vảng - không gây giật mình
+      audioRef.current.src = TEMPLE_BELL_SOUND;
     } else {
       audioRef.current.src = ALARM_SOUND_BASE64;
     }
