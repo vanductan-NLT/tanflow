@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
+import { supabase } from '@/integrations/supabase/client';
+import { MUSIC_TOPICS, MusicTopic } from '@/components/MusicTopicSelector';
 
-const PLAYLISTS = [
+const DEFAULT_PLAYLISTS = [
   { id: '1', name: 'Lofi Hip Hop', videoId: 'jfKfPfyJRdk', thumbnail: '🎵' },
   { id: '2', name: 'Jazz & Coffee', videoId: '-5KAN9_CzSA', thumbnail: '☕' },
   { id: '3', name: 'Nature Sounds', videoId: 'eKFTSSKCzWA', thumbnail: '🌿' },
@@ -9,9 +11,16 @@ const PLAYLISTS = [
   { id: '5', name: 'Ambient Study', videoId: 'lTRiuFIWV54', thumbnail: '🌙' },
 ];
 
+interface QueueVideo {
+  id: string;
+  title: string;
+}
+
 export function useYouTubePlayer() {
   const [savedVideoId, setSavedVideoId] = useLocalStorage<string>('focusflow-youtube-video', 'jfKfPfyJRdk');
   const [autoPlay, setAutoPlay] = useLocalStorage<boolean>('focusflow-youtube-autoplay', true);
+  const [currentTopic, setCurrentTopic] = useLocalStorage<string>('focusflow-music-topic', 'lofi');
+  
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState(50);
   const [isMuted, setIsMuted] = useState(false);
@@ -20,10 +29,19 @@ export function useYouTubePlayer() {
   const [duration, setDuration] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [shouldAutoPlay, setShouldAutoPlay] = useState(false);
+  const [currentVideoTitle, setCurrentVideoTitle] = useState<string>('');
+  const [isSearchingTopic, setIsSearchingTopic] = useState(false);
+  
+  // Queue system
+  const [videoQueue, setVideoQueue] = useState<QueueVideo[]>([]);
+  const [currentQueueIndex, setCurrentQueueIndex] = useState(0);
+  
   const playerRef = useRef<YT.Player | null>(null);
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  const currentTrack = PLAYLISTS.find(p => p.videoId === savedVideoId) || PLAYLISTS[0];
+  // For display, use real title or fallback to playlist name
+  const currentTrack = DEFAULT_PLAYLISTS.find(p => p.videoId === savedVideoId) || DEFAULT_PLAYLISTS[0];
+  const displayTitle = currentVideoTitle || currentTrack.name;
 
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
@@ -44,6 +62,76 @@ export function useYouTubePlayer() {
     firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
   }, []);
 
+  // Search videos for a topic
+  const searchTopicVideos = useCallback(async (query: string): Promise<QueueVideo[]> => {
+    try {
+      const { data, error: fnError } = await supabase.functions.invoke('youtube-search', {
+        body: { query, maxResults: 10 }
+      });
+      
+      if (fnError) {
+        console.error('Search error:', fnError);
+        return [];
+      }
+      
+      const videos = data?.videos ?? [];
+      return videos.map((v: { id: string; title: string }) => ({
+        id: v.id,
+        title: v.title
+      }));
+    } catch (err) {
+      console.error('Failed to search topics:', err);
+      return [];
+    }
+  }, []);
+
+  // Handle next with queue system
+  const handleNext = useCallback(async () => {
+    // If we have queue and not at the end
+    if (videoQueue.length > 0 && currentQueueIndex < videoQueue.length - 1) {
+      const nextIndex = currentQueueIndex + 1;
+      setCurrentQueueIndex(nextIndex);
+      setShouldAutoPlay(true);
+      setSavedVideoId(videoQueue[nextIndex].id);
+      setCurrentVideoTitle(videoQueue[nextIndex].title);
+    } else {
+      // End of queue or no queue - search more videos
+      const topic = MUSIC_TOPICS.find(t => t.id === currentTopic);
+      if (topic) {
+        setIsSearchingTopic(true);
+        const videos = await searchTopicVideos(topic.query);
+        setIsSearchingTopic(false);
+        
+        if (videos.length > 0) {
+          setVideoQueue(videos);
+          setCurrentQueueIndex(0);
+          setShouldAutoPlay(true);
+          setSavedVideoId(videos[0].id);
+          setCurrentVideoTitle(videos[0].title);
+        }
+      } else {
+        // Fallback: cycle through default playlists
+        const currentIndex = DEFAULT_PLAYLISTS.findIndex(p => p.videoId === savedVideoId);
+        const nextIndex = (currentIndex + 1) % DEFAULT_PLAYLISTS.length;
+        setSavedVideoId(DEFAULT_PLAYLISTS[nextIndex].videoId);
+      }
+    }
+  }, [videoQueue, currentQueueIndex, currentTopic, savedVideoId, setSavedVideoId, searchTopicVideos]);
+
+  const handlePrev = useCallback(() => {
+    if (videoQueue.length > 0 && currentQueueIndex > 0) {
+      const prevIndex = currentQueueIndex - 1;
+      setCurrentQueueIndex(prevIndex);
+      setShouldAutoPlay(true);
+      setSavedVideoId(videoQueue[prevIndex].id);
+      setCurrentVideoTitle(videoQueue[prevIndex].title);
+    } else {
+      const currentIndex = DEFAULT_PLAYLISTS.findIndex(p => p.videoId === savedVideoId);
+      const prevIndex = currentIndex === 0 ? DEFAULT_PLAYLISTS.length - 1 : currentIndex - 1;
+      setSavedVideoId(DEFAULT_PLAYLISTS[prevIndex].videoId);
+    }
+  }, [videoQueue, currentQueueIndex, savedVideoId, setSavedVideoId]);
+
   // Initialize player
   useEffect(() => {
     if (!savedVideoId) return;
@@ -62,7 +150,6 @@ export function useYouTubePlayer() {
       setIsPlayerReady(false);
       setError(null);
 
-      // Ensure the container exists
       const container = document.getElementById('hidden-youtube-player');
       if (!container) {
         setTimeout(initPlayer, 100);
@@ -83,15 +170,40 @@ export function useYouTubePlayer() {
             event.target.setVolume(volume);
             const dur = event.target.getDuration();
             if (dur) setDuration(dur);
-            // Auto play if triggered by custom URL
+            
+            // Get real video title
+            try {
+              const videoData = event.target.getVideoData();
+              if (videoData?.title) {
+                setCurrentVideoTitle(videoData.title);
+              }
+            } catch (e) {
+              console.warn('Could not get video data:', e);
+            }
+            
             if (shouldAutoPlay) {
               event.target.playVideo();
               setShouldAutoPlay(false);
             }
           },
           onStateChange: (event: YT.OnStateChangeEvent) => {
-            setIsPlaying(event.data === window.YT.PlayerState.PLAYING);
-            if (event.data === window.YT.PlayerState.ENDED && autoPlay) {
+            const state = event.data;
+            setIsPlaying(state === window.YT.PlayerState.PLAYING);
+            
+            // Update title when playing
+            if (state === window.YT.PlayerState.PLAYING) {
+              try {
+                const videoData = event.target.getVideoData();
+                if (videoData?.title) {
+                  setCurrentVideoTitle(videoData.title);
+                }
+              } catch (e) {
+                console.warn('Could not get video data:', e);
+              }
+            }
+            
+            // Auto-play next when video ends
+            if (state === window.YT.PlayerState.ENDED && autoPlay) {
               handleNext();
             }
           },
@@ -158,18 +270,6 @@ export function useYouTubePlayer() {
     }
   }, [isPlayerReady, isPlaying]);
 
-  const handleNext = useCallback(() => {
-    const currentIndex = PLAYLISTS.findIndex(p => p.videoId === savedVideoId);
-    const nextIndex = (currentIndex + 1) % PLAYLISTS.length;
-    setSavedVideoId(PLAYLISTS[nextIndex].videoId);
-  }, [savedVideoId, setSavedVideoId]);
-
-  const handlePrev = useCallback(() => {
-    const currentIndex = PLAYLISTS.findIndex(p => p.videoId === savedVideoId);
-    const prevIndex = currentIndex === 0 ? PLAYLISTS.length - 1 : currentIndex - 1;
-    setSavedVideoId(PLAYLISTS[prevIndex].videoId);
-  }, [savedVideoId, setSavedVideoId]);
-
   const seekTo = useCallback((seconds: number) => {
     if (playerRef.current?.seekTo) {
       playerRef.current.seekTo(seconds, true);
@@ -177,11 +277,33 @@ export function useYouTubePlayer() {
     }
   }, []);
 
-  // Function to set video and auto-play
+  // Set video and auto-play
   const setVideoAndPlay = useCallback((videoId: string) => {
     setShouldAutoPlay(true);
     setSavedVideoId(videoId);
+    setCurrentVideoTitle(''); // Reset, will be updated on ready
   }, [setSavedVideoId]);
+
+  // Search and play by topic
+  const searchAndPlayTopic = useCallback(async (topic: MusicTopic) => {
+    setCurrentTopic(topic.id);
+    setIsSearchingTopic(true);
+    setError(null);
+    
+    const videos = await searchTopicVideos(topic.query);
+    
+    if (videos.length > 0) {
+      setVideoQueue(videos);
+      setCurrentQueueIndex(0);
+      setShouldAutoPlay(true);
+      setSavedVideoId(videos[0].id);
+      setCurrentVideoTitle(videos[0].title);
+    } else {
+      setError('Không tìm thấy video. Thử lại sau.');
+    }
+    
+    setIsSearchingTopic(false);
+  }, [setCurrentTopic, setSavedVideoId, searchTopicVideos]);
 
   return {
     isPlaying,
@@ -190,8 +312,8 @@ export function useYouTubePlayer() {
     setVolume,
     isMuted,
     setIsMuted,
-    currentTrack,
-    playlists: PLAYLISTS,
+    currentTrack: { ...currentTrack, name: displayTitle },
+    playlists: DEFAULT_PLAYLISTS,
     savedVideoId,
     setSavedVideoId,
     setVideoAndPlay,
@@ -206,5 +328,11 @@ export function useYouTubePlayer() {
     seekTo,
     formatTime,
     error,
+    currentVideoTitle: displayTitle,
+    currentTopic,
+    searchAndPlayTopic,
+    isSearchingTopic,
+    videoQueue,
+    currentQueueIndex,
   };
 }

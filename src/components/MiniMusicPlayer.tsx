@@ -25,8 +25,10 @@ export function MiniMusicPlayer({ isFocusing }: MiniMusicPlayerProps) {
   const [isMuted, setIsMuted] = useState(false);
   const [isPlayerReady, setIsPlayerReady] = useState(false);
   const playerRef = useRef<YT.Player | null>(null);
+  const [currentVideoTitle, setCurrentVideoTitle] = useState<string>('');
 
   const currentTrack = PLAYLISTS.find(p => p.videoId === savedVideoId) || PLAYLISTS[0];
+  const displayTitle = currentVideoTitle || currentTrack.name;
 
   // Load YouTube IFrame API
   useEffect(() => {
@@ -67,9 +69,29 @@ export function MiniMusicPlayer({ isFocusing }: MiniMusicPlayerProps) {
           onReady: (event: YT.PlayerEvent) => {
             setIsPlayerReady(true);
             event.target.setVolume(volume);
+            // Get real video title
+            try {
+              const videoData = event.target.getVideoData();
+              if (videoData?.title) {
+                setCurrentVideoTitle(videoData.title);
+              }
+            } catch (e) {
+              console.warn('Could not get video data:', e);
+            }
           },
           onStateChange: (event: YT.OnStateChangeEvent) => {
             setIsPlaying(event.data === window.YT.PlayerState.PLAYING);
+            // Update title when playing
+            if (event.data === window.YT.PlayerState.PLAYING) {
+              try {
+                const videoData = event.target.getVideoData();
+                if (videoData?.title) {
+                  setCurrentVideoTitle(videoData.title);
+                }
+              } catch (e) {
+                console.warn('Could not get video data:', e);
+              }
+            }
             if (event.data === window.YT.PlayerState.ENDED) {
               handleNext();
             }
@@ -125,7 +147,7 @@ export function MiniMusicPlayer({ isFocusing }: MiniMusicPlayerProps) {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <Music className="h-4 w-4 text-primary shrink-0" />
-            <span className="text-sm font-medium truncate">{currentTrack.name}</span>
+            <span className="text-sm font-medium truncate">{displayTitle}</span>
           </div>
         </div>
 
