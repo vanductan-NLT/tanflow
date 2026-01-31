@@ -50,6 +50,15 @@ const REFRESH_MODE_OPTIONS: { value: VideoRefreshMode; label: string }[] = [
 ];
 
 export function BackgroundToggle({ pexels }: BackgroundToggleProps) {
+  // Defensive check - should not happen but prevents crash during hot reload
+  if (!pexels) {
+    return (
+      <Button variant="ghost" size="icon" className="rounded-full" disabled>
+        <Image className="h-5 w-5" />
+      </Button>
+    );
+  }
+
   const { settings, updateSettings, refreshVideo, isLoading, error, categories } = pexels;
 
   return (
