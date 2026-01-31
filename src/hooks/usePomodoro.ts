@@ -32,11 +32,11 @@ export interface NotificationCallbacks {
 }
 
 const DEFAULT_SETTINGS: PomodoroSettings = {
-  pomodoroDuration: 45, // 45 phút - thời gian tối ưu cho não bộ
+  pomodoroDuration: 45,
   shortBreakDuration: 5,
   longBreakDuration: 15,
   longBreakInterval: 4,
-  meditationDuration: 10,
+  meditationDuration: 5,
   autoStartNextSession: false,
 };
 

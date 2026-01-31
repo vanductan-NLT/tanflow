@@ -9,7 +9,7 @@ export interface BackgroundSettings {
 }
 
 const DEFAULT_SETTINGS: BackgroundSettings = {
-  enabled: true,
+  enabled: false,
   theme: 'aurora',
 };
 
