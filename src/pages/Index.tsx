@@ -12,6 +12,7 @@ import { MinimalReminders } from '@/components/MinimalReminders';
 import { QuoteDisplay } from '@/components/QuoteDisplay';
 import { TaskList } from '@/components/TaskList';
 import { TaskCompleteDialog } from '@/components/TaskCompleteDialog';
+import { BackgroundToggle } from '@/components/BackgroundToggle';
 import { usePomodoro } from '@/hooks/usePomodoro';
 import { useHealthReminders } from '@/hooks/useHealthReminders';
 import { useTheme } from '@/hooks/useTheme';
@@ -19,9 +20,11 @@ import { usePexelsVideo } from '@/hooks/usePexelsVideo';
 import { useYouTubePlayer } from '@/hooks/useYouTubePlayer';
 import { useNotificationPopup } from '@/hooks/useNotificationPopup';
 import { useTasks, Task } from '@/hooks/useTasks';
+import { useBackground } from '@/hooks/useBackground';
 
 const Index = () => {
   useTheme();
+  const background = useBackground();
 
   // Task management
   const tasks = useTasks();
@@ -153,6 +156,7 @@ const Index = () => {
                 <span className="font-semibold text-base sm:text-lg truncate">FocusFlow</span>
               </div>
               <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+                <BackgroundToggle background={background} />
                 <ThemeToggle />
                 <SettingsPanel pomodoro={pomodoro} pexels={pexels} />
               </div>
