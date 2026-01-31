@@ -121,38 +121,44 @@ export function PomodoroTimer({ pomodoro }: PomodoroTimerProps) {
 
         {/* Time Display with +/- controls when paused */}
         <div className="flex flex-col items-center z-10">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             {/* Decrease button - only show when paused */}
-            {!isRunning && (
+            <div className={cn(
+              "transition-all duration-200",
+              isRunning ? "opacity-0 pointer-events-none w-0" : "opacity-100 w-12"
+            )}>
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={handleDecrease}
                 disabled={currentDuration <= config.min}
-                className="h-10 w-10 rounded-full text-muted-foreground hover:text-foreground transition-opacity"
+                className="h-12 w-12 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/50 disabled:opacity-30"
                 aria-label="Giảm thời gian"
               >
-                <Minus className="h-5 w-5" />
+                <Minus className="h-6 w-6" />
               </Button>
-            )}
+            </div>
             
             <span className={cn('text-7xl font-light tracking-tight tabular-nums', modeColors[mode])}>
               {formattedTime}
             </span>
             
             {/* Increase button - only show when paused */}
-            {!isRunning && (
+            <div className={cn(
+              "transition-all duration-200",
+              isRunning ? "opacity-0 pointer-events-none w-0" : "opacity-100 w-12"
+            )}>
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={handleIncrease}
                 disabled={currentDuration >= config.max}
-                className="h-10 w-10 rounded-full text-muted-foreground hover:text-foreground transition-opacity"
+                className="h-12 w-12 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/50 disabled:opacity-30"
                 aria-label="Tăng thời gian"
               >
-                <Plus className="h-5 w-5" />
+                <Plus className="h-6 w-6" />
               </Button>
-            )}
+            </div>
           </div>
           <span className="text-sm text-muted-foreground mt-2">
             {modeLabels[mode]}

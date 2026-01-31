@@ -20,11 +20,8 @@ import { usePexelsVideo } from '@/hooks/usePexelsVideo';
 import { useYouTubePlayer } from '@/hooks/useYouTubePlayer';
 import { useNotificationPopup } from '@/hooks/useNotificationPopup';
 import { useTasks, Task } from '@/hooks/useTasks';
-import { useBackground } from '@/hooks/useBackground';
-
 const Index = () => {
   useTheme();
-  const background = useBackground();
 
   // Task management
   const tasks = useTasks();
@@ -156,7 +153,7 @@ const Index = () => {
                 <span className="font-semibold text-base sm:text-lg truncate">FocusFlow</span>
               </div>
               <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
-                <BackgroundToggle background={background} />
+                <BackgroundToggle pexels={pexels} />
                 <ThemeToggle />
                 <SettingsPanel pomodoro={pomodoro} pexels={pexels} />
               </div>
