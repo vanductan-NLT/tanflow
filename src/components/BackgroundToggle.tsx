@@ -1,167 +1,38 @@
-import { Image, RefreshCw, Trees, TreePine, Waves, Mountain, Cloud, CloudRain, Sunset, CloudSun, Shuffle, LucideIcon } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { usePexelsVideo, VideoRefreshMode } from '@/hooks/usePexelsVideo';
+import { usePexelsVideo } from '@/hooks/usePexelsVideo';
 import { cn } from '@/lib/utils';
 
 interface BackgroundToggleProps {
   pexels: ReturnType<typeof usePexelsVideo>;
 }
 
-interface CategoryConfig {
-  label: string;
-  icon: LucideIcon;
-  color: string;
-}
-
-const CATEGORY_CONFIG: Record<string, CategoryConfig> = {
-  random: { label: 'Ngẫu nhiên', icon: Shuffle, color: 'text-purple-500' },
-  nature: { label: 'Thiên nhiên', icon: Trees, color: 'text-green-500' },
-  forest: { label: 'Rừng', icon: TreePine, color: 'text-emerald-600' },
-  ocean: { label: 'Biển', icon: Waves, color: 'text-blue-500' },
-  mountains: { label: 'Núi', icon: Mountain, color: 'text-slate-500' },
-  sky: { label: 'Bầu trời', icon: CloudSun, color: 'text-sky-400' },
-  rain: { label: 'Mưa', icon: CloudRain, color: 'text-indigo-400' },
-  sunset: { label: 'Hoàng hôn', icon: Sunset, color: 'text-orange-500' },
-  clouds: { label: 'Mây', icon: Cloud, color: 'text-gray-400' },
-};
-
-const REFRESH_MODE_OPTIONS: { value: VideoRefreshMode; label: string }[] = [
-  { value: 'off', label: 'Tắt' },
-  { value: 'on-pomodoro', label: 'Khi hoàn thành Pomodoro' },
-  { value: 'on-video-end', label: 'Khi video phát xong' },
-  { value: '10', label: 'Mỗi 10 phút' },
-  { value: '15', label: 'Mỗi 15 phút' },
-  { value: '30', label: 'Mỗi 30 phút' },
-  { value: '60', label: 'Mỗi 1 giờ' },
-];
-
 export function BackgroundToggle({ pexels }: BackgroundToggleProps) {
-  // Defensive check - should not happen but prevents crash during hot reload
   if (!pexels) {
     return (
       <Button variant="ghost" size="icon" className="rounded-full" disabled>
-        <Image className="h-5 w-5" />
+        <RefreshCw className="h-5 w-5" />
       </Button>
     );
   }
 
-  const { settings, updateSettings, refreshVideo, isLoading, error, categories } = pexels;
+  const { refreshVideo, isLoading, settings } = pexels;
+
+  // Only show if video background is enabled
+  if (!settings.enabled) {
+    return null;
+  }
 
   return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="rounded-full">
-          <Image className="h-5 w-5" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-72" align="end">
-        <div className="space-y-4">
-          {/* Enable/Disable */}
-          <div className="flex items-center justify-between">
-            <Label htmlFor="bg-video-enabled" className="font-medium">Video nền</Label>
-            <Switch
-              id="bg-video-enabled"
-              checked={settings.enabled}
-              onCheckedChange={(enabled) => updateSettings({ enabled })}
-            />
-          </div>
-
-          {settings.enabled && (
-            <>
-              {/* Category */}
-              <div className="space-y-2">
-                <Label className="text-xs text-muted-foreground">Chủ đề</Label>
-                <Select
-                  value={settings.category}
-                  onValueChange={(category) => updateSettings({ category })}
-                >
-                  <SelectTrigger className="h-9">
-                    <SelectValue>
-                      {(() => {
-                        const config = CATEGORY_CONFIG[settings.category];
-                        if (!config) return settings.category;
-                        const IconComponent = config.icon;
-                        return (
-                          <span className="flex items-center gap-2">
-                            <IconComponent className={cn("h-4 w-4", config.color)} />
-                            {config.label}
-                          </span>
-                        );
-                      })()}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map((cat) => {
-                      const config = CATEGORY_CONFIG[cat];
-                      if (!config) return <SelectItem key={cat} value={cat}>{cat}</SelectItem>;
-                      const IconComponent = config.icon;
-                      return (
-                        <SelectItem key={cat} value={cat}>
-                          <span className="flex items-center gap-2">
-                            <IconComponent className={cn("h-4 w-4", config.color)} />
-                            {config.label}
-                          </span>
-                        </SelectItem>
-                      );
-                    })}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Auto refresh mode */}
-              <div className="space-y-2">
-                <Label className="text-xs text-muted-foreground">Tự động đổi</Label>
-                <Select
-                  value={settings.refreshMode}
-                  onValueChange={(value) => updateSettings({ refreshMode: value as VideoRefreshMode })}
-                >
-                  <SelectTrigger className="h-9">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {REFRESH_MODE_OPTIONS.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Error message */}
-              {error && (
-                <p className="text-xs text-destructive">{error}</p>
-              )}
-
-              {/* Refresh button */}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={refreshVideo}
-                disabled={isLoading}
-                className="w-full"
-              >
-                <RefreshCw className={cn("h-4 w-4 mr-2", isLoading && "animate-spin")} />
-                Đổi video
-              </Button>
-            </>
-          )}
-        </div>
-      </PopoverContent>
-    </Popover>
+    <Button
+      variant="ghost"
+      size="icon"
+      className="rounded-full"
+      onClick={refreshVideo}
+      disabled={isLoading}
+      title="Đổi video nền"
+    >
+      <RefreshCw className={cn("h-5 w-5", isLoading && "animate-spin")} />
+    </Button>
   );
 }
