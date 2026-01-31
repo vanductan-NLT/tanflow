@@ -1,7 +1,7 @@
-import { Play, Pause, RotateCcw, SkipForward } from 'lucide-react';
+import { Play, Pause, RotateCcw, SkipForward, Plus, Minus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { usePomodoro, TimerMode } from '@/hooks/usePomodoro';
+import { usePomodoro, TimerMode, PomodoroSettings } from '@/hooks/usePomodoro';
 
 interface PomodoroTimerProps {
   pomodoro: ReturnType<typeof usePomodoro>;
@@ -20,7 +20,37 @@ export function PomodoroTimer({ pomodoro }: PomodoroTimerProps) {
     reset,
     skip,
     switchMode,
+    updateSettings,
   } = pomodoro;
+
+  // Get duration key and limits based on mode
+  const getDurationConfig = (m: TimerMode): { key: keyof PomodoroSettings; min: number; max: number; step: number } => {
+    switch (m) {
+      case 'pomodoro':
+        return { key: 'pomodoroDuration', min: 5, max: 90, step: 5 };
+      case 'shortBreak':
+        return { key: 'shortBreakDuration', min: 1, max: 15, step: 1 };
+      case 'longBreak':
+        return { key: 'longBreakDuration', min: 5, max: 30, step: 5 };
+      case 'meditation':
+        return { key: 'meditationDuration', min: 5, max: 60, step: 5 };
+    }
+  };
+
+  const config = getDurationConfig(mode);
+  const currentDuration = settings[config.key] as number;
+
+  const handleIncrease = () => {
+    if (currentDuration < config.max) {
+      updateSettings({ [config.key]: currentDuration + config.step });
+    }
+  };
+
+  const handleDecrease = () => {
+    if (currentDuration > config.min) {
+      updateSettings({ [config.key]: currentDuration - config.step });
+    }
+  };
 
   const modeLabels: Record<TimerMode, string> = {
     pomodoro: 'Tập trung',
@@ -89,11 +119,41 @@ export function PomodoroTimer({ pomodoro }: PomodoroTimerProps) {
           />
         </svg>
 
-        {/* Time Display */}
+        {/* Time Display with +/- controls when paused */}
         <div className="flex flex-col items-center z-10">
-          <span className={cn('text-7xl font-light tracking-tight tabular-nums', modeColors[mode])}>
-            {formattedTime}
-          </span>
+          <div className="flex items-center gap-3">
+            {/* Decrease button - only show when paused */}
+            {!isRunning && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleDecrease}
+                disabled={currentDuration <= config.min}
+                className="h-10 w-10 rounded-full text-muted-foreground hover:text-foreground transition-opacity"
+                aria-label="Giảm thời gian"
+              >
+                <Minus className="h-5 w-5" />
+              </Button>
+            )}
+            
+            <span className={cn('text-7xl font-light tracking-tight tabular-nums', modeColors[mode])}>
+              {formattedTime}
+            </span>
+            
+            {/* Increase button - only show when paused */}
+            {!isRunning && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleIncrease}
+                disabled={currentDuration >= config.max}
+                className="h-10 w-10 rounded-full text-muted-foreground hover:text-foreground transition-opacity"
+                aria-label="Tăng thời gian"
+              >
+                <Plus className="h-5 w-5" />
+              </Button>
+            )}
+          </div>
           <span className="text-sm text-muted-foreground mt-2">
             {modeLabels[mode]}
           </span>
