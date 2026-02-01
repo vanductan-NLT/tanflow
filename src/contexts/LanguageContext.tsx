@@ -73,17 +73,37 @@ const translations: Record<Language, Record<string, string>> = {
     
     // Settings
     'settings.title': 'Settings',
+    'settings.description': 'Customize Pomodoro timer and other options',
     'settings.timer': 'Timer',
     'settings.background': 'Background',
     'settings.notifications': 'Notifications',
     'settings.sound': 'Sound',
-    'settings.autoStart': 'Auto-start breaks',
+    'settings.autoStart': 'Auto-start next session',
+    'settings.autoStartDesc': 'Automatically start the next session',
     'settings.showNotifications': 'Show notifications',
     
-    // Background
+    // Background / Pexels
+    'background.title': 'Background Video (Pexels)',
     'background.enable': 'Enable video background',
+    'background.category': 'Video theme',
     'background.refresh': 'Refresh video',
-    'background.refreshOnPomodoro': 'Refresh on pomodoro complete',
+    'background.autoRefresh': 'Auto refresh video',
+    'background.refreshOff': 'Off',
+    'background.refreshOnPomodoro': 'On pomodoro complete',
+    'background.refreshOnVideoEnd': 'On video end',
+    'background.refreshEvery10': 'Every 10 minutes',
+    'background.refreshEvery15': 'Every 15 minutes',
+    'background.refreshEvery30': 'Every 30 minutes',
+    'background.refreshEvery60': 'Every 1 hour',
+    'background.random': 'Random',
+    'background.nature': 'Nature',
+    'background.forest': 'Forest',
+    'background.ocean': 'Ocean',
+    'background.mountains': 'Mountains',
+    'background.sky': 'Sky',
+    'background.rain': 'Rain',
+    'background.sunset': 'Sunset',
+    'background.clouds': 'Clouds',
     
     // Theme
     'theme.light': 'Light mode',
@@ -161,17 +181,37 @@ const translations: Record<Language, Record<string, string>> = {
     
     // Settings
     'settings.title': 'Cài đặt',
+    'settings.description': 'Tùy chỉnh thời gian Pomodoro và các tùy chọn khác',
     'settings.timer': 'Hẹn giờ',
     'settings.background': 'Hình nền',
     'settings.notifications': 'Thông báo',
     'settings.sound': 'Âm thanh',
-    'settings.autoStart': 'Tự động bắt đầu nghỉ',
+    'settings.autoStart': 'Tự động chuyển chế độ',
+    'settings.autoStartDesc': 'Tự bắt đầu phiên tiếp theo',
     'settings.showNotifications': 'Hiển thị thông báo',
     
-    // Background
+    // Background / Pexels
+    'background.title': 'Video nền (Pexels)',
     'background.enable': 'Bật video nền',
+    'background.category': 'Chủ đề video',
     'background.refresh': 'Làm mới video',
-    'background.refreshOnPomodoro': 'Làm mới khi hoàn thành pomodoro',
+    'background.autoRefresh': 'Tự động đổi video',
+    'background.refreshOff': 'Tắt',
+    'background.refreshOnPomodoro': 'Khi hoàn thành Pomodoro',
+    'background.refreshOnVideoEnd': 'Khi video phát xong',
+    'background.refreshEvery10': 'Mỗi 10 phút',
+    'background.refreshEvery15': 'Mỗi 15 phút',
+    'background.refreshEvery30': 'Mỗi 30 phút',
+    'background.refreshEvery60': 'Mỗi 1 giờ',
+    'background.random': 'Ngẫu nhiên',
+    'background.nature': 'Thiên nhiên',
+    'background.forest': 'Rừng',
+    'background.ocean': 'Biển',
+    'background.mountains': 'Núi',
+    'background.sky': 'Bầu trời',
+    'background.rain': 'Mưa',
+    'background.sunset': 'Hoàng hôn',
+    'background.clouds': 'Mây',
     
     // Theme
     'theme.light': 'Chế độ sáng',

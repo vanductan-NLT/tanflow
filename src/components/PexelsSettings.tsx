@@ -10,6 +10,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { usePexelsVideo, VideoRefreshMode } from '@/hooks/usePexelsVideo';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
 
 interface PexelsSettingsProps {
@@ -17,46 +18,47 @@ interface PexelsSettingsProps {
 }
 
 interface CategoryConfig {
-  label: string;
+  labelKey: string;
   icon: LucideIcon;
   color: string;
 }
 
 const CATEGORY_CONFIG: Record<string, CategoryConfig> = {
-  random: { label: 'Ngẫu nhiên', icon: Shuffle, color: 'text-purple-500' },
-  nature: { label: 'Thiên nhiên', icon: Trees, color: 'text-green-500' },
-  forest: { label: 'Rừng', icon: TreePine, color: 'text-emerald-600' },
-  ocean: { label: 'Biển', icon: Waves, color: 'text-blue-500' },
-  mountains: { label: 'Núi', icon: Mountain, color: 'text-slate-500' },
-  sky: { label: 'Bầu trời', icon: CloudSun, color: 'text-sky-400' },
-  rain: { label: 'Mưa', icon: CloudRain, color: 'text-indigo-400' },
-  sunset: { label: 'Hoàng hôn', icon: Sunset, color: 'text-orange-500' },
-  clouds: { label: 'Mây', icon: Cloud, color: 'text-gray-400' },
+  random: { labelKey: 'background.random', icon: Shuffle, color: 'text-purple-500' },
+  nature: { labelKey: 'background.nature', icon: Trees, color: 'text-green-500' },
+  forest: { labelKey: 'background.forest', icon: TreePine, color: 'text-emerald-600' },
+  ocean: { labelKey: 'background.ocean', icon: Waves, color: 'text-blue-500' },
+  mountains: { labelKey: 'background.mountains', icon: Mountain, color: 'text-slate-500' },
+  sky: { labelKey: 'background.sky', icon: CloudSun, color: 'text-sky-400' },
+  rain: { labelKey: 'background.rain', icon: CloudRain, color: 'text-indigo-400' },
+  sunset: { labelKey: 'background.sunset', icon: Sunset, color: 'text-orange-500' },
+  clouds: { labelKey: 'background.clouds', icon: Cloud, color: 'text-gray-400' },
 };
 
-const REFRESH_MODE_OPTIONS: { value: VideoRefreshMode; label: string }[] = [
-  { value: 'off', label: 'Tắt' },
-  { value: 'on-pomodoro', label: 'Khi hoàn thành Pomodoro' },
-  { value: 'on-video-end', label: 'Khi video phát xong' },
-  { value: '10', label: 'Mỗi 10 phút' },
-  { value: '15', label: 'Mỗi 15 phút' },
-  { value: '30', label: 'Mỗi 30 phút' },
-  { value: '60', label: 'Mỗi 1 giờ' },
+const REFRESH_MODE_OPTIONS: { value: VideoRefreshMode; labelKey: string }[] = [
+  { value: 'off', labelKey: 'background.refreshOff' },
+  { value: 'on-pomodoro', labelKey: 'background.refreshOnPomodoro' },
+  { value: 'on-video-end', labelKey: 'background.refreshOnVideoEnd' },
+  { value: '10', labelKey: 'background.refreshEvery10' },
+  { value: '15', labelKey: 'background.refreshEvery15' },
+  { value: '30', labelKey: 'background.refreshEvery30' },
+  { value: '60', labelKey: 'background.refreshEvery60' },
 ];
 
 export function PexelsSettings({ pexels }: PexelsSettingsProps) {
   const { settings, updateSettings, refreshVideo, isLoading, error, categories } = pexels;
+  const { t } = useLanguage();
 
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2 text-sm font-medium">
         <Video className="h-4 w-4" />
-        <span>Video nền (Pexels)</span>
+        <span>{t('background.title')}</span>
       </div>
 
       {/* Enable/Disable */}
       <div className="flex items-center justify-between">
-        <Label htmlFor="video-enabled">Bật video nền</Label>
+        <Label htmlFor="video-enabled">{t('background.enable')}</Label>
         <Switch
           id="video-enabled"
           checked={settings.enabled}
@@ -68,7 +70,7 @@ export function PexelsSettings({ pexels }: PexelsSettingsProps) {
         <>
           {/* Category */}
           <div className="space-y-2">
-            <Label>Chủ đề video</Label>
+            <Label>{t('background.category')}</Label>
             <Select
               value={settings.category}
               onValueChange={(category) => updateSettings({ category })}
@@ -82,7 +84,7 @@ export function PexelsSettings({ pexels }: PexelsSettingsProps) {
                     return (
                       <span className="flex items-center gap-2">
                         <IconComponent className={cn("h-4 w-4", config.color)} />
-                        {config.label}
+                        {t(config.labelKey)}
                       </span>
                     );
                   })()}
@@ -97,7 +99,7 @@ export function PexelsSettings({ pexels }: PexelsSettingsProps) {
                     <SelectItem key={cat} value={cat}>
                       <span className="flex items-center gap-2">
                         <IconComponent className={cn("h-4 w-4", config.color)} />
-                        {config.label}
+                        {t(config.labelKey)}
                       </span>
                     </SelectItem>
                   );
@@ -108,18 +110,23 @@ export function PexelsSettings({ pexels }: PexelsSettingsProps) {
 
           {/* Auto refresh mode - unified dropdown */}
           <div className="space-y-2">
-            <Label>Tự động đổi video</Label>
+            <Label>{t('background.autoRefresh')}</Label>
             <Select
               value={settings.refreshMode}
               onValueChange={(value) => updateSettings({ refreshMode: value as VideoRefreshMode })}
             >
               <SelectTrigger>
-                <SelectValue />
+                <SelectValue>
+                  {(() => {
+                    const option = REFRESH_MODE_OPTIONS.find(o => o.value === settings.refreshMode);
+                    return option ? t(option.labelKey) : settings.refreshMode;
+                  })()}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {REFRESH_MODE_OPTIONS.map((option) => (
                   <SelectItem key={option.value} value={option.value}>
-                    {option.label}
+                    {t(option.labelKey)}
                   </SelectItem>
                 ))}
               </SelectContent>
