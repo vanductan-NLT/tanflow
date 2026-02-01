@@ -205,26 +205,6 @@ export function PomodoroTimer({ pomodoro }: PomodoroTimerProps) {
         </Button>
       </div>
 
-      {/* Session Counter */}
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <span>Session:</span>
-        <div className="flex gap-1">
-          {Array.from({ length: settings.longBreakInterval }).map((_, i) => (
-            <div
-              key={i}
-              className={cn(
-                'w-2 h-2 rounded-full transition-colors',
-                i < (completedPomodoros % settings.longBreakInterval)
-                  ? progressColors[mode]
-                  : 'bg-muted'
-              )}
-            />
-          ))}
-        </div>
-        <span className="ml-1">
-          #{Math.floor(completedPomodoros / settings.longBreakInterval) + 1}
-        </span>
-      </div>
     </div>
   );
 }
