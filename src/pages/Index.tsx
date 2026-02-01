@@ -20,6 +20,7 @@ import { usePexelsVideo } from '@/hooks/usePexelsVideo';
 import { useYouTubePlayer } from '@/hooks/useYouTubePlayer';
 import { useNotificationPopup } from '@/hooks/useNotificationPopup';
 import { useTasks, Task } from '@/hooks/useTasks';
+import { useSidebarState } from '@/hooks/useSidebarState';
 const Index = () => {
   useTheme();
 
@@ -27,6 +28,9 @@ const Index = () => {
   const tasks = useTasks();
   const [taskCompleteDialogOpen, setTaskCompleteDialogOpen] = useState(false);
   const [completedTask, setCompletedTask] = useState<Task | null>(null);
+
+  // Sidebar state persistence
+  const sidebar = useSidebarState();
 
   // Notification system - must be called before usePomodoro
   const { showNotification: showPiPNotification } = useNotificationPopup();
@@ -182,6 +186,8 @@ const Index = () => {
                     tasks={tasks.tasks}
                     activeTaskId={tasks.activeTaskId}
                     pomodoroDuration={pomodoro.settings.pomodoroDuration}
+                    isExpanded={sidebar.isTasksExpanded}
+                    onExpandedChange={sidebar.setTasksExpanded}
                     onAddTask={tasks.addTask}
                     onUpdateTask={tasks.updateTask}
                     onDeleteTask={tasks.deleteTask}
@@ -193,13 +199,21 @@ const Index = () => {
                   className="animate-slide-up"
                   style={{ animationDelay: '0.30s' }}
                 >
-                  <YouTubePlayer {...youtube} />
+                  <YouTubePlayer 
+                    {...youtube} 
+                    isExpanded={sidebar.isMusicExpanded}
+                    onExpandedChange={sidebar.setMusicExpanded}
+                  />
                 </div>
                 <div
                   className="animate-slide-up"
                   style={{ animationDelay: '0.40s' }}
                 >
-                  <HealthReminders reminders={reminders} />
+                  <HealthReminders 
+                    reminders={reminders} 
+                    isExpanded={sidebar.isRemindersExpanded}
+                    onExpandedChange={sidebar.setRemindersExpanded}
+                  />
                 </div>
               </div>
             </div>

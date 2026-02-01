@@ -32,6 +32,8 @@ interface YouTubePlayerProps {
   currentTopic: string;
   searchAndPlayTopic: (topic: MusicTopic) => Promise<void>;
   isSearchingTopic: boolean;
+  isExpanded?: boolean;
+  onExpandedChange?: (expanded: boolean) => void;
 }
 
 export function YouTubePlayer({
@@ -58,10 +60,22 @@ export function YouTubePlayer({
   currentTopic,
   searchAndPlayTopic,
   isSearchingTopic,
+  isExpanded: externalIsExpanded,
+  onExpandedChange,
 }: YouTubePlayerProps) {
   const [customUrl, setCustomUrl] = useState('');
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [internalIsExpanded, setInternalIsExpanded] = useState(true);
   const [showSearch, setShowSearch] = useState(false);
+
+  // Use external state if provided, otherwise use internal
+  const isExpanded = externalIsExpanded !== undefined ? externalIsExpanded : internalIsExpanded;
+  const setIsExpanded = (value: boolean) => {
+    if (onExpandedChange) {
+      onExpandedChange(value);
+    } else {
+      setInternalIsExpanded(value);
+    }
+  };
 
   const extractVideoId = (url: string): string | null => {
     const patterns = [

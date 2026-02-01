@@ -13,6 +13,8 @@ interface TaskListProps {
   tasks: Task[];
   activeTaskId: string | null;
   pomodoroDuration?: number;
+  isExpanded?: boolean;
+  onExpandedChange?: (expanded: boolean) => void;
   onAddTask: (title: string, description: string, targetCycles: number) => void;
   onUpdateTask: (id: string, updates: Partial<Pick<Task, 'title' | 'description' | 'targetCycles'>>) => void;
   onDeleteTask: (id: string) => void;
@@ -25,6 +27,8 @@ export function TaskList({
   tasks,
   activeTaskId,
   pomodoroDuration = 25,
+  isExpanded: externalIsExpanded,
+  onExpandedChange,
   onAddTask,
   onUpdateTask,
   onDeleteTask,
@@ -34,9 +38,19 @@ export function TaskList({
 }: TaskListProps) {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showCompleted, setShowCompleted] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [internalIsExpanded, setInternalIsExpanded] = useState(true);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
+
+  // Use external state if provided, otherwise use internal
+  const isExpanded = externalIsExpanded !== undefined ? externalIsExpanded : internalIsExpanded;
+  const setIsExpanded = (value: boolean) => {
+    if (onExpandedChange) {
+      onExpandedChange(value);
+    } else {
+      setInternalIsExpanded(value);
+    }
+  };
 
   const handleManualComplete = (taskId: string) => {
     setShowConfetti(true);
