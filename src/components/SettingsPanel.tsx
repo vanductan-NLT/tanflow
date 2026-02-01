@@ -6,6 +6,7 @@ import { usePomodoro } from '@/hooks/usePomodoro';
 import { usePexelsVideo } from '@/hooks/usePexelsVideo';
 import { PexelsSettings } from '@/components/PexelsSettings';
 import { Separator } from '@/components/ui/separator';
+import { useLanguage } from '@/contexts/LanguageContext';
 import {
   Sheet,
   SheetContent,
@@ -22,6 +23,7 @@ interface SettingsPanelProps {
 
 export function SettingsPanel({ pomodoro, pexels }: SettingsPanelProps) {
   const { settings, updateSettings } = pomodoro;
+  const { t } = useLanguage();
 
   return (
     <Sheet>
@@ -32,17 +34,17 @@ export function SettingsPanel({ pomodoro, pexels }: SettingsPanelProps) {
       </SheetTrigger>
       <SheetContent className="w-80 sm:w-96 overflow-y-auto">
         <SheetHeader>
-          <SheetTitle>Cài đặt</SheetTitle>
-          <SheetDescription>Tùy chỉnh thời gian Pomodoro và các tùy chọn khác</SheetDescription>
+          <SheetTitle>{t('settings.title')}</SheetTitle>
+          <SheetDescription>{t('settings.description')}</SheetDescription>
         </SheetHeader>
         <div className="space-y-6 py-6">
 
           {/* Auto-start next session */}
           <div className="flex items-center justify-between py-2">
             <div className="space-y-0.5">
-              <Label>Tự động chuyển chế độ</Label>
+              <Label>{t('settings.autoStart')}</Label>
               <p className="text-xs text-muted-foreground">
-                Tự bắt đầu phiên tiếp theo
+                {t('settings.autoStartDesc')}
               </p>
             </div>
             <Switch
