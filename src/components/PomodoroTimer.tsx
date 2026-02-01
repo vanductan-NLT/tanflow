@@ -2,12 +2,14 @@ import { Play, Pause, RotateCcw, SkipForward, Plus, Minus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { usePomodoro, TimerMode, PomodoroSettings } from '@/hooks/usePomodoro';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface PomodoroTimerProps {
   pomodoro: ReturnType<typeof usePomodoro>;
 }
 
 export function PomodoroTimer({ pomodoro }: PomodoroTimerProps) {
+  const { t } = useLanguage();
   const {
     mode,
     formattedTime,
@@ -53,10 +55,10 @@ export function PomodoroTimer({ pomodoro }: PomodoroTimerProps) {
   };
 
   const modeLabels: Record<TimerMode, string> = {
-    pomodoro: 'Tập trung',
-    shortBreak: 'Nghỉ ngắn',
-    longBreak: 'Nghỉ dài',
-    meditation: 'Thiền',
+    pomodoro: t('timer.pomodoro'),
+    shortBreak: t('timer.shortBreak'),
+    longBreak: t('timer.longBreak'),
+    meditation: t('timer.meditation'),
   };
 
   const modeColors: Record<TimerMode, string> = {
@@ -182,7 +184,7 @@ export function PomodoroTimer({ pomodoro }: PomodoroTimerProps) {
       {/* Long Break Interval Setting - only show on longBreak mode when paused */}
       {mode === 'longBreak' && !isRunning && (
         <div className="flex items-center gap-3 text-sm text-muted-foreground">
-          <span>Nghỉ dài sau mỗi</span>
+          <span>{t('timer.longBreakAfter')}</span>
           <div className="flex items-center gap-1">
             <Button
               variant="ghost"

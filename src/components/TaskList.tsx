@@ -7,6 +7,7 @@ import { Confetti } from '@/components/Confetti';
 import { cn } from '@/lib/utils';
 import { AddTaskDialog } from './AddTaskDialog';
 import { EditTaskDialog } from './EditTaskDialog';
+import { useLanguage } from '@/contexts/LanguageContext';
 import type { Task } from '@/hooks/useTasks';
 
 interface TaskListProps {
@@ -36,6 +37,7 @@ export function TaskList({
   onMarkComplete,
   compact = false,
 }: TaskListProps) {
+  const { t, language } = useLanguage();
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showCompleted, setShowCompleted] = useState(false);
   const [internalIsExpanded, setInternalIsExpanded] = useState(true);
@@ -74,9 +76,9 @@ export function TaskList({
     return {
       cycles: remainingCycles,
       minutes: totalMinutes,
-      time: completionTime.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+      time: completionTime.toLocaleTimeString(language === 'vi' ? 'vi-VN' : 'en-US', { hour: '2-digit', minute: '2-digit' }),
     };
-  }, [incompleteTasks, pomodoroDuration]);
+  }, [incompleteTasks, pomodoroDuration, language]);
 
   const handleEditSave = (id: string, title: string, description: string, targetCycles: number) => {
     onUpdateTask(id, { title, description, targetCycles });
@@ -87,7 +89,7 @@ export function TaskList({
       <div className="bg-black/20 backdrop-blur-sm rounded-xl p-3 w-full max-w-xs">
         <div className="space-y-1.5 max-h-32 overflow-y-auto">
           {incompleteTasks.length === 0 ? (
-            <p className="text-xs text-white/50 text-center py-2">Không có task</p>
+            <p className="text-xs text-white/50 text-center py-2">{t('tasks.noTasks')}</p>
           ) : (
             incompleteTasks.slice(0, 3).map((task) => (
               <div
@@ -131,7 +133,7 @@ export function TaskList({
         {estimatedCompletion && (
           <div className="flex items-center justify-center gap-1.5 mt-2 pt-2 border-t border-white/10 text-xs text-white/60">
             <Clock className="h-3 w-3" />
-            <span>Xong lúc {estimatedCompletion.time}</span>
+            <span>{language === 'vi' ? 'Xong lúc' : 'Done at'} {estimatedCompletion.time}</span>
           </div>
         )}
       </div>
@@ -146,7 +148,7 @@ export function TaskList({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <ListTodo className="h-5 w-5 text-primary" strokeWidth={1.5} />
-          <span className="font-medium">Tasks</span>
+          <span className="font-medium">{t('tasks.title')}</span>
           {incompleteTasks.length > 0 && (
             <span className="text-xs text-muted-foreground">({incompleteTasks.length})</span>
           )}
@@ -208,7 +210,7 @@ export function TaskList({
           <div className="space-y-2 max-h-[250px] overflow-y-auto pr-1">
             {incompleteTasks.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-4">
-                Chưa có task nào. Thêm task để bắt đầu!
+                {t('tasks.noTasks')}
               </p>
             ) : (
               incompleteTasks.map((task) => (
@@ -237,7 +239,7 @@ export function TaskList({
                 ) : (
                   <ChevronDown className="h-4 w-4" />
                 )}
-                <span>Đã hoàn thành ({completedTasks.length})</span>
+                <span>{t('tasks.completed')} ({completedTasks.length})</span>
               </button>
 
               {showCompleted && (
@@ -264,7 +266,7 @@ export function TaskList({
               <div className="flex items-center justify-between text-sm">
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Clock className="h-4 w-4" strokeWidth={1.5} />
-                  <span>Dự kiến hoàn thành</span>
+                  <span>{t('tasks.estimatedTime')}</span>
                 </div>
                 <div className="text-right">
                   <span className="font-semibold text-primary">{estimatedCompletion.time}</span>
