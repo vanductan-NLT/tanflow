@@ -266,7 +266,7 @@ export function YouTubePlayer({
               size="icon"
               onClick={() => setAutoPlay(!autoPlay)}
               className={cn("h-8 w-8", autoPlay && "bg-primary/20 text-primary")}
-              title={autoPlay ? "Tắt tự động chuyển bài" : "Bật tự động chuyển bài"}
+              title={autoPlay ? t('music.autoPlayOn') : t('music.autoPlayOff')}
             >
               <Repeat className="h-4 w-4" strokeWidth={1.5} />
             </Button>
@@ -303,7 +303,7 @@ export function YouTubePlayer({
               <Input
                 value={customUrl}
                 onChange={(e) => setCustomUrl(e.target.value)}
-                placeholder="Hoặc dán link YouTube..."
+                placeholder={t('music.pasteLink')}
                 className="text-sm"
                 onKeyDown={(e) => e.key === 'Enter' && handleCustomUrl()}
               />
@@ -319,7 +319,7 @@ export function YouTubePlayer({
               className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
             >
               <ExternalLink className="h-3 w-3" />
-              Mở trên YouTube
+              {t('music.openYouTube')}
             </a>
           </div>
         </>

@@ -1,6 +1,7 @@
 import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export const MUSIC_TOPICS = [
   { id: 'lofi', name: 'Lofi', emoji: '🎵', query: 'lofi hip hop beats' },
@@ -25,9 +26,11 @@ export function MusicTopicSelector({
   onTopicSelect,
   isLoading,
 }: MusicTopicSelectorProps) {
+  const { t } = useLanguage();
+  
   return (
     <div className="space-y-2">
-      <p className="text-xs text-muted-foreground">Chọn thể loại:</p>
+      <p className="text-xs text-muted-foreground">{t('music.selectTopic')}</p>
       <div className="flex flex-wrap gap-2">
         {MUSIC_TOPICS.map((topic) => (
           <Button
