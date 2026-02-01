@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface YouTubeVideo {
   id: string;
@@ -18,6 +19,7 @@ interface YouTubeSearchProps {
 }
 
 export function YouTubeSearch({ onVideoSelect }: YouTubeSearchProps) {
+  const { t, language } = useLanguage();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<YouTubeVideo[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -41,13 +43,13 @@ export function YouTubeSearch({ onVideoSelect }: YouTubeSearchProps) {
 
       if (fnError) {
         console.error('[YouTubeSearch] backend function error:', fnError);
-        throw new Error('Không thể tìm kiếm video');
+        throw new Error(language === 'vi' ? 'Không thể tìm kiếm video' : 'Could not search videos');
       }
 
       const videos = ((data as any)?.videos ?? []) as YouTubeVideo[];
       setResults(videos);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Lỗi khi tìm kiếm');
+      setError(err instanceof Error ? err.message : (language === 'vi' ? 'Lỗi khi tìm kiếm' : 'Search error'));
     } finally {
       setIsLoading(false);
     }
@@ -60,7 +62,7 @@ export function YouTubeSearch({ onVideoSelect }: YouTubeSearchProps) {
         <Input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Tìm nhạc trên YouTube..."
+          placeholder={t('music.search')}
           className="text-sm"
           onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
           disabled={isLoading}
@@ -77,7 +79,6 @@ export function YouTubeSearch({ onVideoSelect }: YouTubeSearchProps) {
           )}
         </Button>
       </div>
-
 
       {/* Error */}
       {error && (
@@ -124,7 +125,7 @@ export function YouTubeSearch({ onVideoSelect }: YouTubeSearchProps) {
       {/* No results */}
       {hasSearched && !isLoading && results.length === 0 && !error && (
         <p className="text-sm text-muted-foreground text-center py-4">
-          Không tìm thấy kết quả nào
+          {t('music.noResults')}
         </p>
       )}
     </div>

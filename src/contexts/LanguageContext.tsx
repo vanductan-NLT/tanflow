@@ -55,6 +55,11 @@ const translations: Record<Language, Record<string, string>> = {
     'music.searching': 'Searching...',
     'music.noResults': 'No results found',
     'music.topics': 'Topics',
+    'music.selectTopic': 'Select topic:',
+    'music.pasteLink': 'Or paste YouTube link...',
+    'music.openYouTube': 'Open on YouTube',
+    'music.autoPlayOn': 'Auto-play is on',
+    'music.autoPlayOff': 'Auto-play is off',
     
     // Health Reminders
     'reminders.title': 'Health Reminders',
@@ -163,6 +168,11 @@ const translations: Record<Language, Record<string, string>> = {
     'music.searching': 'Đang tìm...',
     'music.noResults': 'Không tìm thấy kết quả',
     'music.topics': 'Chủ đề',
+    'music.selectTopic': 'Chọn thể loại:',
+    'music.pasteLink': 'Hoặc dán link YouTube...',
+    'music.openYouTube': 'Mở trên YouTube',
+    'music.autoPlayOn': 'Tự động chuyển bài đang bật',
+    'music.autoPlayOff': 'Tự động chuyển bài đang tắt',
     
     // Health Reminders
     'reminders.title': 'Nhắc nhở sức khỏe',
