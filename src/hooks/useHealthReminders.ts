@@ -147,7 +147,9 @@ export function useHealthReminders(options: UseHealthRemindersOptions = {}) {
 
         // Check if reminder should trigger (when it cycles back to full interval)
         // Use a small window to catch the trigger
-        if (elapsed > 0 && elapsed % intervalSeconds < 2) {
+        // Important: elapsed must be > intervalSeconds to ensure at least one full cycle has passed
+        const fullCyclesPassed = Math.floor(elapsed / intervalSeconds);
+        if (fullCyclesPassed > 0 && elapsed % intervalSeconds < 2) {
           const lastTriggered = lastTriggeredRef.current[reminder.id] || 0;
           // Prevent triggering more than once per cycle
           if (now - lastTriggered > intervalSeconds * 1000 - 5000) {
