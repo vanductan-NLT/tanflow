@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import { YouTubeSearch } from '@/components/YouTubeSearch';
 import { MusicTopicSelector, MusicTopic } from '@/components/MusicTopicSelector';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface YouTubePlayerProps {
   isPlaying: boolean;
@@ -63,6 +64,7 @@ export function YouTubePlayer({
   isExpanded: externalIsExpanded,
   onExpandedChange,
 }: YouTubePlayerProps) {
+  const { t } = useLanguage();
   const [customUrl, setCustomUrl] = useState('');
   const [internalIsExpanded, setInternalIsExpanded] = useState(true);
   const [showSearch, setShowSearch] = useState(false);
@@ -103,7 +105,7 @@ export function YouTubePlayer({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Music className="h-5 w-5 text-primary" strokeWidth={1.5} />
-          <span className="font-medium">Nhạc nền</span>
+          <span className="font-medium">{t('music.title')}</span>
           {(!isPlayerReady || isSearchingTopic) && (
             <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
           )}
@@ -227,7 +229,7 @@ export function YouTubePlayer({
               onClick={handleNext}
               disabled={!isPlayerReady || isSearchingTopic}
               className="h-8 w-8 rounded-full"
-              title="Bài tiếp theo"
+              title={t('timer.skip')}
             >
               <SkipForward className="h-4 w-4" strokeWidth={1.5} />
             </Button>
@@ -285,7 +287,7 @@ export function YouTubePlayer({
               className="w-full"
             >
               <Search className="h-4 w-4 mr-2" />
-              {showSearch ? 'Ẩn tìm kiếm' : 'Tìm kiếm nhạc trên YouTube'}
+              {showSearch ? (t('music.title')) : t('music.search')}
             </Button>
 
             {/* YouTube Search Component */}

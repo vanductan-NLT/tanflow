@@ -6,6 +6,7 @@ import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 import { useHealthReminders, HealthReminder } from '@/hooks/useHealthReminders';
 import { ReminderIcon, ICON_OPTIONS, REMINDER_ICONS } from '@/components/icons/ReminderIcon';
+import { useLanguage } from '@/contexts/LanguageContext';
 import {
   Dialog,
   DialogContent,
@@ -41,6 +42,7 @@ export function HealthReminders({
     resetAllTimers,
   } = reminderHook;
 
+  const { t } = useLanguage();
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [newName, setNewName] = useState('');
   const [newIcon, setNewIcon] = useState('droplets');
@@ -123,17 +125,17 @@ export function HealthReminders({
               <ReminderIcon iconKey={activeReminder.icon} size="xl" className="text-primary" />
             </div>
             <h3 className="text-xl font-semibold">{activeReminder.name}</h3>
-            <p className="text-muted-foreground">Đã đến lúc rồi!</p>
+            <p className="text-muted-foreground">{t('reminders.next')}!</p>
             <div className="flex gap-3 justify-center">
               <Button
                 variant="outline"
                 onClick={() => snoozeReminder(activeReminder.id, 5)}
               >
                 <Timer className="h-4 w-4 mr-2" strokeWidth={1.5} />
-                +5 phút
+                +5 {t('reminders.minutes')}
               </Button>
               <Button onClick={dismissReminder}>
-                Xong
+                {t('tasks.complete')}
               </Button>
             </div>
           </div>
@@ -144,7 +146,7 @@ export function HealthReminders({
       <Dialog open={!!editingReminder} onOpenChange={(open) => !open && setEditingReminder(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Chỉnh sửa nhắc nhở</DialogTitle>
+            <DialogTitle>{t('tasks.edit')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 pt-4">
             <div className="space-y-2">
@@ -171,15 +173,15 @@ export function HealthReminders({
               </div>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Tên nhắc nhở</label>
+              <label className="text-sm font-medium">{t('tasks.name')}</label>
               <Input
                 value={editName}
                 onChange={(e) => setEditName(e.target.value)}
-                placeholder="VD: Uống nước"
+                placeholder={t('reminders.water')}
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Chu kỳ (phút)</label>
+              <label className="text-sm font-medium">{t('reminders.interval')} ({t('reminders.minutes')})</label>
               <Input
                 type="number"
                 value={editInterval}
@@ -190,7 +192,7 @@ export function HealthReminders({
             </div>
             <div className="flex gap-2">
               <Button onClick={handleSaveEdit} className="flex-1" disabled={!editName.trim()}>
-                Lưu
+                {t('tasks.save')}
               </Button>
               <Button variant="destructive" onClick={handleDeleteReminder}>
                 <Trash2 className="h-4 w-4" />
@@ -206,7 +208,7 @@ export function HealthReminders({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Bell className="h-5 w-5 text-primary" strokeWidth={1.5} />
-            <span className="font-medium">Nhắc nhở sức khỏe</span>
+            <span className="font-medium">{t('reminders.title')}</span>
           </div>
           <div className="flex items-center gap-1">
             <Button
@@ -288,7 +290,7 @@ export function HealthReminders({
                   </div>
                   <div>
                     <p className="text-sm font-medium">{nextReminder.reminder.name}</p>
-                    <p className="text-xs text-muted-foreground">Sắp đến</p>
+                    <p className="text-xs text-muted-foreground">{t('reminders.next')}</p>
                   </div>
                 </div>
                 <span className="text-lg font-mono tabular-nums text-primary">
@@ -315,7 +317,7 @@ export function HealthReminders({
                       <p className="text-sm font-medium truncate">{reminder.name}</p>
                       <div className="flex items-center gap-1 text-xs text-muted-foreground">
                         <Clock className="h-3 w-3 shrink-0" strokeWidth={1.5} />
-                        <span>Mỗi {reminder.intervalMinutes} phút</span>
+                        <span>{reminder.intervalMinutes} {t('reminders.minutes')}</span>
                         {reminder.enabled && timeUntilNext[reminder.id] && (
                           <span className="ml-2 text-primary">
                             ({formatTimeRemaining(timeUntilNext[reminder.id])})
@@ -348,12 +350,12 @@ export function HealthReminders({
               <DialogTrigger asChild>
                 <Button variant="outline" size="sm" className="w-full">
                   <Plus className="h-4 w-4 mr-2" strokeWidth={1.5} />
-                  Thêm nhắc nhở
+                  {t('reminders.add')}
                 </Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Thêm nhắc nhở mới</DialogTitle>
+                  <DialogTitle>{t('reminders.add')}</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4 pt-4">
                   <div className="space-y-2">
@@ -380,15 +382,15 @@ export function HealthReminders({
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Tên nhắc nhở</label>
+                    <label className="text-sm font-medium">{t('tasks.name')}</label>
                     <Input
                       value={newName}
                       onChange={(e) => setNewName(e.target.value)}
-                      placeholder="VD: Uống trà"
+                      placeholder={t('reminders.water')}
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Chu kỳ (phút)</label>
+                    <label className="text-sm font-medium">{t('reminders.interval')} ({t('reminders.minutes')})</label>
                     <Input
                       type="number"
                       value={newInterval}
@@ -398,7 +400,7 @@ export function HealthReminders({
                     />
                   </div>
                   <Button onClick={handleAddReminder} className="w-full" disabled={!newName.trim()}>
-                    Thêm
+                    {t('tasks.add')}
                   </Button>
                 </div>
               </DialogContent>
