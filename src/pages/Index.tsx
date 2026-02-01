@@ -1,5 +1,6 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { LanguageToggle } from '@/components/LanguageToggle';
 import { PomodoroTimer } from '@/components/PomodoroTimer';
 import { MinimalTimer } from '@/components/MinimalTimer';
 import { YouTubePlayer } from '@/components/YouTubePlayer';
@@ -158,6 +159,7 @@ const Index = () => {
               </div>
               <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
                 <BackgroundToggle pexels={pexels} />
+                <LanguageToggle />
                 <ThemeToggle />
                 <SettingsPanel pomodoro={pomodoro} pexels={pexels} />
               </div>
