@@ -1,9 +1,8 @@
-import { Settings, RotateCcw } from 'lucide-react';
+import { Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
-import { usePomodoro, PomodoroSettings } from '@/hooks/usePomodoro';
+import { usePomodoro } from '@/hooks/usePomodoro';
 import { usePexelsVideo } from '@/hooks/usePexelsVideo';
 import { PexelsSettings } from '@/components/PexelsSettings';
 import { Separator } from '@/components/ui/separator';
@@ -22,11 +21,7 @@ interface SettingsPanelProps {
 }
 
 export function SettingsPanel({ pomodoro, pexels }: SettingsPanelProps) {
-  const { settings, updateSettings, resetSession } = pomodoro;
-
-  const handleChange = (key: keyof PomodoroSettings, value: number) => {
-    updateSettings({ [key]: value });
-  };
+  const { settings, updateSettings } = pomodoro;
 
   return (
     <Sheet>
@@ -54,18 +49,6 @@ export function SettingsPanel({ pomodoro, pexels }: SettingsPanelProps) {
               checked={settings.autoStartNextSession}
               onCheckedChange={(checked) => updateSettings({ autoStartNextSession: checked })}
             />
-          </div>
-
-          {/* Reset Session */}
-          <div className="pt-4 border-t">
-            <Button
-              variant="outline"
-              onClick={resetSession}
-              className="w-full"
-            >
-              <RotateCcw className="h-4 w-4 mr-2" />
-              Reset phiên làm việc
-            </Button>
           </div>
 
           {/* Pexels Video Settings */}
