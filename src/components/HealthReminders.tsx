@@ -16,9 +16,15 @@ import {
 
 interface HealthRemindersProps {
   reminders: ReturnType<typeof useHealthReminders>;
+  isExpanded?: boolean;
+  onExpandedChange?: (expanded: boolean) => void;
 }
 
-export function HealthReminders({ reminders: reminderHook }: HealthRemindersProps) {
+export function HealthReminders({ 
+  reminders: reminderHook,
+  isExpanded: externalIsExpanded,
+  onExpandedChange,
+}: HealthRemindersProps) {
   const {
     reminders,
     timeUntilNext,
@@ -39,7 +45,17 @@ export function HealthReminders({ reminders: reminderHook }: HealthRemindersProp
   const [newName, setNewName] = useState('');
   const [newIcon, setNewIcon] = useState('droplets');
   const [newInterval, setNewInterval] = useState(30);
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [internalIsExpanded, setInternalIsExpanded] = useState(true);
+
+  // Use external state if provided, otherwise use internal
+  const isExpanded = externalIsExpanded !== undefined ? externalIsExpanded : internalIsExpanded;
+  const setIsExpanded = (value: boolean) => {
+    if (onExpandedChange) {
+      onExpandedChange(value);
+    } else {
+      setInternalIsExpanded(value);
+    }
+  };
 
   // Edit dialog state
   const [editingReminder, setEditingReminder] = useState<HealthReminder | null>(null);

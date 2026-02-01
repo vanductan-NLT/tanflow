@@ -73,6 +73,19 @@ export function PomodoroTimer({ pomodoro }: PomodoroTimerProps) {
     meditation: 'bg-[hsl(var(--timer-meditation))]',
   };
 
+  // Long break interval adjustment
+  const handleIntervalIncrease = () => {
+    if (settings.longBreakInterval < 8) {
+      updateSettings({ longBreakInterval: settings.longBreakInterval + 1 });
+    }
+  };
+
+  const handleIntervalDecrease = () => {
+    if (settings.longBreakInterval > 2) {
+      updateSettings({ longBreakInterval: settings.longBreakInterval - 1 });
+    }
+  };
+
   return (
     <div className="flex flex-col items-center gap-8">
       {/* Mode Tabs */}
@@ -165,6 +178,37 @@ export function PomodoroTimer({ pomodoro }: PomodoroTimerProps) {
           </span>
         </div>
       </div>
+
+      {/* Long Break Interval Setting - only show on longBreak mode when paused */}
+      {mode === 'longBreak' && !isRunning && (
+        <div className="flex items-center gap-3 text-sm text-muted-foreground">
+          <span>Nghỉ dài sau mỗi</span>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleIntervalDecrease}
+              disabled={settings.longBreakInterval <= 2}
+              className="h-7 w-7 rounded-full hover:bg-muted/50 disabled:opacity-30"
+            >
+              <Minus className="h-4 w-4" />
+            </Button>
+            <span className="w-6 text-center font-medium text-foreground">
+              {settings.longBreakInterval}
+            </span>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleIntervalIncrease}
+              disabled={settings.longBreakInterval >= 8}
+              className="h-7 w-7 rounded-full hover:bg-muted/50 disabled:opacity-30"
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+          </div>
+          <span>🍅</span>
+        </div>
+      )}
 
       {/* Controls */}
       <div className="flex items-center gap-4">
