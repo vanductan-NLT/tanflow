@@ -1,4 +1,4 @@
-import { Video, RefreshCw, Trees, TreePine, Waves, Mountain, Cloud, CloudRain, Sunset, CloudSun, Shuffle, LucideIcon } from 'lucide-react';
+import { Video, Trees, TreePine, Waves, Mountain, Cloud, CloudRain, Sunset, CloudSun, Shuffle, LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -130,19 +130,6 @@ export function PexelsSettings({ pexels }: PexelsSettingsProps) {
           {error && (
             <p className="text-sm text-destructive">{error}</p>
           )}
-
-          {/* Refresh button */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={refreshVideo}
-            disabled={isLoading}
-            className="w-full"
-          >
-            <RefreshCw className={cn("h-4 w-4 mr-2", isLoading && "animate-spin")} />
-            Đổi video nền
-          </Button>
-
         </>
       )}
     </div>
