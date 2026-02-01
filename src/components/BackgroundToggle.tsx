@@ -30,7 +30,6 @@ export function BackgroundToggle({ pexels }: BackgroundToggleProps) {
       className="rounded-full"
       onClick={refreshVideo}
       disabled={isLoading}
-      title="Đổi video nền"
     >
       <RefreshCw className={cn("h-5 w-5", isLoading && "animate-spin")} />
     </Button>
