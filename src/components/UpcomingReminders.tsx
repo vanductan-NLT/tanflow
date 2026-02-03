@@ -2,6 +2,7 @@ import { Bell } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { HealthReminder } from '@/hooks/useHealthReminders';
 import { ReminderIcon } from '@/components/icons/ReminderIcon';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface UpcomingRemindersProps {
   reminders: HealthReminder[];
@@ -11,6 +12,7 @@ interface UpcomingRemindersProps {
 }
 
 export function UpcomingReminders({ reminders, timeUntilNext, formatTimeRemaining, className }: UpcomingRemindersProps) {
+  const { t, language } = useLanguage();
   const enabledReminders = reminders.filter(r => r.enabled).slice(0, 3);
   
   if (enabledReminders.length === 0) return null;
@@ -30,10 +32,10 @@ export function UpcomingReminders({ reminders, timeUntilNext, formatTimeRemainin
     <div className={cn("glass-effect rounded-2xl p-4", className)}>
       <div className="flex items-center gap-2 mb-3">
         <Bell className="h-4 w-4 text-primary" strokeWidth={1.5} />
-        <span className="text-sm font-medium">Nhắc nhở sắp tới</span>
+        <span className="text-sm font-medium">{t('reminders.title')}</span>
         {nextReminder && (
           <span className="text-xs text-muted-foreground ml-auto">
-            trong {formatTimeRemaining(minTime)}
+            {language === 'en' ? 'in' : 'trong'} {formatTimeRemaining(minTime)}
           </span>
         )}
       </div>

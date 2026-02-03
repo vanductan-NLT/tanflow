@@ -20,10 +20,11 @@ const DEFAULT_REMINDERS: HealthReminder[] = [
 
 interface UseHealthRemindersOptions {
   pauseReminders?: boolean;
+  language?: 'en' | 'vi';
 }
 
 export function useHealthReminders(options: UseHealthRemindersOptions = {}) {
-  const { pauseReminders = false } = options;
+  const { pauseReminders = false, language = 'vi' } = options;
   
   const [reminders, setReminders] = useLocalStorage<HealthReminder[]>(
     'focusflow-health-reminders',
@@ -100,11 +101,23 @@ export function useHealthReminders(options: UseHealthRemindersOptions = {}) {
     playSound();
     setActiveReminder(reminder);
     
+    const healthMessage = language === 'en' 
+      ? 'Time to take care of your health!' 
+      : 'Đã đến lúc chăm sóc sức khỏe!';
+    
+    const browserTitle = language === 'en' 
+      ? 'FocusFlow - Health Reminder' 
+      : 'FocusFlow - Nhắc nhở sức khỏe';
+    
+    const browserBody = language === 'en' 
+      ? `Time for: ${reminder.name}` 
+      : `Đã đến lúc: ${reminder.name}`;
+    
     // Show PiP/Popup notification with icon key
     showPiPNotification({
       type: 'health-reminder',
       title: reminder.name,
-      message: 'Đã đến lúc chăm sóc sức khỏe!',
+      message: healthMessage,
       icon: reminder.icon,
       reminderId: reminder.id,
       onDismiss: () => setActiveReminder(null),
@@ -115,8 +128,8 @@ export function useHealthReminders(options: UseHealthRemindersOptions = {}) {
     });
     
     // Browser notification as fallback
-    showBrowserNotification('FocusFlow - Nhắc nhở sức khỏe', `Đã đến lúc: ${reminder.name}`);
-  }, [playSound, showPiPNotification, showBrowserNotification]);
+    showBrowserNotification(browserTitle, browserBody);
+  }, [playSound, showPiPNotification, showBrowserNotification, language]);
 
   // Store trigger function in ref to avoid re-creating interval
   const triggerNotificationRef = useRef(triggerReminderNotification);

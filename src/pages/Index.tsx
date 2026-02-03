@@ -22,8 +22,11 @@ import { useYouTubePlayer } from '@/hooks/useYouTubePlayer';
 import { useNotificationPopup } from '@/hooks/useNotificationPopup';
 import { useTasks, Task } from '@/hooks/useTasks';
 import { useSidebarState } from '@/hooks/useSidebarState';
+import { useLanguage } from '@/contexts/LanguageContext';
+
 const Index = () => {
   useTheme();
+  const { language } = useLanguage();
 
   // Task management
   const tasks = useTasks();
@@ -64,7 +67,7 @@ const Index = () => {
     showBrowserNotification,
     onPomodoroComplete: handlePomodoroComplete,
   });
-  const reminders = useHealthReminders({ pauseReminders: pomodoro.mode === 'meditation' && pomodoro.isRunning });
+  const reminders = useHealthReminders({ pauseReminders: pomodoro.mode === 'meditation' && pomodoro.isRunning, language });
   const pexels = usePexelsVideo();
   const youtube = useYouTubePlayer();
 

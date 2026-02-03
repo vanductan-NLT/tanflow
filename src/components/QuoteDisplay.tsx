@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { Quote, getRandomQuote } from '@/data/quotes';
 import { cn } from '@/lib/utils';
 import { TimerMode } from '@/hooks/usePomodoro';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface QuoteDisplayProps {
   mode: TimerMode;
@@ -10,6 +11,7 @@ interface QuoteDisplayProps {
 }
 
 export function QuoteDisplay({ mode, refreshInterval = 60, className }: QuoteDisplayProps) {
+  const { language } = useLanguage();
   const [quote, setQuote] = useState<Quote | null>(null);
   const [isVisible, setIsVisible] = useState(false);
   const intervalRef = useRef<number | null>(null);
@@ -17,7 +19,7 @@ export function QuoteDisplay({ mode, refreshInterval = 60, className }: QuoteDis
   const getNewQuote = (quoteMode: TimerMode) => {
     if (quoteMode === 'pomodoro' || quoteMode === 'meditation') {
       const quoteType = quoteMode === 'pomodoro' ? 'focus' : 'meditation';
-      return getRandomQuote(quoteType);
+      return getRandomQuote(quoteType, language);
     }
     return null;
   };
@@ -46,7 +48,7 @@ export function QuoteDisplay({ mode, refreshInterval = 60, className }: QuoteDis
         clearInterval(intervalRef.current);
       }
     };
-  }, [mode, refreshInterval]);
+  }, [mode, refreshInterval, language]);
 
   if (!quote) return null;
 
