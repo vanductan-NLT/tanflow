@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { CheckCircle2, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { REMINDER_ICONS } from '@/components/icons/ReminderIcon';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export type NotificationType = 'pomodoro-complete' | 'break-complete' | 'health-reminder';
 
@@ -44,6 +45,7 @@ export function PiPNotification({
   onSnooze,
   autoCloseSeconds = 30,
 }: PiPNotificationProps) {
+  const { t } = useLanguage();
   const [countdown, setCountdown] = useState(autoCloseSeconds);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -151,7 +153,7 @@ export function PiPNotification({
             onClick={() => onSnooze(5)}
             className="text-xs"
           >
-            Snooze 5 phút
+            {t('reminders.snooze')} 5 {t('reminders.minutes')}
           </Button>
         )}
         <Button
@@ -159,13 +161,13 @@ export function PiPNotification({
           onClick={onDismiss}
           className="text-xs"
         >
-          {type === 'health-reminder' ? 'Đã xong!' : 'Tiếp tục'}
+          {type === 'health-reminder' ? t('reminders.done') : t('reminders.continue')}
         </Button>
       </div>
 
       {/* Auto-close countdown */}
       <p className="text-xs text-muted-foreground mt-4">
-        Tự đóng sau {countdown}s
+        {t('reminders.autoClose')} {countdown}{t('reminders.seconds').charAt(0)}
       </p>
     </div>
   );

@@ -150,7 +150,7 @@ export function HealthReminders({
           </DialogHeader>
           <div className="space-y-4 pt-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Biểu tượng</label>
+              <label className="text-sm font-medium">{t('reminders.icon')}</label>
               <div className="flex flex-wrap gap-2">
                 {ICON_OPTIONS.map((option) => {
                   const IconComponent = REMINDER_ICONS[option.key];
@@ -216,7 +216,7 @@ export function HealthReminders({
               size="icon"
               onClick={resetAllTimers}
               className="h-8 w-8"
-              title="Reset tất cả bộ đếm"
+              title={t('reminders.resetAll')}
             >
               <RotateCcw className="h-4 w-4" strokeWidth={1.5} />
             </Button>
@@ -332,7 +332,7 @@ export function HealthReminders({
                       size="icon"
                       onClick={() => openEditDialog(reminder)}
                       className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
-                      title="Chỉnh sửa"
+                      title={t('reminders.editReminder')}
                     >
                       <Pencil className="h-3.5 w-3.5" strokeWidth={1.5} />
                     </Button>
@@ -359,7 +359,7 @@ export function HealthReminders({
                 </DialogHeader>
                 <div className="space-y-4 pt-4">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Biểu tượng</label>
+                    <label className="text-sm font-medium">{t('reminders.icon')}</label>
                     <div className="flex flex-wrap gap-2">
                       {ICON_OPTIONS.map((option) => {
                         const IconComponent = REMINDER_ICONS[option.key];

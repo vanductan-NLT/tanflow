@@ -1,6 +1,7 @@
 import { cn } from '@/lib/utils';
 import { HealthReminder } from '@/hooks/useHealthReminders';
 import { ReminderIcon } from '@/components/icons/ReminderIcon';
+import { useLanguage } from '@/contexts/LanguageContext';
 import {
   Tooltip,
   TooltipContent,
@@ -15,6 +16,7 @@ interface MinimalRemindersProps {
 }
 
 export function MinimalReminders({ reminders, timeUntilNext, formatTimeRemaining }: MinimalRemindersProps) {
+  const { language } = useLanguage();
   const enabledReminders = reminders.filter(r => r.enabled);
   
   if (enabledReminders.length === 0) return null;
@@ -50,7 +52,7 @@ export function MinimalReminders({ reminders, timeUntilNext, formatTimeRemaining
               </TooltipTrigger>
               <TooltipContent side="top" className="bg-background/90 backdrop-blur-sm">
                 <p className="font-medium">{reminder.name}</p>
-                <p className="text-xs text-muted-foreground">trong {formatTimeRemaining(timeLeft)}</p>
+                <p className="text-xs text-muted-foreground">{language === 'en' ? 'in' : 'trong'} {formatTimeRemaining(timeLeft)}</p>
               </TooltipContent>
             </Tooltip>
           );

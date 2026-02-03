@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { CheckCircle2, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { REMINDER_ICONS } from '@/components/icons/ReminderIcon';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 // Color mapping for health reminder icons
 const iconColors: Record<string, string> = {
@@ -25,13 +26,14 @@ const iconColors: Record<string, string> = {
 };
 
 const Notification = () => {
+  const { t } = useLanguage();
   const [searchParams] = useSearchParams();
   const [countdown, setCountdown] = useState(30);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const channelRef = useRef<BroadcastChannel | null>(null);
 
   const type = searchParams.get('type') || 'pomodoro';
-  const title = searchParams.get('title') || 'Thông báo';
+  const title = searchParams.get('title') || t('reminders.title');
   const message = searchParams.get('message') || '';
   const icon = searchParams.get('icon') || '';
   const reminderId = searchParams.get('id') || '';
@@ -166,7 +168,7 @@ const Notification = () => {
             size="lg"
             onClick={() => handleSnooze(5)}
           >
-            Snooze 5 phút
+            {t('reminders.snooze')} 5 {t('reminders.minutes')}
           </Button>
         )}
         <Button
@@ -174,13 +176,13 @@ const Notification = () => {
           onClick={handleDismiss}
           className="min-w-[120px]"
         >
-          {type === 'health' ? 'Đã xong!' : 'Tiếp tục'}
+          {type === 'health' ? t('reminders.done') : t('reminders.continue')}
         </Button>
       </div>
 
       {/* Auto-close countdown */}
       <p className="text-sm text-muted-foreground mt-8">
-        Tự đóng sau {countdown} giây
+        {t('reminders.autoClose')} {countdown} {t('reminders.seconds')}
       </p>
     </div>
   );
