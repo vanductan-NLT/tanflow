@@ -15,6 +15,7 @@ import { TaskList } from '@/components/TaskList';
 import { TaskCompleteDialog } from '@/components/TaskCompleteDialog';
 import { BackgroundToggle } from '@/components/BackgroundToggle';
 import { usePomodoro } from '@/hooks/usePomodoro';
+import { useBreathBox } from '@/hooks/useBreathBox';
 import { useHealthReminders } from '@/hooks/useHealthReminders';
 import { useTheme } from '@/hooks/useTheme';
 import { usePexelsVideo } from '@/hooks/usePexelsVideo';
@@ -67,9 +68,15 @@ const Index = () => {
     showBrowserNotification,
     onPomodoroComplete: handlePomodoroComplete,
   });
+  const breathBox = useBreathBox();
   const reminders = useHealthReminders({ pauseReminders: pomodoro.mode === 'meditation' && pomodoro.isRunning, language });
   const pexels = usePexelsVideo();
   const youtube = useYouTubePlayer();
+
+  // Determine if focusing - include breath box running state
+  const isFocusing = (pomodoro.mode === 'pomodoro' && pomodoro.isRunning) || 
+                     (pomodoro.mode === 'meditation' && (pomodoro.isRunning || (breathBox.enabled && breathBox.isRunning)));
+  const isMeditating = pomodoro.mode === 'meditation';
 
   // Track previous completed count to detect new completions
   const prevCompletedRef = useRef(pomodoro.completedPomodoros);
@@ -103,8 +110,6 @@ const Index = () => {
     setCompletedTask(null);
   };
 
-  const isFocusing = (pomodoro.mode === 'pomodoro' || pomodoro.mode === 'meditation') && pomodoro.isRunning;
-  const isMeditating = pomodoro.mode === 'meditation';
 
   return (
     <div className="min-h-screen transition-theme">
@@ -129,7 +134,7 @@ const Index = () => {
           </div>
 
           {/* Minimal Timer (shows active task name) */}
-          <MinimalTimer pomodoro={pomodoro} activeTask={tasks.activeTask} />
+          <MinimalTimer pomodoro={pomodoro} activeTask={tasks.activeTask} breathBox={breathBox} />
 
           {/* Bottom bar: Visualizer + Reminders (hide reminders in meditation) */}
           <div className="fixed bottom-4 sm:bottom-6 md:bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 sm:gap-3 md:gap-4 w-full max-w-sm sm:max-w-md md:max-w-lg px-4">
@@ -177,7 +182,7 @@ const Index = () => {
                 className="flex-1 flex flex-col items-center justify-center py-4 sm:py-6 md:py-8 lg:py-12 animate-zoom-in"
                 style={{ animationDelay: '0.15s' }}
               >
-                <PomodoroTimer pomodoro={pomodoro} />
+                <PomodoroTimer pomodoro={pomodoro} breathBox={breathBox} />
               </div>
 
               {/* Right Column - Tasks, Music & Reminders */}

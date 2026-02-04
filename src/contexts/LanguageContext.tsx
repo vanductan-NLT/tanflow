@@ -119,6 +119,19 @@ const translations: Record<Language, Record<string, string>> = {
     'background.sunset': 'Sunset',
     'background.clouds': 'Clouds',
     
+    // Breath Box
+    'breathBox.title': 'Breath Box',
+    'breathBox.enable': 'Enable Breath Box',
+    'breathBox.pattern': 'Breathing pattern',
+    'breathBox.inhale': 'Breathe In',
+    'breathBox.holdIn': 'Hold',
+    'breathBox.exhale': 'Breathe Out',
+    'breathBox.holdOut': 'Hold',
+    'breathBox.cycle': 'Cycle',
+    'breathBox.pattern.box4': 'Box 4-4-4-4 (Navy SEALs)',
+    'breathBox.pattern.relaxing': 'Relaxing 4-7-8',
+    'breathBox.pattern.box5': 'Box 5-5-5-5',
+    
     // Theme
     'theme.light': 'Light mode',
     'theme.dark': 'Dark mode',
@@ -240,6 +253,19 @@ const translations: Record<Language, Record<string, string>> = {
     'background.rain': 'Mưa',
     'background.sunset': 'Hoàng hôn',
     'background.clouds': 'Mây',
+    
+    // Breath Box
+    'breathBox.title': 'Thở hộp',
+    'breathBox.enable': 'Bật chế độ thở hộp',
+    'breathBox.pattern': 'Nhịp thở',
+    'breathBox.inhale': 'Hít vào',
+    'breathBox.holdIn': 'Giữ',
+    'breathBox.exhale': 'Thở ra',
+    'breathBox.holdOut': 'Giữ',
+    'breathBox.cycle': 'Vòng',
+    'breathBox.pattern.box4': 'Hộp 4-4-4-4 (Navy SEALs)',
+    'breathBox.pattern.relaxing': 'Thư giãn 4-7-8',
+    'breathBox.pattern.box5': 'Hộp 5-5-5-5',
     
     // Theme
     'theme.light': 'Chế độ sáng',
