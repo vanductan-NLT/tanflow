@@ -118,6 +118,8 @@ const translations: Record<Language, Record<string, string>> = {
     'background.rain': 'Rain',
     'background.sunset': 'Sunset',
     'background.clouds': 'Clouds',
+    'background.colorTheme': 'Background Color',
+    'background.colorThemeDesc': 'Choose a gradient theme for background',
     
     // Breath Box
     'breathBox.title': 'Breath Box',
@@ -253,6 +255,8 @@ const translations: Record<Language, Record<string, string>> = {
     'background.rain': 'Mưa',
     'background.sunset': 'Hoàng hôn',
     'background.clouds': 'Mây',
+    'background.colorTheme': 'Màu nền',
+    'background.colorThemeDesc': 'Chọn màu gradient cho nền',
     
     // Breath Box
     'breathBox.title': 'Thở hộp',
