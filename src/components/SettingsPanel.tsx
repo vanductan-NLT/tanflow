@@ -66,7 +66,7 @@ export function SettingsPanel({ pomodoro, pexels }: SettingsPanelProps) {
           {!pexels.settings.enabled && (
             <>
               <Separator className="my-4" />
-              <div className="space-y-4">
+              <div className="space-y-3">
                 <div className="space-y-1">
                   <Label>{t('background.colorTheme')}</Label>
                   <p className="text-xs text-muted-foreground">
@@ -74,8 +74,8 @@ export function SettingsPanel({ pomodoro, pexels }: SettingsPanelProps) {
                   </p>
                 </div>
                 
-                {/* Color Palette Grid */}
-                <div className="grid grid-cols-3 gap-3">
+                {/* Compact Color Palette - Horizontal scroll on mobile */}
+                <div className="flex flex-wrap gap-2">
                   {themeKeys.map((key) => {
                     const theme = GRADIENT_THEMES[key];
                     const isSelected = background.settings.theme === key;
@@ -85,37 +85,38 @@ export function SettingsPanel({ pomodoro, pexels }: SettingsPanelProps) {
                       <button
                         key={key}
                         onClick={() => {
-                          background.updateSettings({ enabled: true, theme: key });
+                          background.updateSettings({ theme: key });
                         }}
                         className={cn(
-                          "group relative flex flex-col items-center gap-2 p-2 rounded-lg transition-all",
-                          "hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2",
-                          isSelected && "ring-2 ring-primary ring-offset-2 bg-muted/30"
+                          "group relative flex items-center gap-2 px-2 py-1.5 rounded-full transition-all border",
+                          "hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1",
+                          isSelected 
+                            ? "border-primary bg-primary/10" 
+                            : "border-border hover:border-muted-foreground/50"
                         )}
+                        title={themeName}
                       >
                         {/* Color Preview Circle */}
                         <div
                           className={cn(
-                            "w-12 h-12 rounded-full shadow-md transition-transform",
-                            "group-hover:scale-110",
-                            isSelected && "scale-110"
+                            "w-5 h-5 rounded-full shadow-sm flex-shrink-0",
+                            "ring-1 ring-inset ring-black/10"
                           )}
                           style={{ background: theme.preview }}
-                        >
-                          {isSelected && (
-                            <div className="w-full h-full rounded-full flex items-center justify-center bg-black/20">
-                              <Check className="h-5 w-5 text-white drop-shadow-md" />
-                            </div>
-                          )}
-                        </div>
+                        />
                         
                         {/* Theme Name */}
                         <span className={cn(
-                          "text-xs text-center truncate w-full",
+                          "text-xs whitespace-nowrap",
                           isSelected ? "text-foreground font-medium" : "text-muted-foreground"
                         )}>
                           {themeName}
                         </span>
+
+                        {/* Check indicator */}
+                        {isSelected && (
+                          <Check className="h-3 w-3 text-primary flex-shrink-0" />
+                        )}
                       </button>
                     );
                   })}
