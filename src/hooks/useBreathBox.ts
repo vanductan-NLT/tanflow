@@ -11,6 +11,7 @@ export interface BreathPattern {
   holdOut: number;
 }
 
+// Mutable patterns - will be customized by user
 export const BREATH_PATTERNS: BreathPattern[] = [
   { id: 'box-4', inhale: 4, holdIn: 4, exhale: 4, holdOut: 4 },
   { id: 'relaxing', inhale: 4, holdIn: 7, exhale: 8, holdOut: 0 },
@@ -20,11 +21,14 @@ export const BREATH_PATTERNS: BreathPattern[] = [
 interface BreathBoxState {
   enabled: boolean;
   patternId: string;
+  // Custom pattern durations (override defaults)
+  customPatterns: Record<string, { inhale: number; holdIn: number; exhale: number; holdOut: number }>;
 }
 
 const DEFAULT_STATE: BreathBoxState = {
   enabled: false,
   patternId: 'box-4',
+  customPatterns: {},
 };
 
 export function useBreathBox() {
@@ -42,7 +46,17 @@ export function useBreathBox() {
   const phaseStartRef = useRef<number>(0);
   const initialSecondsRef = useRef<number>(0);
 
-  const currentPattern = BREATH_PATTERNS.find(p => p.id === state.patternId) || BREATH_PATTERNS[0];
+  // Get current pattern with custom overrides
+  const getPatternWithCustom = useCallback((): BreathPattern => {
+    const basePattern = BREATH_PATTERNS.find(p => p.id === state.patternId) || BREATH_PATTERNS[0];
+    const customOverride = state.customPatterns[state.patternId];
+    if (customOverride) {
+      return { ...basePattern, ...customOverride };
+    }
+    return basePattern;
+  }, [state.patternId, state.customPatterns]);
+
+  const currentPattern = getPatternWithCustom();
 
   // Get duration for a phase
   const getPhaseDuration = useCallback((p: BreathPhase): number => {
@@ -199,6 +213,30 @@ export function useBreathBox() {
     setCycleCount(0);
   }, [setState]);
 
+  // Adjust a specific phase duration
+  const adjustPhaseDuration = useCallback((phaseKey: 'inhale' | 'holdIn' | 'exhale' | 'holdOut', delta: number) => {
+    setState(prev => {
+      const currentCustom = prev.customPatterns[prev.patternId] as { inhale?: number; holdIn?: number; exhale?: number; holdOut?: number } | undefined;
+      const basePattern = BREATH_PATTERNS.find(p => p.id === prev.patternId) || BREATH_PATTERNS[0];
+      const currentValue = (currentCustom?.[phaseKey]) ?? basePattern[phaseKey];
+      const newValue = Math.max(0, Math.min(30, currentValue + delta)); // Clamp between 0-30
+      
+      return {
+        ...prev,
+        customPatterns: {
+          ...prev.customPatterns,
+          [prev.patternId]: {
+            inhale: currentCustom?.inhale ?? basePattern.inhale,
+            holdIn: currentCustom?.holdIn ?? basePattern.holdIn,
+            exhale: currentCustom?.exhale ?? basePattern.exhale,
+            holdOut: currentCustom?.holdOut ?? basePattern.holdOut,
+            [phaseKey]: newValue,
+          },
+        },
+      };
+    });
+  }, [setState]);
+
   // Calculate total cycle duration
   const totalCycleDuration = currentPattern.inhale + currentPattern.holdIn + currentPattern.exhale + currentPattern.holdOut;
 
@@ -225,5 +263,6 @@ export function useBreathBox() {
     reset,
     setEnabled,
     setPatternId,
+    adjustPhaseDuration,
   };
 }

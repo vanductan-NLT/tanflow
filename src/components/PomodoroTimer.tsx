@@ -117,7 +117,7 @@ export function PomodoroTimer({ pomodoro, breathBox }: PomodoroTimerProps) {
       </div>
 
       {/* Breath Box Toggle & Settings - only show in meditation mode when paused */}
-      {mode === 'meditation' && !isRunning && breathBox && (
+      {mode === 'meditation' && !isRunning && breathBox && !breathBox.isRunning && (
         <div className="flex flex-col items-center gap-3 mb-4">
           <div className="flex items-center gap-3">
             <span className="text-sm text-muted-foreground">{t('breathBox.enable')}</span>
@@ -127,18 +127,52 @@ export function PomodoroTimer({ pomodoro, breathBox }: PomodoroTimerProps) {
             />
           </div>
           {breathBox.enabled && (
-            <Select value={breathBox.patternId} onValueChange={breathBox.setPatternId}>
-              <SelectTrigger className="w-56 bg-background/50 backdrop-blur-sm">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {BREATH_PATTERNS.map((pattern) => (
-                  <SelectItem key={pattern.id} value={pattern.id}>
-                    {t(`breathBox.pattern.${pattern.id}`)}
-                  </SelectItem>
+            <>
+              <Select value={breathBox.patternId} onValueChange={breathBox.setPatternId}>
+                <SelectTrigger className="w-56 bg-card border-border">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-card border-border z-50">
+                  {BREATH_PATTERNS.map((pattern) => (
+                    <SelectItem key={pattern.id} value={pattern.id}>
+                      {t(`breathBox.pattern.${pattern.id}`)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              
+              {/* Phase duration adjustments */}
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                {(['inhale', 'holdIn', 'exhale', 'holdOut'] as const).map((phaseKey) => (
+                  <div key={phaseKey} className="flex items-center gap-1 bg-muted/30 rounded-lg px-2 py-1">
+                    <span className="text-muted-foreground text-xs w-12 truncate">
+                      {t(`breathBox.${phaseKey}`)}
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => breathBox.adjustPhaseDuration(phaseKey, -1)}
+                      disabled={breathBox.pattern[phaseKey] <= 0}
+                      className="h-6 w-6 rounded-full hover:bg-muted/50 disabled:opacity-30"
+                    >
+                      <Minus className="h-3 w-3" />
+                    </Button>
+                    <span className="w-5 text-center font-medium text-foreground">
+                      {breathBox.pattern[phaseKey]}
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => breathBox.adjustPhaseDuration(phaseKey, 1)}
+                      disabled={breathBox.pattern[phaseKey] >= 30}
+                      className="h-6 w-6 rounded-full hover:bg-muted/50 disabled:opacity-30"
+                    >
+                      <Plus className="h-3 w-3" />
+                    </Button>
+                  </div>
                 ))}
-              </SelectContent>
-            </Select>
+              </div>
+            </>
           )}
         </div>
       )}
