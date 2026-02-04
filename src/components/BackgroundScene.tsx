@@ -1,4 +1,4 @@
-import { useBackground, GRADIENT_THEMES } from '@/hooks/useBackground';
+import { useBackground } from '@/hooks/useBackground';
 import { cn } from '@/lib/utils';
 import { TimerMode } from '@/hooks/usePomodoro';
 
@@ -7,11 +7,7 @@ interface BackgroundSceneProps {
 }
 
 export function BackgroundScene({ timerMode = 'pomodoro' }: BackgroundSceneProps) {
-  const { settings, theme } = useBackground();
-
-  if (!settings.enabled) {
-    return null;
-  }
+  const { theme } = useBackground();
 
   // When focusing (pomodoro), show gradient more clearly
   // When resting, overlay is heavier for a calmer feel

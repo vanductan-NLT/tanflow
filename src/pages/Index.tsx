@@ -118,7 +118,7 @@ const Index = () => {
         <div id="hidden-youtube-player" />
       </div>
 
-      {/* Background: Video when enabled + we have a URL, otherwise gradient */}
+      {/* Background: Video when enabled + we have a URL, otherwise gradient scene */}
       {pexels.settings.enabled && !!pexels.videoUrl ? (
         <VideoBackground timerMode={pomodoro.mode} isRunning={pomodoro.isRunning} pexels={pexels} />
       ) : (
