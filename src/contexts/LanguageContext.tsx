@@ -130,9 +130,9 @@ const translations: Record<Language, Record<string, string>> = {
     'breathBox.exhale': 'Breathe Out',
     'breathBox.holdOut': 'Hold',
     'breathBox.cycle': 'Cycle',
-    'breathBox.pattern.box4': 'Box 4-4-4-4 (Navy SEALs)',
+    'breathBox.pattern.box-4': 'Box 4-4-4-4 (Navy SEALs)',
     'breathBox.pattern.relaxing': 'Relaxing 4-7-8',
-    'breathBox.pattern.box5': 'Box 5-5-5-5',
+    'breathBox.pattern.box-5': 'Box 5-5-5-5',
     
     // Theme
     'theme.light': 'Light mode',
@@ -267,9 +267,9 @@ const translations: Record<Language, Record<string, string>> = {
     'breathBox.exhale': 'Thở ra',
     'breathBox.holdOut': 'Giữ',
     'breathBox.cycle': 'Vòng',
-    'breathBox.pattern.box4': 'Hộp 4-4-4-4 (Navy SEALs)',
+    'breathBox.pattern.box-4': 'Hộp 4-4-4-4 (Navy SEALs)',
     'breathBox.pattern.relaxing': 'Thư giãn 4-7-8',
-    'breathBox.pattern.box5': 'Hộp 5-5-5-5',
+    'breathBox.pattern.box-5': 'Hộp 5-5-5-5',
     
     // Theme
     'theme.light': 'Chế độ sáng',
