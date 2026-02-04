@@ -49,7 +49,8 @@ export function useBreathBox() {
   // Get current pattern with custom overrides
   const getPatternWithCustom = useCallback((): BreathPattern => {
     const basePattern = BREATH_PATTERNS.find(p => p.id === state.patternId) || BREATH_PATTERNS[0];
-    const customOverride = state.customPatterns[state.patternId];
+    // Handle case where customPatterns might be undefined (old localStorage data)
+    const customOverride = state.customPatterns?.[state.patternId];
     if (customOverride) {
       return { ...basePattern, ...customOverride };
     }
