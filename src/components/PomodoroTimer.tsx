@@ -133,11 +133,14 @@ export function PomodoroTimer({ pomodoro, breathBox }: PomodoroTimerProps) {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-card border-border z-50">
-                  {BREATH_PATTERNS.map((pattern) => (
-                    <SelectItem key={pattern.id} value={pattern.id}>
-                      {t(`breathBox.pattern.${pattern.id}`)}
-                    </SelectItem>
-                  ))}
+                  {BREATH_PATTERNS.map((pattern) => {
+                    const patternKey = `breathBox.pattern.${pattern.id}` as const;
+                    return (
+                      <SelectItem key={pattern.id} value={pattern.id}>
+                        {t(patternKey)}
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
               
