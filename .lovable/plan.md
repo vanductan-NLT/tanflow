@@ -1,188 +1,138 @@
 
-# Kế hoạch: Topic Recommendations + Sửa lỗi Track Name & Phát liên tục
+# Breath Box - Chức năng thở theo nhịp cho tab Thiền
 
-## Tóm tắt
+## Tổng quan
+Thêm tính năng "Breath Box" như một mode phụ trong tab Thiền (Meditation), cho phép người dùng thực hành thở theo nhịp hình vuông với các bước: Hít vào → Giữ → Thở ra → Giữ.
 
-Thêm tính năng chọn topic nhạc có sẵn (Lofi, Jazz, Piano...), hiển thị đúng tên bài hát từ YouTube API với truncate "...", và sửa lỗi phát liên tục khi video kết thúc.
+## Thiết kế giao diện
 
----
+### Visual Box Animation (lưu ý: chỗ này vẫn là hình tròn, ko phải hình vuông)
+```text
+          ┌─────────────────────────────────────┐
+          │          Hít vào / Breathe In       │
+          │              ↓ →                    │
+          │  ┌─────────────────────────────┐    │
+          │  │                             │    │
+Giữ/Hold  │  │           4                 │    │  Giữ/Hold
+          │  │        seconds              │    │
+          │  │                             │    │
+          │  └─────────────────────────────┘    │
+          │              ← ↑                    │
+          │         Thở ra / Breathe Out        │
+          └─────────────────────────────────────┘
+```
 
-## Phần 1: Sửa hiển thị tên bài nhạc đúng
+- Hiển thị hình tròn với 4 điểm đại diện cho 4 bước
+- Số đếm ngược ở giữa (4, 3, 2, 1...)
+- Text hiện tại (Hít vào/Giữ/Thở ra) highlight ở cạnh tương ứng
+- Animation dot di chuyển theo cạnh vuông
+- Hỗ trợ text cho cả 2 ngôn ngữ
 
-### Vấn đề hiện tại
-- `currentTrack.name` được lấy từ mảng `PLAYLISTS` hardcoded (5 video preset)
-- Khi user chọn video từ search/custom URL, videoId không có trong PLAYLISTS → fallback về "Lofi Hip Hop"
+### UI Toggle và Settings
+- Toggle "Breath Box" xuất hiện khi ở tab Thiền (khi timer đang dừng)
+- Dropdown chọn template: 4-4-4-4 (mặc định), 4-7-8, 5-5-5-5, Custom
+- Khi bật Breath Box: timer thiền bị ẩn, thay bằng animation hộp thở
 
-### Giải pháp
-- Sử dụng `player.getVideoData().title` từ YouTube IFrame API để lấy tên thực của video đang phát
-- Thêm state `currentVideoTitle` trong `useYouTubePlayer`
-- Cập nhật title khi video ready hoặc state change sang PLAYING
-- UI tự động truncate với CSS `truncate` class (đã có)
+## Files cần tạo/sửa
 
-### Thay đổi kỹ thuật
+### 1. Tạo mới: `src/components/BreathBox.tsx`
+Component chính hiển thị animation box breathing:
+- Props: `pattern`, `isActive`, `onComplete`, `language`
+- State: `phase` (inhale/holdIn/exhale/holdOut), `secondsLeft`, `cycleCount`
+- Animation: SVG path di chuyển quanh hình vuông
+- Âm thanh tick mỗi khi chuyển phase (dùng Web Audio API như timer hiện tại)
 
-**File: `src/types/youtube.d.ts`**
+### 2. Tạo mới: `src/hooks/useBreathBox.ts`
+Hook quản lý logic breath box:
+- Pattern templates: `{ id: string, name: string, inhale: number, holdIn: number, exhale: number, holdOut: number }`
+- Default patterns: 
+  - `box-4`: 4-4-4-4 (Navy SEALs - mặc định)
+  - `relaxing-478`: 4-7-8 (thư giãn sâu)
+  - `box-5`: 5-5-5-5 (nâng cao)
+- Timer logic cho từng phase
+- Persist settings với useLocalStorage
+
+### 3. Cập nhật: `src/components/PomodoroTimer.tsx`
+- Thêm toggle "Breath Box" khi mode === 'meditation' && !isRunning
+- Khi bật: hiển thị BreathBox component thay vì timer circle
+- Thêm dropdown chọn pattern
+
+### 4. Cập nhật: `src/components/MinimalTimer.tsx`
+- Khi mode === 'meditation' && breathBoxEnabled:
+  - Hiển thị BreathBox animation thay vì số timer
+  - Giữ controls (play/pause/reset)
+
+### 5. Cập nhật: `src/contexts/LanguageContext.tsx`
+Thêm translations:
 ```typescript
-// Thêm method getVideoData vào Player class
-getVideoData(): { video_id: string; title: string; author: string };
+// EN
+'breathBox.title': 'Breath Box',
+'breathBox.enable': 'Enable Breath Box',
+'breathBox.pattern': 'Breathing pattern',
+'breathBox.inhale': 'Breathe In',
+'breathBox.holdIn': 'Hold',
+'breathBox.exhale': 'Breathe Out', 
+'breathBox.holdOut': 'Hold',
+'breathBox.cycle': 'Cycle',
+'breathBox.pattern.box4': 'Box 4-4-4-4 (Navy SEALs)',
+'breathBox.pattern.relaxing': 'Relaxing 4-7-8',
+'breathBox.pattern.box5': 'Box 5-5-5-5',
+
+// VI
+'breathBox.title': 'Thở hộp',
+'breathBox.enable': 'Bật chế độ thở hộp',
+'breathBox.pattern': 'Nhịp thở',
+'breathBox.inhale': 'Hít vào',
+'breathBox.holdIn': 'Giữ',
+'breathBox.exhale': 'Thở ra',
+'breathBox.holdOut': 'Giữ',
+'breathBox.cycle': 'Vòng',
+'breathBox.pattern.box4': 'Hộp 4-4-4-4 (Navy SEALs)',
+'breathBox.pattern.relaxing': 'Thư giãn 4-7-8',
+'breathBox.pattern.box5': 'Hộp 5-5-5-5',
 ```
 
-**File: `src/hooks/useYouTubePlayer.ts`**
+### 6. Cập nhật: `src/pages/Index.tsx`
+- Import và sử dụng useBreathBox hook
+- Truyền breathBox state xuống timer components
+- Khi meditation + breathBox: hiển thị BreathBox trong focus mode
+
+### 7. Cập nhật: `src/hooks/usePomodoro.ts`
+- Thêm `breathBoxEnabled: boolean` vào PomodoroSettings
+- Thêm `breathBoxPattern: string` vào PomodoroSettings (mặc định 'box-4')
+
+## Chi tiết kỹ thuật
+
+### Animation Logic
 ```typescript
-const [currentVideoTitle, setCurrentVideoTitle] = useState<string>('');
+// Phases cycle: inhale → holdIn → exhale → holdOut → repeat
+type BreathPhase = 'inhale' | 'holdIn' | 'exhale' | 'holdOut';
 
-// Trong onReady event
-const videoData = event.target.getVideoData();
-if (videoData?.title) setCurrentVideoTitle(videoData.title);
-
-// Trong onStateChange khi PLAYING
-if (event.data === window.YT.PlayerState.PLAYING) {
-  const videoData = event.target.getVideoData();
-  if (videoData?.title) setCurrentVideoTitle(videoData.title);
-}
-
-// Export currentVideoTitle thay vì currentTrack.name
+// SVG path animation dựa trên phase:
+// - inhale: di chuyển lên (bottom → top)
+// - holdIn: di chuyển sang phải (left → right)
+// - exhale: di chuyển xuống (top → bottom)
+// - holdOut: di chuyển sang trái (right → left)
 ```
 
----
+### Tick Sound
+- Sử dụng cùng logic playTickSound từ usePomodoro
+- Tick khi chuyển sang phase mới (không tick mỗi giây)
+- Tick nhẹ hơn (frequency thấp hơn, ~600Hz thay vì 800Hz)
 
-## Phần 2: Sửa lỗi phát liên tục
+### Flow hoạt động
+1. User chọn tab "Thiền" → thấy toggle "Breath Box"
+2. Bật toggle → timer meditation ẩn, hiển thị box animation
+3. Nhấn Play → animation bắt đầu, đếm từng giây
+4. Mỗi khi chuyển phase → kêu tick
+5. Hoàn thành 1 vòng (4 phase) → tăng cycle count
+6. Nhấn Pause/Stop → dừng animation
+7. Tắt toggle → quay lại meditation timer bình thường
 
-### Vấn đề hiện tại
-- `handleNext()` tìm video trong `PLAYLISTS` hardcoded (chỉ 5 video)
-- Khi user phát video từ search/custom URL → không tìm thấy → logic sai
-- `autoPlay` flag không được kiểm tra đúng cách trong một số trường hợp
-
-### Giải pháp
-- Tạo **queue system** lưu danh sách video đã search/chọn
-- Khi video kết thúc + autoPlay bật: tự động search thêm video cùng topic và phát tiếp
-- Nếu không có queue, replay video hiện tại hoặc search thêm
-
-### Thay đổi kỹ thuật
-
-**File: `src/hooks/useYouTubePlayer.ts`**
-
-```typescript
-// Thêm state cho queue và current topic
-const [videoQueue, setVideoQueue] = useState<Array<{id: string, title: string}>>([]);
-const [currentQueueIndex, setCurrentQueueIndex] = useState(0);
-const [currentTopic, setCurrentTopic] = useLocalStorage<string>('focusflow-music-topic', 'lofi');
-
-// handleNext mới
-const handleNext = useCallback(() => {
-  // Nếu có queue và còn video
-  if (videoQueue.length > 0 && currentQueueIndex < videoQueue.length - 1) {
-    const nextIndex = currentQueueIndex + 1;
-    setCurrentQueueIndex(nextIndex);
-    setShouldAutoPlay(true);
-    setSavedVideoId(videoQueue[nextIndex].id);
-  } else {
-    // Không còn video trong queue → search thêm hoặc loop lại
-    // Gọi searchAndQueue(currentTopic)
-  }
-}, [videoQueue, currentQueueIndex, currentTopic]);
-```
-
----
-
-## Phần 3: Topic Recommendations UI
-
-### Tính năng mới
-- Hiển thị các topic có sẵn dưới dạng chips/buttons: Lofi, Jazz, Piano, Nature, Ambient, Classical, Chill
-- Khi user chọn topic → auto search YouTube với query tương ứng → phát video đầu tiên
-- Topic được lưu vào localStorage để nhớ lần sau
-
-### UI Design
-
-```
-┌─────────────────────────────────────────────┐
-│ 🎵 Nhạc nền                            [▲] │
-├─────────────────────────────────────────────┤
-│                                             │
-│  Chọn thể loại:                            │
-│  [🎵 Lofi] [☕ Jazz] [🎹 Piano] [🌿 Nature]│
-│  [🌙 Ambient] [🎻 Classical] [✨ Chill]    │
-│                                             │
-│  ─────────────────────────────────────      │
-│  ▶ Lofi Girl - beats to relax/study...     │
-│  ━━━━━━━━━●──────────── 2:45 / 10:30       │
-│                                             │
-│  [⏯] [⏭] [🔊 ━━━━] [🔁]                   │
-│                                             │
-│  [🔍 Tìm kiếm nhạc trên YouTube]           │
-│  [ Hoặc dán link YouTube...        ] [↗]   │
-└─────────────────────────────────────────────┘
-```
-
-### Thay đổi kỹ thuật
-
-**File: `src/components/MusicTopicSelector.tsx`** (tạo mới)
-
-```typescript
-const MUSIC_TOPICS = [
-  { id: 'lofi', name: 'Lofi', emoji: '🎵', query: 'lofi hip hop beats' },
-  { id: 'jazz', name: 'Jazz', emoji: '☕', query: 'jazz coffee shop music' },
-  { id: 'piano', name: 'Piano', emoji: '🎹', query: 'piano study music' },
-  { id: 'nature', name: 'Nature', emoji: '🌿', query: 'nature sounds relaxing' },
-  { id: 'ambient', name: 'Ambient', emoji: '🌙', query: 'ambient study music' },
-  { id: 'classical', name: 'Classical', emoji: '🎻', query: 'classical music focus' },
-  { id: 'chill', name: 'Chill', emoji: '✨', query: 'chill music playlist' },
-];
-
-interface Props {
-  currentTopic: string;
-  onTopicSelect: (topic: typeof MUSIC_TOPICS[0]) => void;
-  isLoading: boolean;
-}
-```
-
-**File: `src/hooks/useYouTubePlayer.ts`**
-
-```typescript
-// Thêm function để search và phát theo topic
-const searchAndPlayTopic = useCallback(async (topic: MusicTopic) => {
-  setCurrentTopic(topic.id);
-  setIsSearchingTopic(true);
-  
-  // Gọi edge function youtube-search với topic.query
-  const { data } = await supabase.functions.invoke('youtube-search', {
-    body: { query: topic.query, maxResults: 10 }
-  });
-  
-  const videos = data?.videos ?? [];
-  if (videos.length > 0) {
-    setVideoQueue(videos);
-    setCurrentQueueIndex(0);
-    setVideoAndPlay(videos[0].id);
-  }
-  
-  setIsSearchingTopic(false);
-}, []);
-```
-
-**File: `src/components/YouTubePlayer.tsx`**
-- Import và thêm `MusicTopicSelector` component
-- Pass props: currentTopic, onTopicSelect, isSearchingTopic
-
----
-
-## Tóm tắt files cần thay đổi
-
-| File | Thay đổi |
-|------|----------|
-| `src/types/youtube.d.ts` | Thêm `getVideoData()` type |
-| `src/hooks/useYouTubePlayer.ts` | Thêm currentVideoTitle, videoQueue, currentTopic, searchAndPlayTopic |
-| `src/components/MusicTopicSelector.tsx` | **Tạo mới** - UI chọn topic |
-| `src/components/YouTubePlayer.tsx` | Thêm MusicTopicSelector, hiển thị currentVideoTitle |
-| `src/components/MiniMusicPlayer.tsx` | Cập nhật hiển thị tên bài thực |
-
----
-
-## Thứ tự triển khai
-
-1. Cập nhật `youtube.d.ts` - thêm type cho getVideoData
-2. Sửa `useYouTubePlayer.ts` - lấy title thực + queue system
-3. Tạo `MusicTopicSelector.tsx` - UI chọn topic
-4. Cập nhật `YouTubePlayer.tsx` - tích hợp topic selector + title mới
-5. Cập nhật `MiniMusicPlayer.tsx` - đồng bộ logic nếu cần
-6. Test end-to-end: chọn topic → phát nhạc → hết bài → tự chuyển bài
+## Ưu tiên triển khai
+1. Tạo hook `useBreathBox.ts` với logic cơ bản
+2. Tạo component `BreathBox.tsx` với animation SVG
+3. Tích hợp vào `PomodoroTimer.tsx` (normal view)
+4. Tích hợp vào `MinimalTimer.tsx` (focus view)
+5. Thêm translations
+6. Test end-to-end
