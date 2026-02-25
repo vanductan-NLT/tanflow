@@ -21,13 +21,14 @@ export const BREATH_PATTERNS: BreathPattern[] = [
 interface BreathBoxState {
   enabled: boolean;
   patternId: string;
-  // Custom pattern durations (override defaults)
+  targetCycles: number;
   customPatterns: Record<string, { inhale: number; holdIn: number; exhale: number; holdOut: number }>;
 }
 
 const DEFAULT_STATE: BreathBoxState = {
   enabled: false,
   patternId: 'box-4',
+  targetCycles: 5,
   customPatterns: {},
 };
 
@@ -41,6 +42,7 @@ export function useBreathBox() {
   const [secondsLeft, setSecondsLeft] = useState(0);
   const [cycleCount, setCycleCount] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
+  const [isCompleted, setIsCompleted] = useState(false);
   
   const intervalRef = useRef<number | null>(null);
   const phaseStartRef = useRef<number>(0);
@@ -49,7 +51,6 @@ export function useBreathBox() {
   // Get current pattern with custom overrides
   const getPatternWithCustom = useCallback((): BreathPattern => {
     const basePattern = BREATH_PATTERNS.find(p => p.id === state.patternId) || BREATH_PATTERNS[0];
-    // Handle case where customPatterns might be undefined (old localStorage data)
     const customOverride = state.customPatterns?.[state.patternId];
     if (customOverride) {
       return { ...basePattern, ...customOverride };
@@ -59,7 +60,6 @@ export function useBreathBox() {
 
   const currentPattern = getPatternWithCustom();
 
-  // Get duration for a phase
   const getPhaseDuration = useCallback((p: BreathPhase): number => {
     switch (p) {
       case 'inhale': return currentPattern.inhale;
@@ -69,7 +69,6 @@ export function useBreathBox() {
     }
   }, [currentPattern]);
 
-  // Get next phase
   const getNextPhase = useCallback((p: BreathPhase): BreathPhase => {
     switch (p) {
       case 'inhale': return 'holdIn';
@@ -79,7 +78,6 @@ export function useBreathBox() {
     }
   }, []);
 
-  // Play tick sound when phase changes
   const playPhaseTickSound = useCallback(() => {
     try {
       const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
@@ -89,7 +87,6 @@ export function useBreathBox() {
       oscillator.connect(gainNode);
       gainNode.connect(audioContext.destination);
       
-      // Softer, lower frequency for breathing (600Hz instead of 800Hz)
       oscillator.frequency.setValueAtTime(600, audioContext.currentTime);
       oscillator.type = 'sine';
       
@@ -103,32 +100,63 @@ export function useBreathBox() {
     }
   }, []);
 
+  const playCompletionSound = useCallback(() => {
+    try {
+      const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.frequency.setValueAtTime(400, audioContext.currentTime);
+      oscillator.frequency.exponentialRampToValueAtTime(300, audioContext.currentTime + 0.5);
+      oscillator.type = 'sine';
+      
+      gainNode.gain.setValueAtTime(0.4, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+      
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.5);
+    } catch (error) {
+      console.error('[BreathBox] Completion sound error:', error);
+    }
+  }, []);
+
   // Move to next phase
   const advancePhase = useCallback(() => {
     const nextPhase = getNextPhase(phase);
     const nextDuration = getPhaseDuration(nextPhase);
     
-    // Skip phases with 0 duration (e.g., holdOut in 4-7-8 pattern)
+    // Check if a cycle is completing
+    const isCycleCompleting = (nextDuration === 0 && nextPhase === 'holdOut') || phase === 'holdOut';
+    
+    if (isCycleCompleting) {
+      const newCycleCount = cycleCount + 1;
+      const targetCycles = state.targetCycles ?? 0;
+      
+      // Check if target reached
+      if (targetCycles > 0 && newCycleCount >= targetCycles) {
+        setCycleCount(newCycleCount);
+        setIsRunning(false);
+        setIsCompleted(true);
+        playCompletionSound();
+        return;
+      }
+      
+      setCycleCount(newCycleCount);
+    }
+    
+    // Skip phases with 0 duration
     if (nextDuration === 0) {
-      // If next phase has 0 duration, skip to the one after
       const skipToPhase = getNextPhase(nextPhase);
       const skipToDuration = getPhaseDuration(skipToPhase);
-      
-      if (nextPhase === 'holdOut') {
-        // Completed a cycle when skipping holdOut
-        setCycleCount(c => c + 1);
-      }
       
       setPhase(skipToPhase);
       setSecondsLeft(skipToDuration);
       initialSecondsRef.current = skipToDuration;
       phaseStartRef.current = Date.now();
     } else {
-      // Increment cycle when completing holdOut (or exhale if holdOut is 0)
-      if (phase === 'holdOut') {
-        setCycleCount(c => c + 1);
-      }
-      
       setPhase(nextPhase);
       setSecondsLeft(nextDuration);
       initialSecondsRef.current = nextDuration;
@@ -136,7 +164,7 @@ export function useBreathBox() {
     }
     
     playPhaseTickSound();
-  }, [phase, getNextPhase, getPhaseDuration, playPhaseTickSound]);
+  }, [phase, cycleCount, state.targetCycles, getNextPhase, getPhaseDuration, playPhaseTickSound, playCompletionSound]);
 
   // Timer logic
   useEffect(() => {
@@ -192,7 +220,16 @@ export function useBreathBox() {
     setPhase('inhale');
     setSecondsLeft(currentPattern.inhale);
     setCycleCount(0);
+    setIsCompleted(false);
   }, [currentPattern.inhale]);
+
+  const dismissCompletion = useCallback(() => {
+    setIsCompleted(false);
+    setIsRunning(false);
+    setPhase('inhale');
+    setSecondsLeft(0);
+    setCycleCount(0);
+  }, []);
 
   const setEnabled = useCallback((enabled: boolean) => {
     setState(prev => ({ ...prev, enabled }));
@@ -201,26 +238,30 @@ export function useBreathBox() {
       setPhase('inhale');
       setSecondsLeft(0);
       setCycleCount(0);
+      setIsCompleted(false);
     }
   }, [setState]);
 
   const setPatternId = useCallback((patternId: string) => {
     setState(prev => ({ ...prev, patternId }));
-    // Reset when pattern changes
     setIsRunning(false);
     setPhase('inhale');
     const newPattern = BREATH_PATTERNS.find(p => p.id === patternId) || BREATH_PATTERNS[0];
     setSecondsLeft(newPattern.inhale);
     setCycleCount(0);
+    setIsCompleted(false);
   }, [setState]);
 
-  // Adjust a specific phase duration
+  const setTargetCycles = useCallback((targetCycles: number) => {
+    setState(prev => ({ ...prev, targetCycles: Math.max(0, Math.min(30, targetCycles)) }));
+  }, [setState]);
+
   const adjustPhaseDuration = useCallback((phaseKey: 'inhale' | 'holdIn' | 'exhale' | 'holdOut', delta: number) => {
     setState(prev => {
       const currentCustom = prev.customPatterns[prev.patternId] as { inhale?: number; holdIn?: number; exhale?: number; holdOut?: number } | undefined;
       const basePattern = BREATH_PATTERNS.find(p => p.id === prev.patternId) || BREATH_PATTERNS[0];
       const currentValue = (currentCustom?.[phaseKey]) ?? basePattern[phaseKey];
-      const newValue = Math.max(0, Math.min(30, currentValue + delta)); // Clamp between 0-30
+      const newValue = Math.max(0, Math.min(30, currentValue + delta));
       
       return {
         ...prev,
@@ -238,16 +279,13 @@ export function useBreathBox() {
     });
   }, [setState]);
 
-  // Calculate total cycle duration
   const totalCycleDuration = currentPattern.inhale + currentPattern.holdIn + currentPattern.exhale + currentPattern.holdOut;
 
-  // Calculate progress within current phase (0-1)
   const phaseProgress = getPhaseDuration(phase) > 0 
     ? 1 - (secondsLeft / getPhaseDuration(phase))
     : 0;
 
   return {
-    // State
     enabled: state.enabled,
     patternId: state.patternId,
     pattern: currentPattern,
@@ -255,15 +293,18 @@ export function useBreathBox() {
     secondsLeft,
     cycleCount,
     isRunning,
+    isCompleted,
+    targetCycles: state.targetCycles ?? 5,
     totalCycleDuration,
     phaseProgress,
     
-    // Actions
     start,
     pause,
     reset,
     setEnabled,
     setPatternId,
+    setTargetCycles,
     adjustPhaseDuration,
+    dismissCompletion,
   };
 }

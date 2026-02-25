@@ -9,6 +9,7 @@ interface BreathBoxProps {
   cycleCount: number;
   isRunning: boolean;
   phaseProgress: number;
+  targetCycles?: number;
   className?: string;
   variant?: 'normal' | 'minimal';
 }
@@ -20,6 +21,7 @@ export function BreathBox({
   cycleCount,
   isRunning,
   phaseProgress,
+  targetCycles = 0,
   className,
   variant = 'normal',
 }: BreathBoxProps) {
@@ -152,7 +154,7 @@ export function BreathBox({
       {/* Cycle counter */}
       {!isMinimal && (
         <div className="text-sm text-white/60">
-          {t('breathBox.cycle')}: {cycleCount}
+          {t('breathBox.cycle')}: {targetCycles > 0 ? `${cycleCount} / ${targetCycles}` : cycleCount}
         </div>
       )}
     </div>

@@ -175,6 +175,34 @@ export function PomodoroTimer({ pomodoro, breathBox }: PomodoroTimerProps) {
                   </div>
                 ))}
               </div>
+
+              {/* Target cycles */}
+              <div className="flex items-center gap-2 bg-muted/30 rounded-lg px-3 py-1.5">
+                <span className="text-muted-foreground text-xs">
+                  {t('breathBox.targetCycles')}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => breathBox.setTargetCycles(breathBox.targetCycles - 1)}
+                  disabled={breathBox.targetCycles <= 0}
+                  className="h-6 w-6 rounded-full hover:bg-muted/50 disabled:opacity-30"
+                >
+                  <Minus className="h-3 w-3" />
+                </Button>
+                <span className="w-6 text-center font-medium text-foreground">
+                  {breathBox.targetCycles === 0 ? '∞' : breathBox.targetCycles}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => breathBox.setTargetCycles(breathBox.targetCycles + 1)}
+                  disabled={breathBox.targetCycles >= 30}
+                  className="h-6 w-6 rounded-full hover:bg-muted/50 disabled:opacity-30"
+                >
+                  <Plus className="h-3 w-3" />
+                </Button>
+              </div>
             </>
           )}
         </div>
@@ -189,6 +217,7 @@ export function PomodoroTimer({ pomodoro, breathBox }: PomodoroTimerProps) {
           cycleCount={breathBox.cycleCount}
           isRunning={breathBox.isRunning}
           phaseProgress={breathBox.phaseProgress}
+          targetCycles={breathBox.targetCycles}
         />
       ) : (
         <div className="relative flex items-center justify-center w-72 h-72">
