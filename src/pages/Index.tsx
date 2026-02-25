@@ -9,6 +9,7 @@ import { SettingsPanel } from '@/components/SettingsPanel';
 import { VideoBackground } from '@/components/VideoBackground';
 import { BackgroundScene } from '@/components/BackgroundScene';
 import { AudioVisualizer } from '@/components/AudioVisualizer';
+import { BreathBoxComplete } from '@/components/BreathBoxComplete';
 import { MinimalReminders } from '@/components/MinimalReminders';
 import { QuoteDisplay } from '@/components/QuoteDisplay';
 import { TaskList } from '@/components/TaskList';
@@ -125,8 +126,16 @@ const Index = () => {
         <BackgroundScene timerMode={pomodoro.mode} />
       )}
 
+      {/* ===== BREATH BOX COMPLETION ===== */}
+      {breathBox.isCompleted && (
+        <BreathBoxComplete
+          cycleCount={breathBox.cycleCount}
+          onDismiss={breathBox.dismissCompletion}
+        />
+      )}
+
       {/* ===== FOCUS MODE UI ===== */}
-      {isFocusing ? (
+      {isFocusing && !breathBox.isCompleted ? (
         <div className="min-h-screen flex flex-col items-center justify-center px-4 animate-fade-in">
           {/* Inspirational Quote */}
           <div className="absolute top-8 sm:top-12 md:top-16 left-0 right-0 px-4">
