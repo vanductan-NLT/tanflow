@@ -24,7 +24,7 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return json({ ok: true });
   if (req.method !== "POST") return json({ error: "Method not allowed" }, { status: 405 });
 
-  const apiKey = Deno.env.get("VITE_YOUTUBE_API_KEY") ?? "";
+  const apiKey = Deno.env.get("YOUTUBE_API_KEY") ?? Deno.env.get("VITE_YOUTUBE_API_KEY") ?? "";
   if (!apiKey) return json({ error: "Missing YouTube API key" }, { status: 400 });
 
   const payload = await req.json().catch(() => ({} as any));
