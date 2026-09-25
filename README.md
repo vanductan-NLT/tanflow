@@ -1,4 +1,4 @@
-# TanFlow (FocusFlow) 🍅
+# TanFlow (FocusFlow) 🍅.
 
 > A personalized, immersive productivity environment designed to help you enter and maintain a flow state.
 
