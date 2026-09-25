@@ -43,7 +43,15 @@ Built with a modern, performant stack:
    npm install
    ```
 
-3. **Start development server**
+3. **Configure the YouTube search key**
+   ```bash
+   cp .env.example .env.local
+   ```
+   Add a YouTube Data API v3 key to `VITE_YOUTUBE_API_KEY`. YouTube searches run
+   directly in the browser, so restrict this key in Google Cloud to the YouTube
+   Data API and to your production/local HTTP referrers.
+
+4. **Start development server**
    ```bash
    npm run dev
    ```

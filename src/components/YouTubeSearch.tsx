@@ -4,15 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
-
-interface YouTubeVideo {
-  id: string;
-  title: string;
-  thumbnail: string;
-  channelTitle: string;
-}
+import { searchYouTubeVideos, YouTubeVideo } from '@/lib/youtube';
 
 interface YouTubeSearchProps {
   onVideoSelect: (videoId: string) => void;
@@ -34,21 +27,10 @@ export function YouTubeSearch({ onVideoSelect }: YouTubeSearchProps) {
     setHasSearched(true);
 
     try {
-      const { data, error: fnError } = await supabase.functions.invoke('youtube-search', {
-        body: {
-          query,
-          maxResults: 10,
-        },
-      });
-
-      if (fnError) {
-        console.error('[YouTubeSearch] backend function error:', fnError);
-        throw new Error(language === 'vi' ? 'Không thể tìm kiếm video' : 'Could not search videos');
-      }
-
-      const videos = ((data as any)?.videos ?? []) as YouTubeVideo[];
+      const videos = await searchYouTubeVideos(query, 10);
       setResults(videos);
     } catch (err) {
+      console.error('[YouTubeSearch] search error:', err);
       setError(err instanceof Error ? err.message : (language === 'vi' ? 'Lỗi khi tìm kiếm' : 'Search error'));
     } finally {
       setIsLoading(false);
