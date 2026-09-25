@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
-import { supabase } from '@/integrations/supabase/client';
 import { MUSIC_TOPICS, MusicTopic } from '@/components/MusicTopicSelector';
+import { searchYouTubeVideos } from '@/lib/youtube';
 
 const DEFAULT_PLAYLISTS = [
   { id: '1', name: 'Lofi Hip Hop', videoId: 'jfKfPfyJRdk', thumbnail: '🎵' },
@@ -65,16 +65,7 @@ export function useYouTubePlayer() {
   // Search videos for a topic
   const searchTopicVideos = useCallback(async (query: string): Promise<QueueVideo[]> => {
     try {
-      const { data, error: fnError } = await supabase.functions.invoke('youtube-search', {
-        body: { query, maxResults: 10 }
-      });
-      
-      if (fnError) {
-        console.error('Search error:', fnError);
-        return [];
-      }
-      
-      const videos = data?.videos ?? [];
+      const videos = await searchYouTubeVideos(query, 10);
       return videos.map((v: { id: string; title: string }) => ({
         id: v.id,
         title: v.title
