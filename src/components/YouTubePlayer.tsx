@@ -2,6 +2,7 @@ import { Music, Play, Pause, Volume2, VolumeX, ExternalLink, Loader2, SkipForwar
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
+import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import { YouTubeSearch } from '@/components/YouTubeSearch';
@@ -33,6 +34,8 @@ interface YouTubePlayerProps {
   currentTopic: string;
   searchAndPlayTopic: (topic: MusicTopic) => Promise<void>;
   isSearchingTopic: boolean;
+  useVideoBackground: boolean;
+  setUseVideoBackground: (enabled: boolean) => void;
   isExpanded?: boolean;
   onExpandedChange?: (expanded: boolean) => void;
 }
@@ -61,6 +64,8 @@ export function YouTubePlayer({
   currentTopic,
   searchAndPlayTopic,
   isSearchingTopic,
+  useVideoBackground,
+  setUseVideoBackground,
   isExpanded: externalIsExpanded,
   onExpandedChange,
 }: YouTubePlayerProps) {
@@ -271,6 +276,20 @@ export function YouTubePlayer({
               <Repeat className="h-4 w-4" strokeWidth={1.5} />
             </Button>
           </div>
+
+          {isPlaying && (
+            <div className="flex items-center justify-between gap-4 rounded-xl border border-border/50 bg-background/25 px-3 py-2.5">
+              <div className="min-w-0">
+                <p className="text-sm font-medium">{t('music.videoBackground')}</p>
+                <p className="text-xs text-muted-foreground">{t('music.videoBackgroundDesc')}</p>
+              </div>
+              <Switch
+                checked={useVideoBackground}
+                onCheckedChange={setUseVideoBackground}
+                aria-label={t('music.videoBackground')}
+              />
+            </div>
+          )}
 
           {/* Error message */}
           {error && (

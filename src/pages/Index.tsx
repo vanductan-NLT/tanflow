@@ -4,6 +4,7 @@ import { LanguageToggle } from '@/components/LanguageToggle';
 import { PomodoroTimer } from '@/components/PomodoroTimer';
 import { MinimalTimer } from '@/components/MinimalTimer';
 import { YouTubePlayer } from '@/components/YouTubePlayer';
+import { YouTubeVideoBackground } from '@/components/YouTubeVideoBackground';
 import { HealthReminders } from '@/components/HealthReminders';
 import { SettingsPanel } from '@/components/SettingsPanel';
 import { VideoBackground } from '@/components/VideoBackground';
@@ -78,6 +79,7 @@ const Index = () => {
   const isFocusing = (pomodoro.mode === 'pomodoro' && pomodoro.isRunning) || 
                      (pomodoro.mode === 'meditation' && (pomodoro.isRunning || (breathBox.enabled && breathBox.isRunning)));
   const isMeditating = pomodoro.mode === 'meditation';
+  const isYouTubeBackgroundActive = youtube.isPlaying && youtube.useVideoBackground;
 
   // Track previous completed count to detect new completions
   const prevCompletedRef = useRef(pomodoro.completedPomodoros);
@@ -114,17 +116,18 @@ const Index = () => {
 
   return (
     <div className="min-h-screen transition-theme">
-      {/* Hidden YouTube Player */}
-      <div className="hidden">
-        <div id="hidden-youtube-player" />
-      </div>
-
       {/* Background: Video when enabled + we have a URL, otherwise gradient scene */}
-      {pexels.settings.enabled && !!pexels.videoUrl ? (
-        <VideoBackground timerMode={pomodoro.mode} isRunning={pomodoro.isRunning} pexels={pexels} />
-      ) : (
-        <BackgroundScene timerMode={pomodoro.mode} />
+      {!isYouTubeBackgroundActive && (
+        pexels.settings.enabled && !!pexels.videoUrl ? (
+          <VideoBackground timerMode={pomodoro.mode} isRunning={pomodoro.isRunning} pexels={pexels} />
+        ) : (
+          <BackgroundScene timerMode={pomodoro.mode} />
+        )
       )}
+      <YouTubeVideoBackground
+        active={isYouTubeBackgroundActive}
+        isFocusing={isFocusing}
+      />
 
       {/* ===== BREATH BOX COMPLETION ===== */}
       {breathBox.isCompleted && (
