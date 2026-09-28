@@ -20,6 +20,7 @@ export function useYouTubePlayer() {
   const [savedVideoId, setSavedVideoId] = useLocalStorage<string>('focusflow-youtube-video', 'jfKfPfyJRdk');
   const [autoPlay, setAutoPlay] = useLocalStorage<boolean>('focusflow-youtube-autoplay', true);
   const [currentTopic, setCurrentTopic] = useLocalStorage<string>('focusflow-music-topic', 'lofi');
+  const [useVideoBackground, setUseVideoBackground] = useLocalStorage<boolean>('focusflow-youtube-video-background', false);
   
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState(50);
@@ -148,8 +149,8 @@ export function useYouTubePlayer() {
       }
 
       playerRef.current = new window.YT.Player('hidden-youtube-player', {
-        height: '0',
-        width: '0',
+        height: '100%',
+        width: '100%',
         videoId: savedVideoId,
         playerVars: {
           autoplay: 0,
@@ -323,6 +324,8 @@ export function useYouTubePlayer() {
     currentTopic,
     searchAndPlayTopic,
     isSearchingTopic,
+    useVideoBackground,
+    setUseVideoBackground,
     videoQueue,
     currentQueueIndex,
   };

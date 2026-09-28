@@ -61,6 +61,8 @@ const translations: Record<Language, Record<string, string>> = {
     'music.openYouTube': 'Open on YouTube',
     'music.autoPlayOn': 'Auto-play is on',
     'music.autoPlayOff': 'Auto-play is off',
+    'music.videoBackground': 'Use video as background',
+    'music.videoBackgroundDesc': 'Show the playing YouTube video behind your workspace',
     
     // Health Reminders
     'reminders.title': 'Health Reminders',
@@ -201,6 +203,8 @@ const translations: Record<Language, Record<string, string>> = {
     'music.openYouTube': 'Mở trên YouTube',
     'music.autoPlayOn': 'Tự động chuyển bài đang bật',
     'music.autoPlayOff': 'Tự động chuyển bài đang tắt',
+    'music.videoBackground': 'Dùng video làm hình nền',
+    'music.videoBackgroundDesc': 'Hiển thị video YouTube đang phát phía sau không gian làm việc',
     
     // Health Reminders
     'reminders.title': 'Nhắc nhở sức khỏe',
